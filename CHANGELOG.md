@@ -6,6 +6,16 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 23/11/2026
 
+- **Passo 4: rotinas da nuvem rodando em São Paulo (a TruckPag bloqueia fora do Brasil) e comparação com o vigia.** Desde 19/11 às
+  14:40 a simulação das APIs dos cartões e dos estornos recebia "HTTP 403 Acesso nao autorizado" da TruckPag: o banco fica nos EUA e o
+  agendador disparava as funções lá. Diagnóstico com uma função temporária: a mesma chamada deu 403 em us-east-1 e 200 em sa-east-1 (a
+  Ticket responde nos dois). Correção: o disparo pede a região de São Paulo (`x-region`, migração `20261123100000`); cache da nuvem
+  recarregado com o do vigia. Depois: tempo real igual ao do vigia (5 transações), estornos lendo de novo (912 transações, nada a
+  excluir, como o vigia). D-1 de 19 a 22/11 (lotes 96–100, 204 abastecimentos) refeito com as regras e as fontes da nuvem: os mesmos
+  abastecimentos e os mesmos valores; só diferenças de forma (espaço no fim do endereço, matrícula como número). Banco x planilha:
+  TMZ6D31 de 18/11 tinha diesel e Arla no mesmo segundo com a correção do hodômetro aplicada no Arla na planilha (numeração da
+  planilha uma linha atrás da do banco); a planilha foi corrigida pela fila, com o tanque de cada linha; agora 1.324 = 1.324, iguais.
+
 - **Botão de recolher o menu sem o quadrado.** Pedido do usuário: tirar o quadrado em volta da setinha para ficar igual às setas
   dos grupos. Agora é só a seta (cinza, laranja ao passar o mouse), com a mesma área de clique; conferido com o menu aberto e recolhido.
 

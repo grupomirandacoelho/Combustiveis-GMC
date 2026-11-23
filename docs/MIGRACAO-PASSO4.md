@@ -16,6 +16,8 @@ Pedido do usuário: "O token já esta no arquivo pode adiantar o passo 4" (agend
   (sem isso a nuvem retrataria coisas que o vigia já tratou — visto nos estornos em 19/11).
 - **Publicar:** `node scripts/nuvem_publicar.mjs [nome] [--segredos]` (segredos: CHAVE_NUVEM, SITE_URL, SYNC_TOKEN, TRUCKPAG_*,
   TICKET_*; lidos de `%LOCALAPPDATA%\GestaoCombustivel`, nunca impressos).
+- **Região (23/11):** as funções rodam em São Paulo (`x-region: sa-east-1` no disparo): a TruckPag recusa chamadas de fora do
+  Brasil (403). Ao chamar à mão, mandar o mesmo cabeçalho.
 - **Custo medido (sonda, 19/11):** histórico do Consolidador do banco = 6,4 MB, 2 s para buscar, ~0,5 s de CPU para carregar
   (limite 2 s): cabe numa função.
 
