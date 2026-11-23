@@ -35,6 +35,6 @@ select rotina, em, modo, ok, resultado from public.nuvem_execucoes order by em d
 | 2b | Varredura das filas (`processarFilasBanco`) | **LIGADO desde 23/11 9:26**: pg_cron `nuvem-varredura-filas` (2 min) chama `/api/sync/banco/aplicar` |
 | 3 | Tempo real + D-1 (`cartoes_api.mjs`) | **LIGADO desde 23/11 9:13** (D-1 de 19–22/11 refeito igual ao do vigia; antes, simular desde 19/11) (Edge Function `cartoes-api`, 5 min; regras em `lib/nuvem/cartoes.js`, estado em `nuvem_cache`; publica pelo `/api/sync/kv` quando ligada) |
 | 4 | Rateio das NFs (`bomba_rateio.mjs`) | **LIGADO desde 23/11 9:13**, junto com o 3 (`lib/nuvem/rateio-bomba.js`; linhas das bombas por `gestao_linhas_bomba`) |
-| 5 | Conferência com os cartões (`conferencia_cartoes.mjs`) | depois do 3 |
-| 6 | Conciliação de NFs (`conciliacao_nfs.mjs`) | independente (lê as APIs de títulos e NF-e) |
+| 5 | Conferência com os cartões (`conferencia_cartoes.mjs`) | **simular desde 23/11** (Edge Function `conferencia-cartoes`, 3 h; `lib/nuvem/conferencia.js`; 1ª execução igual) |
+| 6 | Conciliação de NFs (`conciliacao_nfs.mjs`) | **simular desde 23/11** (Edge Function `conciliacao-nfs`, 6 h, prazo 80 s com rodízio; `lib/nuvem/conciliacao.js`) |
 | 7 | Motoristas e placas nos cartões (`motoristas_cartoes.mjs`, `placas_truckpag.mjs`) | **gravam nas APIs dos cartões**: ligar só com aprovação do usuário; cadastros do banco no lugar de `planilha_cadastros.py` |

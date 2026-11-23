@@ -34,6 +34,21 @@ export async function portal(metodo: string, rota: string, corpo?: unknown) {
   return t ? JSON.parse(t) : {};
 }
 
+// cache de uma rotina em public.nuvem_cache (o que o vigia guarda em arquivos): lê tudo do prefixo de uma vez, grava item a item
+export async function cacheNuvem(prefixo: string) {
+  const dados: Record<string, unknown> = (await rpc('gestao_nuvem_cache_ler', { p_prefixo: prefixo }, 60000)) || {};
+  return {
+    ler: async (nome: string, padrao: unknown) => (nome in dados ? dados[nome] : padrao),
+    gravar: async (nome: string, valor: unknown) => {
+      dados[nome] = valor;
+      await rpc('gestao_nuvem_cache_gravar', { p_nome: prefixo + nome, p_valor: valor }, 60000);
+    },
+  };
+}
+// prazo de uma execução (a função tem tempo limitado): depois dele, o que falta reler fica com a leitura anterior
+export const prazo = (segundos: number) => { const inicio = Date.now(); return () => Date.now() - inicio < segundos * 1000; };
+export const msLocal = (s: string) => Date.parse(s + '-03:00');   // 'AAAA-MM-DDTHH:MM:SS' no horário de Salvador
+
 // dia no fuso do Brasil (as rotinas do vigia usam a hora do computador, em Salvador)
 export function diaLocal(ms = Date.now()) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bahia', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms));

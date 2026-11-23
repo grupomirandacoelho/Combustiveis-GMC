@@ -6,6 +6,15 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 23/11/2026
 
+- **Passo 4: Conferência com os cartões e Conciliação de NFs na nuvem (em simulação).** As regras saíram dos scripts do vigia para
+  `lib/nuvem/conferencia.js` e `lib/nuvem/conciliacao.js` (vigia só com os arquivos); as versões antiga e nova, rodadas com as APIs reais
+  em cópias isoladas, deram a mesma saída (Conferência: 2.669 transações, 44 diferentes, 13 faltando, 8 sumidas; Conciliação: 271 NFS da
+  Ticket, 22 da TruckPag, 8.489 notas). Novas Edge Functions `conferencia-cartoes` (3 h) e `conciliacao-nfs` (6 h), em São Paulo, com o
+  cache do vigia levado ao banco e prazo de 80–100 s por execução: o que não dá tempo de reler fica com a leitura anterior, e a Conciliação
+  relê a fila em rodízio (a cada execução começa num ponto). 1ª execução: Conferência igual; Conciliação com os 271 títulos da Ticket
+  iguais e 3 da TruckPag com notas mais novas que as do vigia. A rota `/api/sync/kv` aceita as duas chaves; o vigia pula cada rotina
+  quando a da nuvem estiver ligada.
+
 - **Correção: o vigia parou estornos, cadastros nos cartões, Conciliação e Conferência das 9:13 às 9:40.** Ao ligar as APIs dos
   cartões na nuvem, o vigia passou a pular a função inteira, que também chama essas rotinas. Agora só a parte das APIs (tempo real,
   D-1, rateio) é pulada. Nada se perdeu: são rotinas por fila e nenhum cadastro foi alterado no intervalo.

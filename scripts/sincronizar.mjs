@@ -568,10 +568,10 @@ async function processarApisCartoes(forcar) {
   try { await (await import('./placas_truckpag.mjs')).processar({ api, log }); }
   catch (e) { log('Placas x TruckPag: ' + String(e.message || e).slice(0, 200)); }
   // conciliação de NFs (Fiscal/Financeiro): NFS dos cartões x notas dos postos, a cada 6 horas
-  try { await (await import('./conciliacao_nfs.mjs')).processar({ kvPut, log, forcar }); }
+  if (!(await nuvemLigada('conciliacao-nfs'))) try { await (await import('./conciliacao_nfs.mjs')).processar({ kvPut, log, forcar }); }
   catch (e) { log('Conciliação de NFs: ' + String(e.message || e).slice(0, 200)); }
   // conferência com os cartões (Operacional): Base_copia x APIs, últimos 45 dias, a cada 3 horas; pedidos de inclusão a cada volta
-  try { await (await import('./conferencia_cartoes.mjs')).processar({ api, kvPut, log, forcar }); }
+  if (!(await nuvemLigada('conferencia-cartoes'))) try { await (await import('./conferencia_cartoes.mjs')).processar({ api, kvPut, log, forcar }); }
   catch (e) { log('Conferência com os cartões: ' + String(e.message || e).slice(0, 200)); }
 }
 

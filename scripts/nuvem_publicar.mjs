@@ -23,6 +23,8 @@ export const COPIAS = {
   'estornos.js': 'lib/nuvem/estornos.js',
   'cartoes.js': 'lib/nuvem/cartoes.js',
   'rateio-bomba.js': 'lib/nuvem/rateio-bomba.js',
+  'conferencia.js': 'lib/nuvem/conferencia.js',
+  'conciliacao.js': 'lib/nuvem/conciliacao.js',
 };
 // em _shared tudo fica na mesma pasta: os imports do portal passam a apontar para o lado
 export const ajustarImports = (texto) => texto.replace(/'\.\.\/\.\.\/public\/gestao\/lib\/([\w-]+\.js)'/g, "'./$1'");
@@ -53,6 +55,8 @@ async function main() {
       CHAVE_NUVEM: chave, SITE_URL: SITE, SYNC_TOKEN: fs.readFileSync(path.join(LOCAL, 'sync-token.txt'), 'utf8').trim(),
       TRUCKPAG_HOST: cartoes.truckpag.hosts[0], TRUCKPAG_TOKEN: cartoes.truckpag.token,
       TICKET_HOST: cartoes.ticket.host, TICKET_BASIC: cartoes.ticket.basic, TICKET_CLIENTES: JSON.stringify(cartoes.ticket.clientes),
+      // login da API de títulos da TruckPag (Conciliação de NFs, 23/11/2026)
+      ...(cartoes.truckpag.titulosUsuario ? { TRUCKPAG_TITULOS_USUARIO: cartoes.truckpag.titulosUsuario, TRUCKPAG_TITULOS_SENHA: cartoes.truckpag.titulosSenha } : {}),
     };
     const r = await fetch(`https://api.supabase.com/v1/projects/${ref}/secrets`, { method: 'POST', headers: H,
       body: JSON.stringify(Object.entries(segredos).map(([name, value]) => ({ name, value }))) });
