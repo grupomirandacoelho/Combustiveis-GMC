@@ -6,6 +6,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 23/11/2026
 
+- **Passo 4: Conferência com os cartões e Conciliação de NFs LIGADAS na nuvem (13:15).** Decisão do usuário ("Pode ligar"). A 1ª execução
+  ligada publicou as duas telas pelo portal (Conferência: 2.676 transações, 58 itens; Conciliação: 293 NFS, 8.495 notas). Os pedidos de
+  inclusão da Conferência também passam a ser atendidos pela nuvem; o vigia pula as duas rotinas.
+
 - **Passo 4: Conferência com os cartões e Conciliação de NFs na nuvem (em simulação).** As regras saíram dos scripts do vigia para
   `lib/nuvem/conferencia.js` e `lib/nuvem/conciliacao.js` (vigia só com os arquivos); as versões antiga e nova, rodadas com as APIs reais
   em cópias isoladas, deram a mesma saída (Conferência: 2.669 transações, 44 diferentes, 13 faltando, 8 sumidas; Conciliação: 271 NFS da
