@@ -4,6 +4,11 @@ Toda alteração pedida e feita no portal Gestão de Combustível, da mais nova 
 Cada alteração nova entra no topo, com a data, o que foi pedido e o que mudou. O detalhe técnico de cada item continua
 no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
+## 23/11/2026
+
+- **Botão de recolher o menu sem o quadrado.** Pedido do usuário: tirar o quadrado em volta da setinha para ficar igual às setas
+  dos grupos. Agora é só a seta (cinza, laranja ao passar o mouse), com a mesma área de clique; conferido com o menu aberto e recolhido.
+
 ## 19/11/2026
 
 - **Menu lateral mais compacto.** Pedido do usuário: botões de grupo e de telas muito grandes, e muito espaço entre os grupos

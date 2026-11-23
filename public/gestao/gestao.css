@@ -96,9 +96,12 @@ a{color:inherit;}
 .lateral-simbolo{display:none;width:40px;height:auto;flex-shrink:0;}
 .app.recolhido .lateral-simbolo{display:block;}
 :root[data-theme="light"] .so-escuro, :root:not([data-theme="light"]) .so-claro{display:none !important;}
-.btn-recolher{flex-shrink:0;width:30px;height:30px;border-radius:var(--r);border:1px solid var(--borda-forte);background:transparent;color:var(--texto-2);display:grid;place-items:center;}
-.btn-recolher:hover{background:var(--cartao);}
-.btn-recolher svg{width:15px;height:15px;}
+/* recolher o menu: só a seta, igual às setas dos grupos (23/11/2026, pedido do usuário: tirar o quadrado em volta); a área de
+   clique continua de 30 px */
+.btn-recolher{flex-shrink:0;width:30px;height:30px;border-radius:var(--r);border:0;background:transparent;color:var(--suave);display:grid;place-items:center;cursor:pointer;}
+.btn-recolher:hover{color:var(--primaria-texto);}
+.btn-recolher:focus-visible{outline:2px solid var(--primaria);outline-offset:1px;}
+.btn-recolher svg{width:14px;height:14px;}
 .usuario{display:flex;align-items:center;gap:var(--e-3);padding:var(--e-5);border-radius:var(--r);background:var(--fundo);min-width:0;}
 :root[data-theme="light"] .usuario{background:var(--cartao-2);}
 .avatar{width:38px;height:38px;flex-shrink:0;border-radius:var(--r-pilula);border:3px solid #fff;background:var(--primaria);color:var(--sobre-primaria);display:grid;place-items:center;font-weight:600;font-size:14px;}
