@@ -55,7 +55,7 @@ computador novo, rode `npx wrangler login` para entrar na conta Cloudflare.
 ## Rotinas na nuvem (Supabase Edge Functions, desde 19/11/2026)
 - As rotinas do vigia passam, uma a uma, para funções no Supabase agendadas pelo próprio banco (a cada 5 min ele confere quais
   rodam). Cada uma começa em **simulação** (só anota o que faria, para comparar com o vigia) e depois é **ligada** (o vigia pula a dele).
-- Situação e plano: `docs/MIGRACAO-PASSO4.md`. Hoje em simulação: estornos da TruckPag e APIs dos cartões (tempo real, D-1 e Rateio das NFs).
+- Situação e plano: `docs/MIGRACAO-PASSO4.md`. Ligados na nuvem desde 23/11: APIs dos cartões (tempo real, D-1 e Rateio das NFs) e estornos da TruckPag (o vigia pula essas rotinas). As funções rodam em São Paulo: a TruckPag recusa chamadas de fora do Brasil.
 - Publicar depois de mudar uma regra: `node scripts/nuvem_publicar.mjs` (o teste avisa se a cópia em `supabase/functions/_shared` ficou velha).
 
 ## Banco de dados no Supabase (desde 12/11/2026)

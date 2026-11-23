@@ -6,6 +6,11 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 23/11/2026
 
+- **Passo 4: APIs dos cartões e estornos da TruckPag LIGADOS na nuvem (9:13).** Decisão do usuário depois da comparação ("Ligar agora").
+  A nuvem (São Paulo, a cada 5 min) passa a ler a Ticket e a TruckPag, publicar o tempo real e a lista do Rateio das NFs, mandar o D-1
+  e as correções do rateio e, a cada 6 h, os estornos; o vigia pula essas rotinas. Estado do vigia recarregado na nuvem antes de ligar.
+  Os abastecimentos das APIs entram no portal sem o computador ligado. Para voltar: pôr a rotina em 'simular' (`nuvem_rotinas.modo`).
+
 - **Passo 4: rotinas da nuvem rodando em São Paulo (a TruckPag bloqueia fora do Brasil) e comparação com o vigia.** Desde 19/11 às
   14:40 a simulação das APIs dos cartões e dos estornos recebia "HTTP 403 Acesso nao autorizado" da TruckPag: o banco fica nos EUA e o
   agendador disparava as funções lá. Diagnóstico com uma função temporária: a mesma chamada deu 403 em us-east-1 e 200 em sa-east-1 (a
