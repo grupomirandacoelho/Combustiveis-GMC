@@ -24,3 +24,13 @@ test('pctCurto: % inteiro; abaixo de meio por cento vira "<1%"', async () => {
   assert.equal(pctCurto(0.003), '<1%');
   assert.equal(pctCurto(0), '0%');
 });
+
+// Preço bomba interna (23/11/2026): "Lançar negociação" e "Adicionar fornecedor" só com as praças (com negociação ou fornecedor),
+// não com o cadastro inteiro de unidades do portal
+test('pracasDoLancamento: praças com negociação ou fornecedor; sem as descontinuadas; em ordem de nome', async () => {
+  const { pracasDoLancamento } = await import('../../public/gestao/dashboards/preco-fornecedor.js');
+  const cad = [{ u: 'BELEM' }, { u: 'GV' }, { u: 'NOVA' }];
+  assert.deepEqual(pracasDoLancamento(['SP', 'JEQUIE'], cad, 'SP'), ['BELEM', 'JEQUIE', 'NOVA', 'SP']);
+  assert.ok(!pracasDoLancamento([], cad, null).includes('GV'));
+  assert.ok(!pracasDoLancamento(['SP'], [], 'SP').includes('RAJA JEQUIE'));
+});

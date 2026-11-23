@@ -6,6 +6,11 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 23/11/2026
 
+- **Preço bomba interna: "Lançar negociação" só com as praças que têm negociação** (pedido do usuário). Desde 18/11 a lista mostrava
+  o cadastro inteiro de unidades do portal (24, com outros nomes: RAJA JEQUIE em vez de JEQUIE). Agora "Lançar negociação" e
+  "Adicionar fornecedor" mostram as praças com negociação ou com fornecedor cadastrado (Belém, Jequié, Salvador, São Paulo), sem
+  Governador Valadares (descontinuada). Nenhum lançamento gravado com nome errado (só 2 desde 18/11, os dois certos).
+  `pracasDoLancamento` em `dashboards/preco-fornecedor.js`; teste em `tests/js/layout.test.mjs`.
 - **Passo 4: Conferência com os cartões e Conciliação de NFs LIGADAS na nuvem (13:15).** Decisão do usuário ("Pode ligar"). A 1ª execução
   ligada publicou as duas telas pelo portal (Conferência: 2.676 transações, 58 itens; Conciliação: 293 NFS, 8.495 notas). Os pedidos de
   inclusão da Conferência também passam a ser atendidos pela nuvem; o vigia pula as duas rotinas.

@@ -30,6 +30,12 @@ const preco = (v) => (v === null || v === undefined ? '—' : f3.format(v));
 const nomeProduto = (p) => (p === 'ARLA' ? 'Arla 32' : p.charAt(0) + p.slice(1).toLowerCase());
 const NOMES_UNIDADE = { SP: 'São Paulo', GV: 'Governador Valadares', BELEM: 'Belém', JEQUIE: 'Jequié', SALVADOR: 'Salvador' };
 const nomeUnidade = (u) => NOMES_UNIDADE[u] || u.charAt(0) + u.slice(1).toLowerCase();
+// praças do "Lançar negociação" e do "Adicionar fornecedor": as com negociação + as com fornecedor cadastrado + a escolhida na tela,
+// sem as descontinuadas (UNIDADES_FORA). São os códigos da planilha (SP, JEQUIE...), não o cadastro de unidades do portal.
+export function pracasDoLancamento(comNegociacao, cadastroForn, atual) {
+  const comFornecedor = cadastroForn.map((x) => x.u).filter((u) => !UNIDADES_FORA.has(u));
+  return [...new Set([...comNegociacao, ...comFornecedor, atual].filter(Boolean))].sort((a, b) => nomeUnidade(a).localeCompare(nomeUnidade(b), 'pt-BR'));
+}
 const soNumeros = (v) => String(v ?? '').replace(/\D/g, '');
 const fmtCnpj = (c) => (c && /^\d{14}$/.test(c) ? c.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : c || '');
 
@@ -508,11 +514,14 @@ export async function montar(ctx) {
         }).join('') + '</tbody>'
       : '<tbody><tr><td><div class="vazio">Nenhum fornecedor de ' + esc(nomeProduto(prod)) + ' em ' + esc(nomeUnidade(uni)) + '. Use Fornecedores > Adicionar fornecedor.</div></td></tr></tbody>';
   }
+  // "Lançar negociação" e "Adicionar fornecedor": só as praças com negociação e as que já têm fornecedor cadastrado, mais a escolhida
+  // na tela (23/11/2026: desde 18/11 aparecia o cadastro inteiro de unidades do portal, com outros nomes — RAJA JEQUIE em vez de JEQUIE)
+  const unidadesLancamento = () => pracasDoLancamento(unidades, cadastro(), unidade);
   function abrirLancamento() {
     formNeg.reset();
     formNeg.data.value = diaIso(dataParaDia(new Date()));
     formNeg.produto.value = produto;
-    formNeg.unidade.innerHTML = [...new Set([...unidadesForm(), unidade])].map((u) => '<option value="' + esc(u) + '"' + (u === unidade ? ' selected' : '') + '>' + esc(nomeUnidade(u)) + '</option>').join('');
+    formNeg.unidade.innerHTML = unidadesLancamento().map((u) => '<option value="' + esc(u) + '"' + (u === unidade ? ' selected' : '') + '>' + esc(nomeUnidade(u)) + '</option>').join('');
     erro('pf-erro-neg', '');
     desenharLancamento();
     dlgNeg.showModal();
@@ -578,7 +587,7 @@ export async function montar(ctx) {
     formForn.produto.value = x ? x.p : produto;
     formForn.produto.disabled = !!x;
     formForn.ativo.checked = x ? x.ativo : true;
-    const unis = x ? [x.u] : unidadesForm();
+    const unis = x ? [x.u] : unidadesLancamento();   // praças (SP, JEQUIE...), não os nomes do cadastro de unidades (RAJA JEQUIE)
     const cnpjDe = (u) => { const c = cad.find((y) => y.f === formForn.fornecedor.value.trim().toUpperCase() && y.p === formForn.produto.value && y.u === u); return c ? c.cnpj : ''; };
     el('pf-forn-unidades').innerHTML = unis.map((u) => '<div class="pf-uni-cnpj"><label class="pf-uni"><input type="checkbox" value="' + esc(u) + '"' +
       (x || u === unidade ? ' checked' : '') + (x ? ' disabled' : '') + '> ' + esc(nomeUnidade(u)) + '</label>' +

@@ -178,4 +178,4 @@ Ordem (cada passo conferido antes do próximo; o vigia continua ligado até o fi
 ### 15.4 Desligar o vigia
 - [ ] Conferir painéis x banco por alguns dias com o vigia ainda ligado (só lendo).
 - [ ] Desligar a tarefa agendada nos dois computadores e retirar o revezamento.
-
+- [x] Preço bomba interna: "Lançar negociação" e "Adicionar fornecedor" só com as praças (com negociação ou fornecedor), não o cadastro inteiro de unidades (23/11/2026).
