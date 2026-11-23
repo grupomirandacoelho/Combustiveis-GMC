@@ -6,6 +6,13 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 23/11/2026
 
+- **Passo 4: recálculo do KM e varredura das filas fora do vigia (ligados às 9:26).** Recálculo do KM: quando um lote entra no banco,
+  o próprio banco aponta o abastecimento seguinte de cada linha que ainda tem o km antigo (`gestao_km_seguintes`, a mesma regra do
+  `km_recalcular.mjs`: km corrigido à mão fica, negativo não mexe, diesel e Arla em sequências separadas; testado em 6 casos) e o
+  portal põe a correção na fila como "Recálculo do KM (automático)", com o tanque, para o banco e a planilha de reserva. Varredura das
+  filas: o banco chama o portal a cada 2 min (pg_cron `nuvem-varredura-filas`). Interruptores `km-recalcular` e `varredura-filas` em
+  `nuvem_rotinas` (coluna nova `funcao` = não é Edge Function); o vigia pula as dele quando ligados.
+
 - **Passo 4: APIs dos cartões e estornos da TruckPag LIGADOS na nuvem (9:13).** Decisão do usuário depois da comparação ("Ligar agora").
   A nuvem (São Paulo, a cada 5 min) passa a ler a Ticket e a TruckPag, publicar o tempo real e a lista do Rateio das NFs, mandar o D-1
   e as correções do rateio e, a cada 6 h, os estornos; o vigia pula essas rotinas. Estado do vigia recarregado na nuvem antes de ligar.

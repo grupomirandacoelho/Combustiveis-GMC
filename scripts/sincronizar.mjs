@@ -443,6 +443,7 @@ function planilhaBaseCopia() {
 let ultimaVarreduraBanco = 0;
 async function processarFilasBanco() {
   if (!tokenSync() || Date.now() - ultimaVarreduraBanco < 60_000) return;
+  if (await nuvemLigada('varredura-filas')) return;   // passo 4 (23/11/2026): o pg_cron do banco chama a varredura a cada 2 min
   ultimaVarreduraBanco = Date.now();
   const r = await api('POST', '/api/sync/banco/aplicar', {});
   if (r && (r.aplicados || r.erros)) log(`Banco: ${r.aplicados} pedido(s) das filas aplicado(s)${r.erros ? `, ${r.erros} com erro (ver banco_mensagem)` : ''}.`);
@@ -494,7 +495,8 @@ async function processarConsolidador() {
       // linhas gravadas: o abastecimento seguinte da mesma placa pode precisar do km recalculado (scripts/km_recalcular.mjs)
       const aplicados = new Set(mudaram.filter((i) => i.estado === 'aplicada').map((i) => i.id));
       if (aplicados.size) {
-        try { (await import('./km_recalcular.mjs')).anotar(pendentes.filter((l) => aplicados.has(l.id)).flatMap((l) => l.linhas)); }
+        // passo 4 (23/11/2026): com 'km-recalcular' ligado na nuvem, o recálculo é feito pelo portal ao aplicar o lote no banco
+        if (!(await nuvemLigada('km-recalcular'))) try { (await import('./km_recalcular.mjs')).anotar(pendentes.filter((l) => aplicados.has(l.id)).flatMap((l) => l.linhas)); }
         catch (e) { log('Recálculo do KM: não foi possível anotar o lote (' + String(e.message || e).slice(0, 160) + ').'); }
       }
       for (const i of mudaram) {
@@ -578,7 +580,7 @@ async function processarEdicaoBase() {
   const copia = planilhaBaseCopia();
   if (!copia) return;
   // km do abastecimento seguinte aos lotes gravados (usa a lista da Base_copia já publicada com as linhas novas)
-  try { await (await import('./km_recalcular.mjs')).recalcular({ api, log }); }
+  if (!(await nuvemLigada('km-recalcular'))) try { await (await import('./km_recalcular.mjs')).recalcular({ api, log }); }
   catch (e) { log('Recálculo do KM: ' + String(e.message || e).slice(0, 200)); }
   const { pendentes } = await api('GET', '/api/sync/base-copia/pendentes');
   if (pendentes && pendentes.length) {

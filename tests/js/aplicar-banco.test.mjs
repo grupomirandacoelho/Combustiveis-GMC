@@ -8,13 +8,17 @@ import { ordenarPedidos, aplicarPendentes } from '../../lib/aplicar-banco.js';
 function d1Falso({ lotes = [], alteracoes = [] } = {}) {
   const t = { consolidador_lotes: lotes, alteracoes_base_copia: alteracoes };
   const tabela = (sql) => (sql.includes('consolidador_lotes') ? 'consolidador_lotes' : 'alteracoes_base_copia');
+  const inseridas = [];
   return {
-    t,
+    t, inseridas,
+    async batch(stmts) { for (const st of stmts) inseridas.push(st.args); return []; },
     prepare(sql) {
       let args = [];
       const st = {
+        get args() { return args; },
         bind(...a) { args = a; return st; },
         async first() {
+          if (/FROM usuarios/.test(sql)) return { id: 1 };
           if (sql.includes("LIKE 'aplicando:%'")) {
             return Object.values(t).flat().some((r) => String(r.banco_aplicado_em || '').startsWith('aplicando:')) ? { 1: 1 } : null;
           }
@@ -139,4 +143,29 @@ test('outra rodada em andamento: não aplica nada (nem pula na frente); reserva 
 
 test('sem banco configurado: não faz nada', async () => {
   assert.equal((await aplicarPendentes({ DB: d1Falso() })).semBanco, true);
+});
+
+// Recálculo do KM (23/11/2026, passo 4): lote aplicado no banco -> correções do abastecimento seguinte na fila (só com o
+// interruptor 'km-recalcular' ligado), com o tanque para a planilha de reserva
+test('lote inserido com o recálculo ligado: correções do km do seguinte vão para a fila', async () => {
+  const DB = d1Falso({ lotes: [lote(1, '2026-11-23 10:00:00')] });
+  const item = { linha: 63100, placa: 'ABC1D23', data: 46349.5, tanque: 'diesel', celulas: { R: 300, S: 3 }, antes: { R: 500, S: 5 } };
+  await comBanco((f) => (f === 'gestao_aplicar_lote' ? { ok: true, inseridas: 1, ignoradas: 0, ids: [77] }
+    : f === 'gestao_nuvem_modo' ? 'ligado' : f === 'gestao_km_seguintes' ? [item] : null), async (chamadas) => {
+    assert.equal((await aplicarPendentes(ENV(DB))).aplicados, 1);
+    assert.deepEqual(chamadas.map((c) => c[0]), ['gestao_aplicar_lote', 'gestao_nuvem_modo', 'gestao_km_seguintes']);
+    assert.deepEqual(chamadas[2][1], { p_ids: [77] });
+  });
+  assert.equal(DB.inseridas.length, 1);
+  assert.deepEqual(DB.inseridas[0], [1, 63100, 'ABC1D23', 46349.5, '{"R":300,"S":3}', '{"R":500,"S":5}', 'diesel']);
+  assert.equal(DB.t.consolidador_lotes[0].banco_mensagem, 'inseridas 1, já estavam 0; km refeito em 1 seguinte(s)');
+});
+
+test('recálculo desligado na nuvem: nada vai para a fila (o vigia faz)', async () => {
+  const DB = d1Falso({ lotes: [lote(1, '2026-11-23 10:00:00')] });
+  await comBanco((f) => (f === 'gestao_aplicar_lote' ? { ok: true, inseridas: 1, ignoradas: 0, ids: [77] } : f === 'gestao_nuvem_modo' ? 'desligado' : null), async (chamadas) => {
+    await aplicarPendentes(ENV(DB));
+    assert.deepEqual(chamadas.map((c) => c[0]), ['gestao_aplicar_lote', 'gestao_nuvem_modo']);
+  });
+  assert.equal(DB.inseridas.length, 0);
 });

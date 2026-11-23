@@ -67,7 +67,9 @@ with gestao_carga.conectar() as c, c.cursor() as cur:
         else: cur.execute("select vault.create_secret(%s, %s)", (valor, nome))
     c.commit()
 print('vault ok')`;
-    const v = spawnSync('py', ['-c', py], { cwd: PROJETO, input: JSON.stringify({ chave_nuvem: chave, url_projeto: sb.url }), encoding: 'utf8' });
+    // site_url e sync_token: a varredura das filas (pg_cron) chama o portal com o token de sincronização (23/11/2026)
+    const v = spawnSync('py', ['-c', py], { cwd: PROJETO, encoding: 'utf8',
+      input: JSON.stringify({ chave_nuvem: chave, url_projeto: sb.url, site_url: SITE, sync_token: segredos.SYNC_TOKEN }) });
     console.log(esconder((v.stdout + v.stderr).trim()));
   }
 
