@@ -6,6 +6,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 23/11/2026
 
+- **Correção: o vigia parou estornos, cadastros nos cartões, Conciliação e Conferência das 9:13 às 9:40.** Ao ligar as APIs dos
+  cartões na nuvem, o vigia passou a pular a função inteira, que também chama essas rotinas. Agora só a parte das APIs (tempo real,
+  D-1, rateio) é pulada. Nada se perdeu: são rotinas por fila e nenhum cadastro foi alterado no intervalo.
+
 - **Passo 4: recálculo do KM e varredura das filas fora do vigia (ligados às 9:26).** Recálculo do KM: quando um lote entra no banco,
   o próprio banco aponta o abastecimento seguinte de cada linha que ainda tem o km antigo (`gestao_km_seguintes`, a mesma regra do
   `km_recalcular.mjs`: km corrigido à mão fica, negativo não mexe, diesel e Arla em sequências separadas; testado em 6 casos) e o

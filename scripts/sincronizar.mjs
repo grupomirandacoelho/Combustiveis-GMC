@@ -545,8 +545,9 @@ async function processarApisCartoes(forcar) {
   proximaApis = Date.now() + 5 * 60 * 1000;
   const m = await import('./cartoes_api.mjs');
   if (!m.temConfig()) return;
-  // tempo real comparado com o banco (19/11/2026: a Base.xlsx parou de ser a base dos painéis)
-  await m.processar({ api, kvPut, log, chavesBanco: (desde) => rpcBanco('gestao_chaves_tempo_real', { p_desde: desde }), gerarHistorico: () => {
+  // tempo real comparado com o banco (19/11/2026: a Base.xlsx parou de ser a base dos painéis). Com a rotina da nuvem ligada
+  // (23/11/2026) só esta parte é pulada: estornos, cadastros nos cartões, Conciliação e Conferência abaixo seguem cada um com o seu interruptor
+  if (!(await nuvemLigada('cartoes-api'))) await m.processar({ api, kvPut, log, chavesBanco: (desde) => rpcBanco('gestao_chaves_tempo_real', { p_desde: desde }), gerarHistorico: () => {
     rodar('py', ['scripts/consolidador_historico.py']);
     fs.mkdirSync(path.dirname(HISTORICO_APIS), { recursive: true });
     fs.renameSync(CONSOLIDACAO_GERADO, HISTORICO_APIS);
@@ -919,8 +920,7 @@ if (process.argv.includes('--vigiar')) {
       if (await plantao()) { try { await processarFilasBanco(); } catch (e) { erro('nas filas do banco', e); } }
       if (await plantao()) { try { await processarConsolidador(); } catch (e) { erro('no consolidador', e); } }
       if (await plantao()) { try { await processarEdicaoBase(); } catch (e) { erro('em editar abastecimentos', e); } }
-      // passo 4: com a rotina da nuvem ligada (tempo real, D-1 e Rateio das NFs), o vigia não roda a dele
-      if (await plantao() && !(await nuvemLigada('cartoes-api'))) { try { await processarApisCartoes(); } catch (e) { erro('nas APIs dos cartões', e); } }
+      if (await plantao()) { try { await processarApisCartoes(); } catch (e) { erro('nas APIs dos cartões', e); } }
       if (await plantao()) { try { processarANP(); } catch (e) { erro('nos preços da ANP', e); } }
       if (await plantao()) { try { processarPetrobras(); } catch (e) { erro('nos preços da Petrobras', e); } }
       if (await plantao()) { try { processarReajustes(); } catch (e) { erro('nos reajustes', e); } }
