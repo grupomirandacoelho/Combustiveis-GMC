@@ -25,6 +25,7 @@ export const COPIAS = {
   'rateio-bomba.js': 'lib/nuvem/rateio-bomba.js',
   'conferencia.js': 'lib/nuvem/conferencia.js',
   'conciliacao.js': 'lib/nuvem/conciliacao.js',
+  'cadastros-cartoes.js': 'lib/nuvem/cadastros-cartoes.js',
 };
 // em _shared tudo fica na mesma pasta: os imports do portal passam a apontar para o lado
 export const ajustarImports = (texto) => texto.replace(/'\.\.\/\.\.\/public\/gestao\/lib\/([\w-]+\.js)'/g, "'./$1'");

@@ -6,6 +6,13 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 23/11/2026
 
+- **Passo 4: cadastro de motoristas e placas nos cartões na nuvem (em simulação).** As regras saíram de `motoristas_cartoes.mjs` e
+  `placas_truckpag.mjs` para `lib/nuvem/cadastros-cartoes.js` (vigia com os arquivos e a planilha; a linha de comando conferir/alinhar
+  das placas continua). Nova Edge Function `cadastros-cartoes` (5 min, São Paulo): motoristas do banco (`gestao_motoristas_cartoes`,
+  conferido igual à planilha: 166 = 166, nenhum campo diferente), interruptores e estado do vigia levados ao banco. Como essa rotina grava
+  nas APIs dos cartões, na simulação só as consultas saem: criar, alterar, trocar senha e trocar centro de custo ficam anotados, e o portal
+  não é avisado para apagar os dados pessoais. Testes com as APIs simuladas (criar, motorista de teste, edição, placa).
+
 - **Preço bomba interna: "Lançar negociação" só com as praças que têm negociação** (pedido do usuário). Desde 18/11 a lista mostrava
   o cadastro inteiro de unidades do portal (24, com outros nomes: RAJA JEQUIE em vez de JEQUIE). Agora "Lançar negociação" e
   "Adicionar fornecedor" mostram as praças com negociação ou com fornecedor cadastrado (Belém, Jequié, Salvador, São Paulo), sem

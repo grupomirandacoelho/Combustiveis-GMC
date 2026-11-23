@@ -558,14 +558,16 @@ async function processarApisCartoes(forcar) {
   // cadastro de motoristas x cartões (scripts/motoristas_cartoes.mjs): cria os novos e repete as edições (se ligado), com os
   // dados pessoais digitados no portal, que são apagados depois do envio. O "completar pela Ticket" (CNH etc.) saiu em
   // 12/11/2026: o portal não guarda mais CPF, nascimento nem CNH
-  try {
+  // passo 4 (23/11/2026): com 'cadastros-cartoes' ligado na nuvem, motoristas e placas nos cartões saem de lá
+  const cadastrosNaNuvem = await nuvemLigada('cadastros-cartoes');
+  if (!cadastrosNaNuvem) try {
     const mc = await import('./motoristas_cartoes.mjs');
     await mc.criarNovos({ api, log });
     await mc.editarTruckpag({ api, log });
   } catch (e) { log('Cadastro x cartões: ' + String(e.message || e).slice(0, 200)); }
   // cadastro de placas x TruckPag (scripts/placas_truckpag.mjs, 16/11/2026): unidade nova da placa vira o centro de custo
   // do veículo na TruckPag (se ligado: "placasUnidade" em motoristas-cartoes.json)
-  try { await (await import('./placas_truckpag.mjs')).processar({ api, log }); }
+  if (!cadastrosNaNuvem) try { await (await import('./placas_truckpag.mjs')).processar({ api, log }); }
   catch (e) { log('Placas x TruckPag: ' + String(e.message || e).slice(0, 200)); }
   // conciliação de NFs (Fiscal/Financeiro): NFS dos cartões x notas dos postos, a cada 6 horas
   if (!(await nuvemLigada('conciliacao-nfs'))) try { await (await import('./conciliacao_nfs.mjs')).processar({ kvPut, log, forcar }); }
