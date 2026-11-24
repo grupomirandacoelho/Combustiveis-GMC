@@ -21,6 +21,11 @@ Pedido do usuário: "O token já esta no arquivo pode adiantar o passo 4" (agend
 - **Custo medido (sonda, 19/11):** histórico do Consolidador do banco = 6,4 MB, 2 s para buscar, ~0,5 s de CPU para carregar
   (limite 2 s): cabe numa função.
 
+- **Falhas (24/11):** rotina cuja última execução falhou é disparada de novo 10 min depois (não espera o intervalo inteiro).
+- **Limite do D1 (24/11):** o plano gratuito lê até 5 milhões de linhas/dia; acima disso o portal responde 500 até a meia-noite UTC
+  (visto em 23/11, 17:50–21:00). Consultas chamadas pelas rotinas a cada poucos minutos precisam de índice. Consumo por consulta:
+  GraphQL da Cloudflare, `d1QueriesAdaptiveGroups` (ordenar por `sum_rowsRead`).
+
 ## Para mudar o modo de uma rotina
 ```sql
 update public.nuvem_rotinas set modo = 'ligado' where nome = 'estornos-truckpag';   -- ou 'simular' / 'desligado'

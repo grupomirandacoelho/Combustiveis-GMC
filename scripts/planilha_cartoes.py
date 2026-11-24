@@ -64,7 +64,7 @@ def planilha():
     if os.environ.get('PLANILHA_CARTOES'):
         return os.environ['PLANILHA_CARTOES']
     achados = [p for p in glob.glob(os.path.join(PASTA_PROJETO, 'CONTROLES', '*.xlsx'))
-               if not os.path.basename(p).startswith('~$') and 'CARTO' in chave(os.path.basename(p))]
+               if not os.path.basename(p).startswith('~$') and 'conflict' not in os.path.basename(p).lower() and 'CARTO' in chave(os.path.basename(p))]
     return sorted(achados)[0] if achados else None
 
 

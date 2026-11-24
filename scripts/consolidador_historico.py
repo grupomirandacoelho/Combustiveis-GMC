@@ -41,7 +41,7 @@ def base_copia():
     if os.environ.get('PLANILHA_BASE_COPIA'):
         return os.environ['PLANILHA_BASE_COPIA']
     achados = [p for p in glob.glob(os.path.join(PASTA_PROJETO, 'CONTROLES', '*.xlsx'))
-               if not os.path.basename(p).startswith('~$') and chave(os.path.basename(p)).startswith('BASE')]
+               if not os.path.basename(p).startswith('~$') and 'conflict' not in os.path.basename(p).lower() and chave(os.path.basename(p)).startswith('BASE')]
     return sorted(achados)[0] if achados else None
 
 

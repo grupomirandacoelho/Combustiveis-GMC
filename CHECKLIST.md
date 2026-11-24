@@ -169,6 +169,11 @@ Ordem (cada passo conferido antes do próximo; o vigia continua ligado até o fi
       estornos TruckPag e APIs dos cartões com Rateio das NFs LIGADOS em 23/11; recálculo do KM e varredura das filas também na nuvem; falta Conferência, conciliação e cadastros nos cartões): tempo real e D-1 (Ticket/TruckPag), estornos TruckPag, cadastro de motoristas e
       placas nos cartões, conciliação de NFs, conferência com os cartões.
 
+- [x] 24/11: varredura das filas com índice no D1 (o LIKE lia a tabela inteira e estourou o limite diário em 23/11); rotina da nuvem
+      que falha repete em 10 min; vigia ignora cópias em conflito do ownCloud.
+- [ ] Antes de 15.4: conferir o consumo diário do D1 (rows read) depois do índice; `bomba-rateio/estado` ainda lê alteracoes_base_copia
+      inteira a cada 5 min (~0,7 M/dia).
+
 ### 15.3 Demais planilhas no banco
 - [ ] Placas e motoristas sem a planilha (já gravam no Supabase).
 - [ ] Cartões frota, postos dos motoristas e negociações, preço bomba interna, coordenadas dos postos.

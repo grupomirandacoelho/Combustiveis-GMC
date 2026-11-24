@@ -2,7 +2,7 @@
 // ordem em que foram pedidos, sem aplicar duas vezes, e o que falha por banco fora do ar fica para a próxima rodada. D1 e banco simulados.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ordenarPedidos, aplicarPendentes } from '../../lib/aplicar-banco.js';
+import { ordenarPedidos, aplicarPendentes, RESERVADO } from '../../lib/aplicar-banco.js';
 
 // D1 falso: só o que o aplicador usa (filas em memória)
 function d1Falso({ lotes = [], alteracoes = [] } = {}) {
@@ -19,7 +19,7 @@ function d1Falso({ lotes = [], alteracoes = [] } = {}) {
         bind(...a) { args = a; return st; },
         async first() {
           if (/FROM usuarios/.test(sql)) return { id: 1 };
-          if (sql.includes("LIKE 'aplicando:%'")) {
+          if (sql.includes(RESERVADO)) {
             return Object.values(t).flat().some((r) => String(r.banco_aplicado_em || '').startsWith('aplicando:')) ? { 1: 1 } : null;
           }
           throw new Error('first não esperado: ' + sql);
@@ -32,7 +32,7 @@ function d1Falso({ lotes = [], alteracoes = [] } = {}) {
         async run() {
           const linhas = t[tabela(sql)];
           let changes = 0;
-          if (sql.includes("LIKE 'aplicando:%' AND banco_aplicado_em < ?")) {
+          if (sql.includes(RESERVADO + ' AND banco_aplicado_em < ?')) {
             for (const r of linhas) if (String(r.banco_aplicado_em || '').startsWith('aplicando:') && r.banco_aplicado_em < args[0]) { r.banco_aplicado_em = null; changes++; }
           } else if (sql.includes('banco_mensagem = ?')) {          // marcar
             const [msg, id, marca] = args;
@@ -168,4 +168,32 @@ test('recálculo desligado na nuvem: nada vai para a fila (o vigia faz)', async 
     assert.deepEqual(chamadas.map((c) => c[0]), ['gestao_aplicar_lote', 'gestao_nuvem_modo']);
   });
   assert.equal(DB.inseridas.length, 0);
+});
+
+// 24/11/2026: a varredura das filas lia a tabela inteira a cada 2 min e estourou o limite diário de linhas lidas do D1.
+// Confere, num SQLite de verdade com o índice da migração 0029, que as consultas da varredura usam o índice (sem SCAN da tabela).
+test('varredura das filas usa o índice de banco_aplicado_em (sem ler a tabela inteira)', async () => {
+  const { DatabaseSync } = await import('node:sqlite');
+  const fs = await import('node:fs');
+  const db = new DatabaseSync(':memory:');
+  db.exec(`CREATE TABLE consolidador_lotes (id INTEGER PRIMARY KEY, criado_em TEXT, linhas TEXT, estado TEXT, banco_aplicado_em TEXT, banco_mensagem TEXT);
+    CREATE TABLE alteracoes_base_copia (id INTEGER PRIMARY KEY, criado_em TEXT, acao TEXT, linha INTEGER, placa TEXT, data TEXT, celulas TEXT,
+      tanque TEXT, estado TEXT, banco_aplicado_em TEXT, banco_mensagem TEXT);`);
+  db.exec(fs.readFileSync(new URL('../../migrations/0029_indice_aplicado_no_banco.sql', import.meta.url), 'utf8'));
+  const plano = (sql) => db.prepare('EXPLAIN QUERY PLAN ' + sql).all().map((r) => r.detail).join(' | ');
+  const consultas = [
+    `SELECT 1 FROM consolidador_lotes WHERE ${RESERVADO} UNION ALL SELECT 1 FROM alteracoes_base_copia WHERE ${RESERVADO} LIMIT 1`,
+    `SELECT id, criado_em, acao, linha, placa, data, celulas, tanque FROM alteracoes_base_copia
+      WHERE banco_aplicado_em IS NULL AND estado <> 'erro' ORDER BY id LIMIT 20`,
+    `SELECT id, criado_em, linhas FROM consolidador_lotes WHERE banco_aplicado_em IS NULL AND estado <> 'erro' ORDER BY id LIMIT 20`,
+    `UPDATE alteracoes_base_copia SET banco_aplicado_em = NULL WHERE ${RESERVADO} AND banco_aplicado_em < 'aplicando:2026'`,
+  ];
+  for (const sql of consultas) {
+    const p = plano(sql);
+    assert.match(p, /USING (COVERING )?INDEX idx_/, p);
+    assert.doesNotMatch(p, /SCAN (consolidador_lotes|alteracoes_base_copia)(?! USING)/, p);
+  }
+  // a faixa pega exatamente as reservas
+  db.exec(`INSERT INTO alteracoes_base_copia (id, banco_aplicado_em) VALUES (1, 'aplicando:2026-11-24T10:00:00Z'), (2, '2026-11-24T10:00:00Z'), (3, NULL)`);
+  assert.deepEqual(db.prepare(`SELECT id FROM alteracoes_base_copia WHERE ${RESERVADO}`).all().map((r) => r.id), [1]);
 });

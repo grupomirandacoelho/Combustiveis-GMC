@@ -4,6 +4,23 @@ Toda alteração pedida e feita no portal Gestão de Combustível, da mais nova 
 Cada alteração nova entra no topo, com a data, o que foi pedido e o que mudou. O detalhe técnico de cada item continua
 no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
+## 24/11/2026
+
+- **Portal fora do ar em 23/11 das 17:50 às 21:00: limite diário do D1 estourado (corrigido).** A varredura das filas (pg_cron a cada
+  2 min, ligada em 23/11) lia a tabela `alteracoes_base_copia` inteira três vezes por rodada: 6,1 milhões de linhas lidas no dia, acima
+  do limite gratuito do D1 (5 milhões/dia; volta à meia-noite UTC). Em 19/11 já tinha passado (5,45 milhões). Novo índice
+  (migração `0029`) e as consultas de reserva ('aplicando:') como faixa em vez de LIKE: a varredura passa a ler só as linhas pendentes.
+  Teste confere num SQLite de verdade que as consultas usam o índice.
+- **Conciliação/Conferência na nuvem: rotina que falha tenta de novo em 10 min** (antes esperava o intervalo inteiro: a Conciliação
+  falhou à 1:15 e às 7:15 por tempo esgotado lendo o cache, as duas rotinas lendo ao mesmo tempo). Migração `20261124100000`.
+- **Vigia gravando na cópia em conflito do ownCloud (corrigido).** Hoje às 7:17 o ownCloud criou "Base_copia (conflicted copy …).xlsx"
+  e o vigia, que escolhia a planilha pela ordem alfabética, passou a gravar nela (o lote 102, D-1 de 23/11, ficou fora da Base_copia).
+  Agora o vigia e os scripts das planilhas (Base_copia, motoristas, cartões, histórico do consolidador) ignoram cópias em conflito.
+  Lote 102 regravado na Base_copia; a cópia em conflito foi para `%LOCALAPPDATA%\GestaoCombustivel\backup`. Banco x planilha:
+  1.365 = 1.365 em novembro.
+- Primeiro D-1 feito pela nuvem (lote 102, 41 abastecimentos de 23/11) conferido: entrou no banco às 6:00 sem o computador, sem
+  correção de km necessária.
+
 ## 23/11/2026
 
 - **Passo 4: cadastro de motoristas e placas nos cartões na nuvem (em simulação).** As regras saíram de `motoristas_cartoes.mjs` e
@@ -105,7 +122,7 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   Base_copia que ficou valendo não tinha o que foi gravado de 16/11 ~14h a 18/11 13h20; a virada (19/11 10:47) copiou essa planilha
   para o banco. Recuperado pela fila do D1 (que guarda cada pedido): lotes 85, 87, 88, 89, 90 e 91 (81 abastecimentos: todo o 17/11,
   o lançamento de 16/11 e o atrasado do TMZ0C74) e 27 correções perdidas, reaplicados na ordem no banco e na planilha. Cópias antes:
-  `backup.base_transacoes_20261119` e Base_copia em `%LOCALAPPDATA%GestaoCombustivelackup`. Depois: banco = planilha (63.042).
+  `backup.base_transacoes_20261119` e Base_copia em `%LOCALAPPDATA%\GestaoCombustivel\backup`. Depois: banco = planilha (63.042).
   A comparação diária passa a tratar texto só com espaços como vazio.
 
 - **Exportar do Editar abastecimentos com as cores dos cartões.** Pedido do usuário: o export "não veio com as formatações, como

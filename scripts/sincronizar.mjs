@@ -274,7 +274,7 @@ async function processarPostos() {
 function planilhaCadastros() {
   try {
     const pasta = path.join(PROJETO, 'CONTROLES');
-    const nome = fs.readdirSync(pasta).filter((n) => /\.xlsx$/i.test(n) && !n.startsWith('~$') && /motorista/i.test(n)).sort()[0];
+    const nome = fs.readdirSync(pasta).filter((n) => /\.xlsx$/i.test(n) && !n.startsWith('~$') && !/conflict/i.test(n) && /motorista/i.test(n)).sort()[0];
     return nome ? path.join(pasta, nome) : null;
   } catch { return null; }
 }
@@ -341,7 +341,7 @@ async function processarCadastros() {
 function planilhaCartoes() {
   try {
     const pasta = path.join(PROJETO, 'CONTROLES');
-    const nome = fs.readdirSync(pasta).filter((n) => /\.xlsx$/i.test(n) && !n.startsWith('~$') && /cart[oõ]es/i.test(n)).sort()[0];
+    const nome = fs.readdirSync(pasta).filter((n) => /\.xlsx$/i.test(n) && !n.startsWith('~$') && !/conflict/i.test(n) && /cart[oõ]es/i.test(n)).sort()[0];
     return nome ? path.join(pasta, nome) : null;
   } catch { return null; }
 }
@@ -434,7 +434,7 @@ async function sincronizarCartoesComCadastro(arqCartoes) {
 function planilhaBaseCopia() {
   try {
     const pasta = path.join(PROJETO, 'CONTROLES');
-    const nome = fs.readdirSync(pasta).filter((n) => /\.xlsx$/i.test(n) && !n.startsWith('~$') && /^base/i.test(n)).sort()[0];
+    const nome = fs.readdirSync(pasta).filter((n) => /\.xlsx$/i.test(n) && !n.startsWith('~$') && !/conflict/i.test(n) && /^base/i.test(n)).sort()[0];
     return nome ? path.join(pasta, nome) : null;
   } catch { return null; }
 }
