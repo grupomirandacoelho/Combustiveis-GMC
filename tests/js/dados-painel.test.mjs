@@ -116,3 +116,28 @@ test('extras do banco: negociações e coordenadas dos postos ("postos-fonte"), 
       locaisSuspeitos: [{ nome: 'C' }], orcamento: null });
   });
 });
+
+// 25/11/2026: o aviso "Atualizar: dados novos" (/api/dados/versao) usa a mesma versão do ETag do arquivo; com todas as partes no
+// banco, a carga do vigia (KV "versao") não entra (senão cada Base salva acendia o aviso sem nada novo nos painéis)
+test('versaoDoBanco: mesma do etag do arquivo; sem a versão do vigia quando todas as partes vêm do banco', async () => {
+  const { versaoDoBanco } = await import('../../lib/dados-painel.js');
+  const { versaoDoEtag } = await import('../../functions/api/dados/versao.js');
+  const kv = kvFalso({ versao: '{"versao":"VIGIA"}', 'abastecimentos-fonte': 'banco', 'bomba-fonte': 'banco', 'postos-fonte': 'banco',
+    'orcamento-fonte': 'banco', 'abastecimentos-extras': '{"negociacao":null,"fornecedoresBomba":null,"negPostos":null,"locais":{},"locaisSuspeitos":[],"orcamento":null}' });
+  const respostas = { gestao_dados_painel_versao: { versao: '7', geradoEm: '2026-11-25T17:42:00+00:00' }, gestao_dados_painel: '{"linhas":1}',
+    gestao_bomba_versao: '"aaaaaaaaaaaaaaaa"', gestao_postos_info: { versao: 'bbbbbbbbbbbbbbbb' }, gestao_orcamento_info: { versao: 'cccccccccccccccc' },
+    gestao_bomba_extras: { negociacao: 1, fornecedoresBomba: [] }, gestao_postos_extras: { negPostos: 2, locais: {}, locaisSuspeitos: [] },
+    gestao_orcamento_extras: { orcamento: 3 } };
+  await comBanco(respostas, async () => {
+    const v = await versaoDoBanco(ENV(kv));
+    assert.equal(v.etag, '"b7-aaaaaaaaaaaa-bbbbbbbbbbbb-cccccccccccc"');
+    assert.equal((await abastecimentosDoBanco(ENV(kv))).etag, v.etag);
+    assert.equal(versaoDoEtag(v.etag), 'b7-aaaaaaaaaaaa-bbbbbbbbbbbb-cccccccccccc');
+    assert.equal(versaoDoEtag('W/' + v.etag), versaoDoEtag(v.etag));   // a Cloudflare pode enfraquecer o ETag ao comprimir
+  });
+  // uma parte sem versão (banco lento): ela fica com a planilha e a versão do vigia volta a contar
+  delete respostas.gestao_orcamento_info;
+  await comBanco(respostas, async () => {
+    assert.equal((await versaoDoBanco(ENV(kv))).etag, '"b7-VIGIA-aaaaaaaaaaaa-bbbbbbbbbbbb"');
+  });
+});

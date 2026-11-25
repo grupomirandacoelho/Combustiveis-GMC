@@ -6,6 +6,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 25/11/2026
 
+- **Botão "Atualizar: dados novos" aceso sem motivo** (correção; pedido do usuário "Pode seguir"): desde que os painéis passaram a
+  ler do banco, a tela comparava a versão do banco com a da última carga do vigia; as duas nunca batiam e o botão ficava aceso o tempo
+  todo (clicar não apagava). Agora o aviso usa a mesma versão do arquivo que a tela carregou (abastecimentos + negociações,
+  coordenadas e orçamento do banco): só acende quando algo mudou de verdade, e salvar a Base no computador não acende mais.
 - **Rotina dos painéis mais leve** (pedido do usuário "Pode rodar"): o banco refazia a cada 2 minutos uma conta sobre os 63 mil
   abastecimentos só para saber se algo tinha mudado (até 55 s por vez nas horas de pico, 3 horas de banco por dia, 78 falhas em 24 h;
   é a causa provável das lentidões do banco). Agora o próprio banco anota quando os abastecimentos ou o cadastro de placas mudam e a

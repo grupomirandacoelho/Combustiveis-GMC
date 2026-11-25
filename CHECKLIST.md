@@ -193,8 +193,10 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 - [x] Busca de coordenadas no OpenStreetMap como rotina da nuvem (`geo-postos`), LIGADA em 25/11.
 
 ### 15.4 Desligar o vigia
-- [ ] Aviso "Atualizar: dados novos" (`/api/dados/versao`) ainda usa a versão que o vigia publica no KV ("versao"): passar a somar
+- [x] Aviso "Atualizar: dados novos" (`/api/dados/versao`) ainda usa a versão que o vigia publica no KV ("versao"): passar a somar
       as versões do banco (`gestao_dados_painel_versao`, `gestao_bomba_versao` e as próximas) antes de desligar o vigia (25/11/2026).
+      Feito 25/11: com os painéis no banco a versão é o ETag do arquivo (`versaoDoBanco` em lib/dados-painel.js); a do vigia só conta
+      enquanto alguma parte ainda vem das planilhas.
 - [x] pg_cron `gestao-dados-painel`: ~8 s a cada 2 min mesmo sem mudança e 3 a 6 falhas por dia passando de 2 min (statement timeout);
       gerar só quando algo mudou (visto em 25/11/2026). Feito 25/11: contador por gatilho (`painel_mudancas`), rotina
       `gestao_dados_painel_rodar()`; conferir em 26/11 o tempo e as falhas do dia em `cron.job_run_details`.

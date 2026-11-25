@@ -3,6 +3,7 @@ import { chaveLinha } from './tempo-real.js';
 
 let promessa = null;
 let versaoAtual = null;
+let etagBase = '';
 
 // placas desabilitadas no cadastro de Placas: saem das listas e escolhas (filtro Placa, bomba interna, Consulta de KM,
 // Editar abastecimentos); os totais continuam com os abastecimentos delas. Carregadas junto com os dados.
@@ -25,6 +26,9 @@ export function carregarDados() {
         if (r.status === 401 || r.redirected) { location.href = '/?entrar=1'; throw new Error('sessão'); }
         if (r.status === 503) throw new Error('Os dados ainda não foram enviados para o site. Rode a sincronização da Base.');
         if (!r.ok) throw new Error('Não foi possível carregar os dados (' + r.status + ').');
+        // versão = ETag (sem aspas), a mesma que o /api/dados/versao devolve: com os dados do banco ela junta a versão dos
+        // abastecimentos e a das partes (negociações, coordenadas, orçamento); com a planilha é a versão da carga do vigia
+        etagBase = String(r.headers.get('ETag') || '').replace(/^W\//, '').replace(/"/g, '');
         return r.json();
       });
     // transações das APIs dos cartões (Ticket Log e TruckPag) que ainda não estão na Base: entram na hora em todos os
@@ -34,7 +38,7 @@ export function carregarDados() {
     promessa = Promise.all([base, tempoReal, carregarDesabilitadas()])
       .then(([bruto, tr]) => {
         // mesma combinação do /api/dados/versao: a versão muda quando chega transação nova pela API
-        versaoAtual = (bruto.versao || bruto.geradoEm) + (tr && tr.versao ? '+' + tr.versao : '');
+        versaoAtual = (etagBase || bruto.versao || bruto.geradoEm) + (tr && tr.versao ? '+' + tr.versao : '');
         return decodificar(bruto, tr);
       })
       .catch((e) => { promessa = null; throw e; });
