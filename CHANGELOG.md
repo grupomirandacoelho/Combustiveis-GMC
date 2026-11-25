@@ -66,6 +66,9 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   unidades, meses e totais) e, confirmado, o banco troca o orçamento inteiro. A tela mostra quem enviou e quando. Os painéis já leem o
   orçamento do banco (chave KV `orcamento-fonte` = `banco`): igual ao da planilha (12 unidades, 2.364 linhas), com 21 células com
   1 centavo de diferença por arredondamento de meio centavo (valores com muitas casas na planilha).
+- **Correção: o primeiro envio do orçamento não gravou.** A API do Supabase recusa apagar uma tabela inteira sem condição (proteção
+  safeupdate), e a troca do orçamento começa apagando o anterior; o teste tinha sido feito pela conexão direta, onde a proteção não
+  roda. Nada foi gravado (o orçamento ficou como estava). Corrigido (migração `20261125211000`) e conferido pela própria API.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada
