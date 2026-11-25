@@ -42,6 +42,11 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   (Jequié, Salvador, SP), gravados no banco em menos de 1 s e nas mesmas linhas da planilha; banco = planilha (2.982 preços, 25
   fornecedores). A planilha não é mais recopiada; a repetição diária do preço do Arla roda no banco de hora em hora (pg_cron
   `bomba-repetir-arla`). A comparação diária com as planilhas passou a incluir a bomba.
+- **Negociações e localização dos postos (itens 4 e 5 do 15.3): lidas do banco.** A lista dos motoristas (`/postos.csv`: app dos
+  motoristas e roteirizador) sai do banco idêntica à do vigia (94 postos, byte a byte), e as negociações e coordenadas dos painéis
+  (Preço por posto, mapa de calor, roteirizador) também (2.237 negociações, 624 coordenadas, 6 suspeitas, todas iguais). Chave KV
+  `postos-fonte` = `banco`. O que ficava fora das planilhas foi para o banco: sedes dos municípios, coordenadas da lista antiga e as
+  digitadas no portal, e os limites das negociações (`scripts/postos_semente.py`).
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada

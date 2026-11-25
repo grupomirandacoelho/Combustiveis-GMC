@@ -40,3 +40,24 @@ test('cartões frota: chave própria ("cartoes-fonte"), lista do banco ou do KV 
   limparCacheCadastros();
   assert.equal((await lerCartoes(kv('banco'), { rpcFn: async () => ({ cartoes: [] }) })).fonte, 'planilha');
 });
+
+// 15.3 itens 4 e 5 (25/11/2026): lista dos postos dos motoristas do banco ("postos-fonte" = "banco") ou do KV
+test('lista dos postos: do banco (CSV e contagem) com a chave ligada; banco fora do ar ou lista vazia, do KV', async () => {
+  const { lerPostos, limparCachePostos } = await import('../../lib/postos-fonte.js');
+  const CSV = 'Unidade;Posto;Cidade;Status;Cartao;Latitude;Longitude;Aviso;Negociado;Tipo\nSalvador;POSTO A;SALVADOR - BA;OK;TICKET;-12.9;-38.5;;2026-11-25;POLO\n';
+  const kv = (fonte) => ({ DADOS: { get: async (k, t) => (k === 'postos-fonte' ? fonte : k === 'postos' ? 'Unidade;Posto;KV\nx\n'
+    : k === 'postos-info' && t === 'json' ? { atualizadoEm: 'kv', postos: 1 } : null) } });
+  const original = globalThis.fetch;
+  const resp = { gestao_postos_csv: JSON.stringify(CSV), gestao_postos_info: JSON.stringify({ versao: 'v', atualizadoEm: '2026-11-25T12:00:00Z' }) };
+  globalThis.fetch = async (url) => new Response(resp[String(url).split('/rpc/')[1]] ?? 'erro', { status: resp[String(url).split('/rpc/')[1]] ? 200 : 500 });
+  try {
+    const env = (f) => ({ ...kv(f), SUPABASE_URL: 'https://b', SUPABASE_KEY: 'k' });
+    limparCachePostos();
+    assert.equal((await lerPostos(env(null))).fonte, 'planilha');
+    const b = await lerPostos(env('banco'));
+    assert.equal(b.fonte, 'banco'); assert.equal(b.csv, CSV); assert.deepEqual(b.info, { atualizadoEm: '2026-11-25T12:00:00Z', postos: 1 });
+    limparCachePostos();
+    resp.gestao_postos_csv = JSON.stringify('Unidade;Posto;Cidade\n');   // só o cabeçalho: não serve
+    assert.equal((await lerPostos(env('banco'))).fonte, 'planilha');
+  } finally { globalThis.fetch = original; }
+});

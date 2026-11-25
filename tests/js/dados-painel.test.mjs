@@ -103,3 +103,16 @@ test('cadastro dos fornecedores da bomba: do banco com a chave ligada, senão do
     assert.deepEqual(l, [{ fornecedor: 'BANCO', produto: 'ARLA', unidade: 'BA', ativo: false, cnpj: '12345678000199' }]);
   });
 });
+
+test('extras do banco: negociações e coordenadas dos postos ("postos-fonte"), versão vinda como {versao}', async () => {
+  const kv = kvFalso({ versao: '{"versao":"V"}', 'abastecimentos-fonte': 'banco', 'postos-fonte': 'banco',
+    'abastecimentos-extras': '{"negPostos":{"velho":1},"locais":{"A":[1,2]},"locaisSuspeitos":[],"orcamento":null}' });
+  await comBanco({ gestao_dados_painel_versao: { versao: '7' }, gestao_dados_painel: '{"linhas":1}',
+    gestao_postos_info: { versao: '0123456789abcdef', atualizadoEm: 'x' },
+    gestao_postos_extras: { negPostos: { dic: {}, col: {}, limites: {} }, locais: { B: [3, 4] }, locaisSuspeitos: [{ nome: 'C' }] } }, async () => {
+    const a = await abastecimentosDoBanco(ENV(kv));
+    assert.equal(a.etag, '"b7-V-0123456789ab"');
+    assert.deepEqual(JSON.parse(a.corpo), { linhas: 1, negPostos: { dic: {}, col: {}, limites: {} }, locais: { B: [3, 4] },
+      locaisSuspeitos: [{ nome: 'C' }], orcamento: null });
+  });
+});

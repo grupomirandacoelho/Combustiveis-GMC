@@ -1,5 +1,6 @@
 import { usuarioDaSessao, json } from '../../../lib/auth.js';
 import { pode } from '../../../lib/permissoes.js';
+import { lerPostos } from '../../../lib/postos-fonte.js';
 
 // Opções oficiais: as mesmas listas de validação da planilha "Gestão de negociações de preço"
 export const UNIDADES = ['BELEM', 'CONQUISTA', 'GOIANIA', 'GOVERNADOR VALADARES', 'ILHEUS', 'JEQUIE', 'MARANHAO',
@@ -69,7 +70,8 @@ export async function onRequestGet({ request, env }) {
   const { results } = await env.DB.prepare(
     `SELECT id, criado_em, usuario_nome, acao, dados, estado, mensagem, aplicada_em, linha
        FROM alteracoes_postos ORDER BY id DESC LIMIT 60`).all();
-  const info = await env.DADOS.get('postos-info', 'json');
+  const lista = await lerPostos(env);   // planilha (KV) ou banco ("postos-fonte", 15.3)
+  const info = lista ? lista.info : null;
   return json({
     alteracoes: results.map((r) => ({ ...r, dados: JSON.parse(r.dados) })),
     opcoes: { unidades: UNIDADES, tipos: TIPOS, plataformas: PLATAFORMAS, status: STATUS },
