@@ -947,8 +947,10 @@ if (process.argv.includes('--vigiar')) {
       if (await plantao()) { try { await processarConsolidador(); } catch (e) { erro('no consolidador', e); } }
       if (await plantao()) { try { await processarEdicaoBase(); } catch (e) { erro('em editar abastecimentos', e); } }
       if (await plantao()) { try { await processarApisCartoes(); } catch (e) { erro('nas APIs dos cartões', e); } }
-      if (await plantao()) { try { processarANP(); } catch (e) { erro('nos preços da ANP', e); } }
-      if (await plantao()) { try { processarPetrobras(); } catch (e) { erro('nos preços da Petrobras', e); } }
+      // 15.3 (25/11/2026): com 'precos-anp' ligado, o GitHub Actions baixa e publica a ANP e a Petrobras; o vigia pula
+      const precosNaNuvem = await nuvemLigada('precos-anp');
+      if (!precosNaNuvem && await plantao()) { try { processarANP(); } catch (e) { erro('nos preços da ANP', e); } }
+      if (!precosNaNuvem && await plantao()) { try { processarPetrobras(); } catch (e) { erro('nos preços da Petrobras', e); } }
       if (await plantao()) { try { processarReajustes(); } catch (e) { erro('nos reajustes', e); } }
       if (await plantao()) { try { await processarBomba(); } catch (e) { erro('no preço da bomba interna', e); } }
       if (await plantao()) { try { await processarLocais(); } catch (e) { erro('nas coordenadas dos postos', e); } }

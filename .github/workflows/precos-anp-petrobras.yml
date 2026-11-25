@@ -1,0 +1,70 @@
+# Preços da ANP (gov.br) e da Petrobras (precos.petrobras.com.br) sem o computador do vigia (migração 15.3, 25/11/2026; decisão do
+# usuário: GitHub Actions, porque as funções do Supabase não dão conta das planilhas grandes da ANP nem do PDF da Petrobras).
+# Roda os mesmos scripts do vigia (scripts/anp_precos.py e scripts/petrobras_precos.py); a pasta .dados (estado e arquivos já
+# baixados) fica no cache do Actions entre as rodadas, então só é baixado o que mudou no servidor.
+# Publicar no portal só com a variável do repositório PRECOS_PUBLICAR = 1 (antes disso: simulação; o resultado fica como artefato
+# para comparar com o do vigia). Segredo SYNC_TOKEN e variável SITE_URL no repositório.
+name: Preços ANP e Petrobras
+
+on:
+  schedule:
+    - cron: '23 */3 * * *'     # a cada 3 horas (UTC)
+  workflow_dispatch:
+
+concurrency:
+  group: precos-anp-petrobras
+  cancel-in-progress: false
+
+jobs:
+  precos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Bibliotecas (as mesmas do vigia)
+        run: python -m pip install --quiet openpyxl==3.1.5 pypdf==6.19.0
+
+      - name: Estado e arquivos da rodada anterior
+        uses: actions/cache/restore@v4
+        with:
+          path: .dados
+          key: precos-${{ github.run_id }}
+          restore-keys: precos-
+
+      - name: ANP
+        run: python scripts/anp_precos.py atualizar | tee saida-anp.json
+
+      - name: Petrobras
+        run: python scripts/petrobras_precos.py atualizar | tee saida-petrobras.json
+
+      - name: Publicar no portal
+        if: vars.PRECOS_PUBLICAR == '1'
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: python scripts/publicar_precos.py saida-anp.json saida-petrobras.json
+
+      - name: Guardar o estado para a próxima rodada
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .dados
+          key: precos-${{ github.run_id }}
+
+      - name: Resultado (para comparar com o vigia na simulação)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: precos
+          path: |
+            saida-anp.json
+            saida-petrobras.json
+            .dados/anp/anp.json
+            .dados/petrobras/petrobras.json
+          retention-days: 5
+          if-no-files-found: ignore
