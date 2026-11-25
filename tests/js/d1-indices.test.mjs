@@ -29,6 +29,10 @@ const FREQUENTES = {
     "SELECT id, acao, chave, dados FROM alteracoes_cartoes WHERE banco_aplicado_em IS NULL AND estado <> 'erro' ORDER BY id LIMIT ?",
   'fila do preço bomba interna para o banco':
     "SELECT id, tipo, dados FROM alteracoes_bomba WHERE banco_aplicado_em IS NULL AND estado <> 'erro' ORDER BY id LIMIT ?",
+  'fila dos postos para o banco':
+    "SELECT id, usuario_nome, dados FROM alteracoes_postos WHERE banco_aplicado_em IS NULL AND estado <> 'erro' ORDER BY id LIMIT ?",
+  'fila das coordenadas para o banco':
+    "SELECT id, nome, cidade, uf, lat, lon FROM alteracoes_locais WHERE banco_aplicado_em IS NULL AND estado <> 'erro' ORDER BY id LIMIT ?",
   'placas editadas':
     "SELECT id, aplicada_em, acao, chave, dados FROM alteracoes_cadastros WHERE tipo = 'placas' AND acao IN ('editar', 'adicionar') AND estado = 'aplicada' AND aplicada_em > ? AND usuario_nome NOT LIKE 'APIs dos cartões%' ORDER BY aplicada_em, id LIMIT ?",
 };
@@ -38,7 +42,7 @@ test('migrações aplicam do zero num SQLite e as consultas frequentes dos cadas
   for (const [nome, sql] of Object.entries(FREQUENTES)) {
     const plano = db.prepare('EXPLAIN QUERY PLAN ' + sql).all().map((r) => r.detail).join(' | ');
     assert.match(plano, /USING (COVERING )?INDEX/, nome + ': ' + plano);
-    assert.doesNotMatch(plano, /SCAN alteracoes_(cadastros|cartoes|bomba)(?! USING)/, nome + ': ' + plano);
+    assert.doesNotMatch(plano, /SCAN alteracoes_(cadastros|cartoes|bomba|postos|locais)(?! USING)/, nome + ': ' + plano);
   }
 });
 

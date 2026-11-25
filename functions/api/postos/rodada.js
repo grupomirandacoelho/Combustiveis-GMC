@@ -1,6 +1,7 @@
 import { usuarioDaSessao, json } from '../../../lib/auth.js';
 import { validar, texto } from './alteracoes.js';
 import { pode } from '../../../lib/permissoes.js';
+import { aplicarCadastrosDepois } from '../../../lib/aplicar-cadastros.js';
 
 // Rodada de preços: a atualização semanal do valor negociado de cada posto pelo preço da última transação.
 // Cada posto vira uma alteração "editar" comum; o vigia grava todas juntas na planilha de negociações,
@@ -13,7 +14,7 @@ const FORA_DA_RODADA = new Set(['POSTO INT RAJA BELEM', 'POSTO INT RAJA JEQUIE',
   'CAANA', 'CALAN', 'CABET', 'CAAPE']);
 const chave = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   const origem = request.headers.get('Origin');
   if (origem && origem !== new URL(request.url).origin) return json({ erro: 'Origem não permitida.' }, 403);
   const u = await usuarioDaSessao(env.DB, request);
@@ -39,5 +40,6 @@ export async function onRequestPost({ request, env }) {
   }
   const sql = 'INSERT INTO alteracoes_postos (usuario_id, usuario_nome, acao, dados) VALUES (?, ?, ?, ?)';
   await env.DB.batch(linhas.map((d) => env.DB.prepare(sql).bind(u.id, u.nome, 'editar', JSON.stringify(d))));
+  aplicarCadastrosDepois({ env, waitUntil }, 'postos');   // aplica também direto no banco (15.3 item 4, 25/11/2026)
   return json({ ok: true, postos: linhas.length }, 201);
 }

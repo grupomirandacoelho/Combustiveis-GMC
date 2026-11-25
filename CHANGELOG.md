@@ -47,6 +47,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   (Preço por posto, mapa de calor, roteirizador) também (2.237 negociações, 624 coordenadas, 6 suspeitas, todas iguais). Chave KV
   `postos-fonte` = `banco`. O que ficava fora das planilhas foi para o banco: sedes dos municípios, coordenadas da lista antiga e as
   digitadas no portal, e os limites das negociações (`scripts/postos_semente.py`).
+- **Negociações e coordenadas: cada pedido do portal também gravado direto no banco** (tela Postos dos motoristas, rodada de preços,
+  coordenadas do mapa de calor), com as regras do vigia: negociação nova no fim, valor em branco repete o anterior, "Novo contato
+  feito? = Sim" nas anteriores, correção de cadastro leva as linhas antigas para o nome novo; coordenada troca a do posto ou cria a
+  linha. A planilha continua recebendo tudo pelo vigia.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada

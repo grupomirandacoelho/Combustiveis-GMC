@@ -1,5 +1,6 @@
 import { usuarioDaSessao, json } from '../../../lib/auth.js';
 import { pode } from '../../../lib/permissoes.js';
+import { aplicarCadastrosDepois } from '../../../lib/aplicar-cadastros.js';
 
 // Mapa de calor > Postos sem coordenadas: coordenadas cadastradas pelo site, gravadas pelo vigia na planilha
 // LOCALIZAÇÃO DOS POSTOS (scripts/planilha_locais.py).
@@ -18,7 +19,7 @@ export async function onRequestGet({ request, env }) {
   return json({ podeEditar: pode(u, 'mapa-calor-editar'), alteracoes: results });
 }
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   const origem = request.headers.get('Origin');
   if (origem && origem !== new URL(request.url).origin) return json({ erro: 'Origem não permitida.' }, 403);
   const u = await usuarioDaSessao(env.DB, request);
@@ -34,11 +35,13 @@ export async function onRequestPost({ request, env }) {
   // o mesmo posto ainda esperando gravação: troca a coordenada em vez de criar outra linha
   const pend = await env.DB.prepare(`SELECT id FROM alteracoes_locais WHERE nome = ? AND estado IN ('pendente', 'aguardando') LIMIT 1`).bind(nome).first();
   const r = pend
-    ? await env.DB.prepare(`UPDATE alteracoes_locais SET lat = ?, lon = ?, cidade = ?, uf = ?, usuario_id = ?, usuario_nome = ?, estado = 'pendente', mensagem = NULL
+    ? await env.DB.prepare(`UPDATE alteracoes_locais SET lat = ?, lon = ?, cidade = ?, uf = ?, usuario_id = ?, usuario_nome = ?, estado = 'pendente', mensagem = NULL,
+        banco_aplicado_em = NULL, banco_mensagem = NULL
         WHERE id = ? RETURNING id, criado_em, usuario_nome, nome, cidade, uf, lat, lon, estado, mensagem, aplicada_em, linha`)
       .bind(lat, lon, cidade || null, uf || null, u.id, u.nome, pend.id).first()
     : await env.DB.prepare(`INSERT INTO alteracoes_locais (usuario_id, usuario_nome, nome, cidade, uf, lat, lon) VALUES (?, ?, ?, ?, ?, ?, ?)
         RETURNING id, criado_em, usuario_nome, nome, cidade, uf, lat, lon, estado, mensagem, aplicada_em, linha`)
       .bind(u.id, u.nome, nome, cidade || null, uf || null, lat, lon).first();
+  aplicarCadastrosDepois({ env, waitUntil }, 'locais');   // aplica também direto no banco (15.3 item 5, 25/11/2026)
   return json({ ok: true, alteracao: r }, 201);
 }

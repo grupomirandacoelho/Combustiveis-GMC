@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { aplicarCadastrosPendentes, aplicarCartoesPendentes, aplicarBombaPendentes } from '../../lib/aplicar-cadastros.js';
+import { aplicarCadastrosPendentes, aplicarCartoesPendentes, aplicarBombaPendentes, aplicarPostosPendentes, aplicarLocaisPendentes } from '../../lib/aplicar-cadastros.js';
 
 const PASTA = new URL('../../migrations/', import.meta.url);
 function d1() {
@@ -125,4 +125,18 @@ test('preço bomba interna: fila própria (alteracoes_bomba) com gestao_aplicar_
   assert.deepEqual(r, { aplicados: 2, erros: 0, parou: false });
   assert.deepEqual(chamadas, [['gestao_aplicar_bomba', 'negociacao'], ['gestao_aplicar_bomba', 'fornecedor']]);
   assert.deepEqual(db.prepare('SELECT banco_mensagem FROM alteracoes_bomba ORDER BY id').all().map((x) => x.banco_mensagem), [null, 'linha 9', 'linha null']);
+});
+
+test('postos e coordenadas: filas próprias (gestao_aplicar_posto com o usuário; gestao_aplicar_local pelas colunas)', async () => {
+  const { db, DB } = d1();
+  db.prepare(`INSERT INTO alteracoes_postos (id, usuario_id, usuario_nome, acao, dados) VALUES (1, 1, 'Ana', 'editar', ?)`)
+    .run(JSON.stringify({ unidade: 'SALVADOR', posto: 'POSTO A', valor: 6.1 }));
+  db.prepare(`INSERT INTO alteracoes_locais (id, usuario_id, usuario_nome, nome, cidade, uf, lat, lon) VALUES (1, 1, 'Ana', 'POSTO A', 'JEQUIE', 'BA', -13.85, -40.08)`).run();
+  const chamadas = [];
+  const rpcFn = async (_e, f, a) => { chamadas.push([f, a]); return { ok: true, linha: 5 }; };
+  assert.equal((await aplicarPostosPendentes(env(DB), { rpcFn })).aplicados, 1);
+  assert.equal((await aplicarLocaisPendentes(env(DB), { rpcFn })).aplicados, 1);
+  assert.deepEqual(chamadas, [
+    ['gestao_aplicar_posto', { p_dados: { unidade: 'SALVADOR', posto: 'POSTO A', valor: 6.1 }, p_usuario: 'Ana' }],
+    ['gestao_aplicar_local', { p_nome: 'POSTO A', p_cidade: 'JEQUIE', p_uf: 'BA', p_lat: -13.85, p_lon: -40.08 }]]);
 });

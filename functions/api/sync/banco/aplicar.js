@@ -1,6 +1,6 @@
 import { tokenSyncValido, json } from '../../../../lib/auth.js';
 import { aplicarPendentes } from '../../../../lib/aplicar-banco.js';
-import { aplicarCadastrosPendentes, aplicarCartoesPendentes, aplicarBombaPendentes } from '../../../../lib/aplicar-cadastros.js';
+import { aplicarCadastrosPendentes, aplicarCartoesPendentes, aplicarBombaPendentes, aplicarPostosPendentes, aplicarLocaisPendentes } from '../../../../lib/aplicar-cadastros.js';
 
 // Migração 100% nuvem, 15.2 passo 3: varredura das filas — aplica no banco o que ficou pendente (banco fora do ar na hora da gravação,
 // pedidos gravados por rotas antigas). Chamada de tempos em tempos (vigia e, depois, agendador na nuvem), com o token de sincronização.
@@ -18,6 +18,9 @@ export async function onRequestPost({ request, env }) {
   const c = await aplicarCadastrosPendentes(env);
   const k = await aplicarCartoesPendentes(env);   // cartões frota (15.3 item 2)
   const bo = await aplicarBombaPendentes(env);   // preço bomba interna (15.3 item 3)
+  const po = await aplicarPostosPendentes(env);   // negociações dos postos (15.3 item 4)
+  const lo = await aplicarLocaisPendentes(env);   // coordenadas dos postos (15.3 item 5)
   return json({ ok: true, ...total, cadastros: { aplicados: c.aplicados, erros: c.erros }, cartoes: { aplicados: k.aplicados, erros: k.erros },
-    bomba: { aplicados: bo.aplicados, erros: bo.erros } });
+    bomba: { aplicados: bo.aplicados, erros: bo.erros }, postos: { aplicados: po.aplicados, erros: po.erros },
+    locais: { aplicados: lo.aplicados, erros: lo.erros } });
 }

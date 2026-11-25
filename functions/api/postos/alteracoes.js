@@ -1,6 +1,7 @@
 import { usuarioDaSessao, json } from '../../../lib/auth.js';
 import { pode } from '../../../lib/permissoes.js';
 import { lerPostos } from '../../../lib/postos-fonte.js';
+import { aplicarCadastrosDepois } from '../../../lib/aplicar-cadastros.js';
 
 // Opções oficiais: as mesmas listas de validação da planilha "Gestão de negociações de preço"
 export const UNIDADES = ['BELEM', 'CONQUISTA', 'GOIANIA', 'GOVERNADOR VALADARES', 'ILHEUS', 'JEQUIE', 'MARANHAO',
@@ -79,7 +80,7 @@ export async function onRequestGet({ request, env }) {
   });
 }
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   const origem = request.headers.get('Origin');
   if (origem && origem !== new URL(request.url).origin) return json({ erro: 'Origem não permitida.' }, 403);
   const u = await usuarioDaSessao(env.DB, request);
@@ -94,5 +95,6 @@ export async function onRequestPost({ request, env }) {
   const r = await env.DB.prepare(
     'INSERT INTO alteracoes_postos (usuario_id, usuario_nome, acao, dados) VALUES (?, ?, ?, ?) RETURNING id, criado_em, estado')
     .bind(u.id, u.nome, acao, JSON.stringify(dados)).first();
+  aplicarCadastrosDepois({ env, waitUntil }, 'postos');   // aplica também direto no banco (15.3 item 4, 25/11/2026)
   return json({ ok: true, alteracao: { ...r, acao, dados, usuario_nome: u.nome } }, 201);
 }
