@@ -5,7 +5,10 @@
 //            das linhas de diesel. Orçado: aba Base_Metas (COMBUSTIVEL CAMINHAO, ARLA, KM) da Banco_Orçamento_Despesas_Frota.
 //  Consumo - só diesel e "Abastecimento", veículos da aba Metas (menos a categoria VENDA). Centro de custo = INF. ADICIONAL 3
 //            da transação. Média = km ÷ litros; meta média ponderada pelos litros; economia = km ÷ meta − litros (por placa).
-import { carregarDados, fmt, esc, fmtMes, mesDoDia, fmtDia, inicioDoMes, diaParaData } from '../lib/dados.js';
+import { carregarDados, recarregarDados, fmt, esc, fmtMes, mesDoDia, fmtDia, inicioDoMes, diaParaData } from '../lib/dados.js';
+import { carregarSheetJS } from '../lib/sheetjs.js';
+import { confirmar } from '../lib/confirmar.js';
+import { lerOrcamento } from '../lib/orcamento.js';
 import { criarFiltros, statusHtml, agendador, ICONES } from '../lib/filtros.js';
 import { graficoPeriodo } from '../lib/graficos.js';
 import { pesosSemana, fracaoDoMes } from '../lib/esperado.js';
@@ -173,7 +176,7 @@ export async function montar(ctx) {
     '<div class="segmentado ro-visoes" role="group" aria-label="Visão do painel">' +
       '<button type="button" data-visao="custos">Custos (real × orçado)</button>' +
       '<button type="button" data-visao="consumo">Consumo (km/L)</button>' +
-    '</div><div id="ro-corpo"></div>';
+    '</div><div class="ro-orc" id="ro-orc"></div><div id="ro-corpo"></div>';
   const corpo = pagina.querySelector('#ro-corpo');
   let visao = null, atual = null;
   function abrir(v, inicial) {
@@ -184,6 +187,60 @@ export async function montar(ctx) {
     else if (v === 'consumo' && ![...q0.keys()].some((k) => k !== 'visao')) history.replaceState(null, '', ROTA + '?visao=consumo&periodo=ano');
     atual = v === 'custos' ? montarCustos() : montarConsumo();
   }
+  // orçamento: último envio e, para quem pode, o envio da planilha (15.3, 25/11/2026: o orçamento continua no Excel e vai ao banco
+  // por aqui; o portal lê a planilha no navegador e o banco troca o orçamento inteiro)
+  const caixaOrc = pagina.querySelector('#ro-orc');
+  function mostrarEnvio(info) {
+    const e = info && info.envio;
+    const quando = e && e.em ? new Date(e.em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
+    caixaOrc.innerHTML = '<span class="ro-orc-info">' + (e && e.usuario ? 'Orçamento enviado por ' + esc(e.usuario) + ' em ' + esc(quando) +
+      ' (' + esc(e.arquivo || '') + ')' : (M ? 'Orçamento: ' + esc(M.arquivo || '') : '')) + '</span>' +
+      (info && info.podeEnviar ? '<button type="button" class="btn" id="ro-orc-enviar">Enviar planilha do orçamento</button><input type="file" id="ro-orc-arquivo" accept=".xlsx,.xlsm,.xls" hidden>' : '');
+    const bt = caixaOrc.querySelector('#ro-orc-enviar'), arq = caixaOrc.querySelector('#ro-orc-arquivo');
+    if (!bt) return;
+    bt.addEventListener('click', () => arq.click());
+    arq.addEventListener('change', async () => {
+      const f = arq.files[0];
+      arq.value = '';
+      if (f) await enviarOrcamento(f, bt);
+    });
+  }
+  const mesAno = (m) => m.slice(5, 7) + '/' + m.slice(0, 4);   // 'AAAA-MM' -> 'MM/AAAA'
+  async function enviarOrcamento(f, bt) {
+    bt.disabled = true;
+    try {
+      const XLSX = await carregarSheetJS();
+      const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
+      const aba = (nome) => {
+        const n = wb.SheetNames.find((x) => x.trim().toUpperCase() === nome.toUpperCase());
+        return n ? XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: null }) : null;
+      };
+      const o = lerOrcamento({ baseMetas: aba('Base_Metas'), bdUnd: aba('BD_UND') });
+      if (o.erro) { ctx.aviso(o.erro); return; }
+      const r = o.resumo;
+      const nat = Object.entries(r.porNatureza).sort((a, b) => b[1] - a[1]).slice(0, 4)
+        .map(([n, v]) => n + ' ' + (n === 'KM' ? fmt.int(v) : brl(v))).join('; ');
+      const texto = 'Trocar o orçamento do portal pelo da planilha "' + f.name + '"? ' + r.linhas + ' linhas de ' + r.unidades + ' unidades, de ' +
+        mesAno(r.mesInicio) + ' a ' + mesAno(r.mesFim) + '. Totais: ' + nat + '.' +
+        (o.ignoradas.length ? ' ' + o.ignoradas.length + ' linha(s) incompleta(s) ficam de fora (ex.: linha ' + o.ignoradas.slice(0, 3).join(', ') + ').' : '');
+      if (!(await confirmar(texto, { titulo: 'Enviar orçamento', ok: 'Enviar' }))) return;
+      const resp = await fetch('/api/orcamento', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ arquivo: f.name, metas: o.metas, unidades: o.unidades }) });
+      const j = await resp.json().catch(() => ({}));
+      if (!resp.ok) { ctx.aviso(j.erro || 'Não foi possível enviar o orçamento (' + resp.status + ').'); return; }
+      ctx.aviso('Orçamento enviado: ' + j.metas + ' linhas e ' + j.unidades + ' unidades. Atualizando o painel…');
+      usarDados(await recarregarDados());
+      abrir(visao, false);
+      carregarEnvio();
+    } catch (e) {
+      ctx.aviso('Não foi possível ler a planilha: ' + (e && e.message ? e.message : e));
+    } finally { bt.disabled = false; }
+  }
+  function carregarEnvio() {
+    fetch('/api/orcamento', { credentials: 'same-origin' }).then((r) => (r.ok ? r.json() : null)).catch(() => null).then(mostrarEnvio);
+  }
+  carregarEnvio();
+
   pagina.querySelector('.ro-visoes').addEventListener('click', (e) => {
     const b = e.target.closest('[data-visao]');
     if (b && b.dataset.visao !== visao) abrir(b.dataset.visao, false);

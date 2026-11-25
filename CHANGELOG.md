@@ -60,6 +60,12 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   a planilha foi recopiada antes e, quando o banco voltou, a varredura aplicou de novo: 7 negociações ficaram em dobro no banco
   (linhas 2246–2252). Corrigido recopiando a aba da planilha (2.244 negociações, cada uma uma vez); as 7 que o banco gravou sozinho
   eram idênticas às da planilha. Depois da virada a planilha não é mais recopiada, então isso não se repete. Comparação: tudo igual.
+- **Orçamento (item 6 do 15.3): envio da planilha pela tela Real x Orçado.** O orçamento continua sendo preenchido no Excel
+  (Banco_Orçamento_Despesas_Frota); quem tem a permissão nova "Real x Orçado (enviar a planilha do orçamento)" vê o botão
+  "Enviar planilha do orçamento": o navegador lê as abas Base_Metas e BD_UND (mesmas regras do vigia), mostra um resumo (linhas,
+  unidades, meses e totais) e, confirmado, o banco troca o orçamento inteiro. A tela mostra quem enviou e quando. Os painéis já leem o
+  orçamento do banco (chave KV `orcamento-fonte` = `banco`): igual ao da planilha (12 unidades, 2.364 linhas), com 21 células com
+  1 centavo de diferença por arredondamento de meio centavo (valores com muitas casas na planilha).
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada
