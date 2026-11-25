@@ -73,6 +73,12 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   seguinte). O envio só acrescenta os anos que ainda não estão no portal; ano que já está fica como está, e planilha só com anos já
   enviados é recusada sem gravar nada. A confirmação mostra quais anos entram e quais já estão. Nada é apagado. **Virada do orçamento:**
   o banco é a origem (2025 e 2026 já estavam iguais à planilha; o próximo envio é o de 2027).
+- **Real x Orçado: janela "Orçamentos" no lugar do botão "Enviar planilha"** (pedido do usuário, para evitar erro na hora de incluir).
+  Botão pequeno "Orçamentos" à direita dos filtros (linha do Período): lista os anos que estão no portal com os totais de combustível,
+  Arla e KM, unidades e quem enviou/quando; para quem tem a permissão (agora "Real x Orçado (incluir, alterar e excluir orçamentos)"):
+  **Incluir ano** (escolhe a planilha; se ela tiver mais de um ano novo, pergunta qual), **Alterar** (troca só aquele ano pelo da
+  planilha escolhida, mostrando os totais de hoje e os novos) e **Excluir** (confirmação em vermelho). Só as linhas do ano escolhido
+  vão ao banco. Conferido no preview (respostas simuladas, nada gravado) e pela API do Supabase.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada

@@ -429,9 +429,13 @@ table.cc-tabela td.cc-dif{min-width:240px;}
 .btn-linha.acao-escondida{display:none;}
 .btn-mais{display:inline-grid;place-items:center;width:32px;padding:0;margin:0;}
 .btn-mais svg{width:16px;height:16px;fill:currentColor;}
-/* Real x Orçado: último envio do orçamento e botão de enviar a planilha (15.3, 25/11/2026) */
-.ro-orc{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:8px 0 4px;font-size:12px;color:var(--texto-2);}
-.ro-orc:empty{display:none;}
+/* Real x Orçado: botão Orçamentos à direita dos filtros (15.3, 25/11/2026) */
+.ro-orc-btn{margin-left:auto;margin-right:0;}
+.orc-tabela th,.orc-tabela td{padding:8px 12px;white-space:nowrap;vertical-align:middle;}
+.dialogo.dialogo-orc{width:min(900px,calc(100vw - 32px));max-width:none;}
+/* confirmação aberta por cima de outra janela: sem a barra de rolagem lateral de fração de pixel (25/11/2026) */
+.dialogo-confirmar{overflow-x:hidden;}
+.orc-tabela .acoes-linha{text-align:right;}
 .segmentado{display:inline-flex;flex-wrap:wrap;gap:4px;padding:3px;border:1px solid var(--borda-forte);border-radius:var(--r);}
 .segmentado button{border:0;border-radius:3px;background:transparent;padding:0 12px;min-height:30px;font-size:12px;font-weight:500;color:var(--texto-2);}
 .segmentado button:hover{color:var(--texto);background:var(--cartao-2);}

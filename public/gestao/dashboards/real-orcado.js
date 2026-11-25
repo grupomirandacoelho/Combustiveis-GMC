@@ -176,7 +176,7 @@ export async function montar(ctx) {
     '<div class="segmentado ro-visoes" role="group" aria-label="Visão do painel">' +
       '<button type="button" data-visao="custos">Custos (real × orçado)</button>' +
       '<button type="button" data-visao="consumo">Consumo (km/L)</button>' +
-    '</div><div class="ro-orc" id="ro-orc"></div><div id="ro-corpo"></div>';
+    '</div><div id="ro-corpo"></div>';
   const corpo = pagina.querySelector('#ro-corpo');
   let visao = null, atual = null;
   function abrir(v, inicial) {
@@ -187,70 +187,135 @@ export async function montar(ctx) {
     else if (v === 'consumo' && ![...q0.keys()].some((k) => k !== 'visao')) history.replaceState(null, '', ROTA + '?visao=consumo&periodo=ano');
     atual = v === 'custos' ? montarCustos() : montarConsumo();
   }
-  // orçamento: último envio e, para quem pode, o envio da planilha (15.3, 25/11/2026: o orçamento continua no Excel e vai ao banco
-  // por aqui; o portal lê a planilha no navegador e o banco troca o orçamento inteiro)
-  const caixaOrc = pagina.querySelector('#ro-orc');
-  let anosNoPortal = [];
-  function mostrarEnvio(info) {
-    anosNoPortal = info && Array.isArray(info.anos) ? info.anos.map(Number) : [];
-    const e = info && info.envio;
-    const quando = e && e.em ? new Date(e.em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
-    caixaOrc.innerHTML = '<span class="ro-orc-info">' + (e && e.usuario ? 'Orçamento enviado por ' + esc(e.usuario) + ' em ' + esc(quando) +
-      ' (' + esc(e.arquivo || '') + ')' : (M ? 'Orçamento: ' + esc(M.arquivo || '') : '')) + '</span>' +
-      (info && info.podeEnviar ? '<button type="button" class="btn" id="ro-orc-enviar">Enviar planilha do orçamento</button><input type="file" id="ro-orc-arquivo" accept=".xlsx,.xlsm,.xls" hidden>' : '');
-    const bt = caixaOrc.querySelector('#ro-orc-enviar'), arq = caixaOrc.querySelector('#ro-orc-arquivo');
-    if (!bt) return;
-    bt.addEventListener('click', () => arq.click());
-    arq.addEventListener('change', async () => {
-      const f = arq.files[0];
-      arq.value = '';
-      if (f) await enviarOrcamento(f, bt);
-    });
-  }
+  // ======================================================================== ORÇAMENTOS
+  // Janela "Orçamentos" (botão pequeno à direita dos filtros; pedido do usuário em 25/11/2026): os anos que estão no portal, e para
+  // quem pode editar: incluir um ano, alterar o orçamento de um ano (troca só aquele ano pelo da planilha escolhida) e excluir um ano.
+  // O orçamento continua no Excel (Banco_Orçamento_Despesas_Frota): o navegador lê as abas Base_Metas e BD_UND e manda só o ano.
   const mesAno = (m) => m.slice(5, 7) + '/' + m.slice(0, 4);   // 'AAAA-MM' -> 'MM/AAAA'
-  async function enviarOrcamento(f, bt) {
-    bt.disabled = true;
-    try {
-      const XLSX = await carregarSheetJS();
-      const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
-      const aba = (nome) => {
-        const n = wb.SheetNames.find((x) => x.trim().toUpperCase() === nome.toUpperCase());
-        return n ? XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: null }) : null;
-      };
-      const o = lerOrcamento({ baseMetas: aba('Base_Metas'), bdUnd: aba('BD_UND') });
-      if (o.erro) { ctx.aviso(o.erro); return; }
-      // um envio por ano (usuário, 25/11/2026): só entram os anos que ainda não estão no portal; os outros ficam como estão
-      const anosArquivo = [...new Set(o.metas.map((l) => Number(l.data.slice(0, 4))))].sort();
-      const novos = anosArquivo.filter((a) => !anosNoPortal.includes(a)), ja = anosArquivo.filter((a) => anosNoPortal.includes(a));
-      if (!novos.length) { ctx.aviso('O orçamento de ' + ja.join(', ') + ' já está no portal e não é substituído. Nada foi enviado.'); return; }
-      o.metas = o.metas.filter((l) => novos.includes(Number(l.data.slice(0, 4))));
-      const meses = o.metas.map((l) => l.data.slice(0, 7)).sort(), porNatureza = {};
-      for (const l of o.metas) porNatureza[l.natureza] = (porNatureza[l.natureza] || 0) + l.valor;
-      const r = { ...o.resumo, linhas: o.metas.length, unidades: new Set(o.metas.map((l) => l.unidade)).size, mesInicio: meses[0],
-        mesFim: meses[meses.length - 1], porNatureza };
-      const nat = Object.entries(r.porNatureza).sort((a, b) => b[1] - a[1]).slice(0, 4)
-        .map(([n, v]) => n + ' ' + (n === 'KM' ? fmt.int(v) : brl(v))).join('; ');
-      const texto = 'Acrescentar o orçamento de ' + novos.join(', ') + ' da planilha "' + f.name + '"? ' + r.linhas + ' linhas de ' + r.unidades + ' unidades, de ' +
-        mesAno(r.mesInicio) + ' a ' + mesAno(r.mesFim) + '. Totais: ' + nat + '.' +
-        (ja.length ? ' O orçamento de ' + ja.join(', ') + ' já está no portal e fica como está.' : '') +
-        (o.ignoradas.length ? ' ' + o.ignoradas.length + ' linha(s) incompleta(s) ficam de fora (ex.: linha ' + o.ignoradas.slice(0, 3).join(', ') + ').' : '');
-      if (!(await confirmar(texto, { titulo: 'Enviar orçamento', ok: 'Enviar' }))) return;
-      const resp = await fetch('/api/orcamento', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ arquivo: f.name, metas: o.metas, unidades: o.unidades }) });
-      const j = await resp.json().catch(() => ({}));
-      if (!resp.ok) { ctx.aviso(j.erro || 'Não foi possível enviar o orçamento (' + resp.status + ').'); return; }
-      ctx.aviso('Orçamento de ' + (j.anosNovos || novos).join(', ') + ' enviado: ' + j.metas + ' linhas' + (j.unidades ? ' e ' + j.unidades + ' unidade(s) nova(s)' : '') + '. Atualizando o painel…');
-      usarDados(await recarregarDados());
-      abrir(visao, false);
-      carregarEnvio();
-    } catch (e) {
-      ctx.aviso('Não foi possível ler a planilha: ' + (e && e.message ? e.message : e));
-    } finally { bt.disabled = false; }
+  async function lerPlanilha(f) {
+    const XLSX = await carregarSheetJS();
+    const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
+    const aba = (nome) => {
+      const n = wb.SheetNames.find((x) => x.trim().toUpperCase() === nome.toUpperCase());
+      return n ? XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: true, defval: null }) : null;
+    };
+    return lerOrcamento({ baseMetas: aba('Base_Metas'), bdUnd: aba('BD_UND') });
   }
-  function carregarEnvio() {
-    fetch('/api/orcamento', { credentials: 'same-origin' }).then((r) => (r.ok ? r.json() : null)).catch(() => null).then(mostrarEnvio);
+  const escolherArquivo = () => new Promise((ok) => {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = '.xlsx,.xlsm,.xls';
+    inp.addEventListener('change', () => ok(inp.files[0] || null));
+    inp.click();
+  });
+  async function abrirOrcamentos() {
+    const d = document.createElement('dialog');
+    d.className = 'dialogo dialogo-largo dialogo-orc';
+    d.setAttribute('aria-labelledby', 'orc-titulo');
+    d.innerHTML = '<h2 id="orc-titulo">Orçamentos</h2><p class="dialogo-explica">Orçamento de cada ano, vindo da planilha ' +
+      'Banco_Orçamento_Despesas_Frota (abas Base_Metas e BD_UND).</p><div id="orc-corpo"><div class="carregando"><div class="giro"></div>Carregando…</div></div>' +
+      '<div class="dialogo-acoes"><button type="button" class="btn" data-fechar>Fechar</button></div>';
+    document.body.appendChild(d);
+    let mudou = false;
+    // ao fechar, se algo mudou, o painel recarrega com o orçamento novo
+    d.addEventListener('close', async () => {
+      d.remove();
+      if (!mudou) return;
+      try { usarDados(await recarregarDados()); abrir(visao, false); } catch { /* o botão Atualizar resolve */ }
+    });
+    d.querySelector('[data-fechar]').addEventListener('click', () => d.close());
+    d.showModal();
+    const corpoOrc = d.querySelector('#orc-corpo');
+    async function listar() {
+      const r = await fetch('/api/orcamento', { credentials: 'same-origin' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { corpoOrc.innerHTML = '<div class="vazio">' + esc(j.erro || 'Não foi possível carregar os orçamentos.') + '</div>'; return; }
+      const anos = j.anos || [];
+      const ed = !!j.podeEditar;
+      corpoOrc.innerHTML = (anos.length ? '<div class="tabela-rolagem"><table class="dados orc-tabela"><thead><tr><th>Ano</th><th class="num">Combustível</th>' +
+        '<th class="num">Arla</th><th class="num">KM</th><th class="num">Unidades</th><th>Enviado</th>' + (ed ? '<th><span class="sr">Ações</span></th>' : '') +
+        '</tr></thead><tbody>' + anos.map((a) => '<tr><td><strong>' + a.ano + '</strong><br><small>' + a.meses + ' meses</small></td>' +
+          '<td class="num">' + brl(a.combustivel) + '</td><td class="num">' + brl(a.arla) + '</td><td class="num">' + fmt.int(a.km) + '</td>' +
+          '<td class="num">' + a.unidades + '</td><td title="' + esc(a.arquivo ? 'Planilha: ' + a.arquivo : '') + '"><small>' +
+          (a.usuario ? esc(a.usuario) + '<br>' : '') + (a.em ? esc(new Date(a.em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })) : '') +
+          '</small></td>' +
+          (ed ? '<td class="acoes-linha"><button type="button" class="btn-linha" data-alterar="' + a.ano + '">Alterar</button>' +
+            '<button type="button" class="btn-linha btn-linha-ruim" data-excluir="' + a.ano + '">Excluir</button></td>' : '') + '</tr>').join('') +
+        '</tbody></table></div>' : '<div class="vazio">Nenhum orçamento no portal ainda.</div>') +
+        (ed ? '<p><button type="button" class="btn btn-principal" data-incluir>Incluir ano</button></p>'
+          : '<p class="nota">Para incluir, alterar ou excluir um orçamento, peça a permissão "Real x Orçado (incluir, alterar e excluir orçamentos)".</p>');
+      corpoOrc.querySelectorAll('[data-alterar]').forEach((b) => b.addEventListener('click', () => enviarAno('alterar', Number(b.dataset.alterar), anos)));
+      corpoOrc.querySelectorAll('[data-excluir]').forEach((b) => b.addEventListener('click', () => excluirAno(Number(b.dataset.excluir))));
+      const inc = corpoOrc.querySelector('[data-incluir]');
+      if (inc) inc.addEventListener('click', () => enviarAno('incluir', null, anos));
+    }
+    async function pedir(corpo) {
+      const r = await fetch('/api/orcamento', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.erro || 'Não foi possível gravar (' + r.status + ').');
+      return j;
+    }
+    function escolherAno(livres) {
+      return new Promise((ok) => {
+        const q = document.createElement('dialog');
+        q.className = 'dialogo';
+        q.innerHTML = '<h2>Qual ano incluir?</h2><p class="dialogo-explica">A planilha tem mais de um ano que ainda não está no portal.</p>' +
+          '<div class="segmentado">' + livres.map((x) => '<button type="button" data-ano="' + x + '">' + x + '</button>').join('') + '</div>' +
+          '<div class="dialogo-acoes"><button type="button" class="btn" data-nao>Cancelar</button></div>';
+        let feito = false;
+        const fim = (v) => { if (feito) return; feito = true; if (q.open) q.close(); q.remove(); ok(v); };
+        q.querySelectorAll('[data-ano]').forEach((b) => b.addEventListener('click', () => fim(b.dataset.ano)));
+        q.querySelector('[data-nao]').addEventListener('click', () => fim(null));
+        q.addEventListener('close', () => fim(null));
+        d.appendChild(q);
+        q.showModal();
+      });
+    }
+    async function enviarAno(acao, ano, anos) {
+      const f = await escolherArquivo();
+      if (!f) return;
+      try {
+        const o = await lerPlanilha(f);
+        if (o.erro) { ctx.aviso(o.erro); return; }
+        const noArquivo = [...new Set(o.metas.map((l) => Number(l.data.slice(0, 4))))].sort((x, y) => x - y);
+        const noPortal = anos.map((a) => a.ano);
+        if (acao === 'incluir') {
+          const livres = noArquivo.filter((x) => !noPortal.includes(x));
+          if (!livres.length) { ctx.aviso('Todos os anos desta planilha (' + noArquivo.join(', ') + ') já estão no portal. Use "Alterar" no ano que quer trocar.'); return; }
+          ano = livres.length === 1 ? livres[0] : Number(await escolherAno(livres));
+          if (!ano) return;
+        } else if (!noArquivo.includes(ano)) { ctx.aviso('A planilha "' + f.name + '" não tem linhas de ' + ano + '.'); return; }
+        const linhas = o.metas.filter((l) => Number(l.data.slice(0, 4)) === ano);
+        const tot = {};
+        for (const l of linhas) tot[l.natureza] = (tot[l.natureza] || 0) + l.valor;
+        const meses = linhas.map((l) => l.data.slice(0, 7)).sort();
+        const atual = anos.find((a) => a.ano === ano);
+        const totais = ['COMBUSTIVEL CAMINHAO', 'ARLA', 'KM'].filter((n) => tot[n] !== undefined)
+          .map((n) => (n === 'COMBUSTIVEL CAMINHAO' ? 'Combustível ' : n === 'ARLA' ? 'Arla ' : 'KM ') + (n === 'KM' ? fmt.int(tot[n]) : brl(tot[n]))).join('; ');
+        const texto = (acao === 'incluir' ? 'Incluir o orçamento de ' + ano : 'Trocar o orçamento de ' + ano + ' pelo') + ' da planilha "' + f.name + '"? ' +
+          linhas.length + ' linhas de ' + new Set(linhas.map((l) => l.unidade)).size + ' unidades, de ' + mesAno(meses[0]) + ' a ' + mesAno(meses[meses.length - 1]) +
+          '. ' + totais + '.' + (atual ? ' Hoje no portal: combustível ' + brl(atual.combustivel) + ', Arla ' + brl(atual.arla) + ', KM ' + fmt.int(atual.km) + '.' : '') +
+          (o.ignoradas.length ? ' ' + o.ignoradas.length + ' linha(s) incompleta(s) da planilha ficam de fora.' : '');
+        if (!(await confirmar(texto, { titulo: acao === 'incluir' ? 'Incluir orçamento' : 'Alterar orçamento', ok: acao === 'incluir' ? 'Incluir' : 'Alterar' }))) return;
+        const j = await pedir({ acao, ano, arquivo: f.name, metas: linhas, unidades: o.unidades });
+        ctx.aviso('Orçamento de ' + ano + (acao === 'incluir' ? ' incluído' : ' alterado') + ': ' + j.metas + ' linhas' +
+          (j.unidades ? ' e ' + j.unidades + ' unidade(s) nova(s)' : '') + '.');
+        mudou = true;
+        await listar();
+      } catch (e) { ctx.aviso(e && e.message ? e.message : String(e)); }
+    }
+    async function excluirAno(ano) {
+      if (!(await confirmar('Excluir o orçamento de ' + ano + '? O Real x Orçado fica sem orçado nesse ano até ele ser incluído de novo.'))) return;
+      try {
+        await pedir({ acao: 'excluir', ano });
+        ctx.aviso('Orçamento de ' + ano + ' excluído.');
+        mudou = true;
+        await listar();
+      } catch (e) { ctx.aviso(e && e.message ? e.message : String(e)); }
+    }
+    await listar();
   }
-  carregarEnvio();
+  const botaoOrcamentos = '<button type="button" class="btn-linha ro-orc-btn" data-orcamentos>Orçamentos</button>';
+  pagina.addEventListener('click', (e) => { if (e.target.closest('[data-orcamentos]')) abrirOrcamentos(); });
 
   pagina.querySelector('.ro-visoes').addEventListener('click', (e) => {
     const b = e.target.closest('[data-visao]');
@@ -261,7 +326,7 @@ export async function montar(ctx) {
   function montarCustos() {
     if (!M) {
       corpo.innerHTML = '<div class="vazio"><strong>O orçamento ainda não chegou ao site.</strong> Ele vem da planilha Banco_Orçamento_Despesas_Frota ' +
-        '(pasta Dashboars Logística) junto com a próxima carga da Base. Use o botão Atualizar quando a Base for enviada.</div>';
+        '(pasta Dashboars Logística). Use o botão Orçamentos para incluir o orçamento do ano.</div><p>' + botaoOrcamentos + '</p>';
       return { desmontar() {}, redesenhar() {} };
     }
     const anoAtual = ano(M.mesParcial);
@@ -284,6 +349,7 @@ export async function montar(ctx) {
           ${JANELAS.map(([k, r]) => '<button type="button" data-janela="' + k + '">' + esc(r) + '</button>').join('')}
         </div>
         <label class="ro-comparar"><input type="checkbox" id="ro-comparar"> Comparar com ${anoAtual - 1}</label>
+        ${botaoOrcamentos}
       </div>
       </div>
       <div class="chips" id="ro-chips" aria-live="polite"></div>

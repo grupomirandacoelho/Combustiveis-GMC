@@ -39,13 +39,16 @@ test('planilha errada: aba ou coluna faltando', () => {
   assert.match(lerOrcamento({ baseMetas: [['Unidade', 'Natureza', 'Data', 'Valor']], bdUnd: [['UNIDADE']] }).erro, /INF ADICIONAL/);
 });
 
-test('servidor confere de novo o que chega', () => {
-  const ok = validarOrcamento({ arquivo: ' orc.xlsx ', metas: [{ unidade: 'A', natureza: 'ARLA', data: '2026-01-01', valor: 1 }],
+test('servidor confere de novo o que chega: ação, ano e só as linhas do ano', () => {
+  const m = (data, valor = 1) => ({ unidade: 'A', natureza: 'ARLA', data, valor });
+  const ok = validarOrcamento({ acao: 'incluir', ano: 2027, arquivo: ' orc.xlsx ', metas: [m('2026-12-01'), m('2027-01-01', 2)],
     unidades: [{ unidade: 'A', inf_adicional: 'RAJA A' }, { unidade: '' }] });
-  assert.deepEqual(ok, { arquivo: 'orc.xlsx', metas: [{ unidade: 'A', natureza: 'ARLA', data: '2026-01-01', valor: 1 }],
+  assert.deepEqual(ok, { acao: 'incluir', ano: 2027, arquivo: 'orc.xlsx', metas: [m('2027-01-01', 2)],
     unidades: [{ unidade: 'A', inf_adicional: 'RAJA A', centro_de_custo: null }] });
-  assert.match(validarOrcamento({ metas: [], unidades: [{ unidade: 'A' }] }).erro, /Base_Metas/);
-  assert.match(validarOrcamento({ metas: [{ unidade: 'A', natureza: 'X', data: '2026-02-30', valor: 1 }], unidades: [{ unidade: 'A' }] }).erro, /Linha 2/);
-  assert.match(validarOrcamento({ metas: [{ unidade: 'A', natureza: 'X', data: '2026-02-01', valor: 'abc' }], unidades: [{ unidade: 'A' }] }).erro, /Linha 2/);
+  assert.deepEqual(validarOrcamento({ acao: 'excluir', ano: 2025 }), { acao: 'excluir', ano: 2025, arquivo: null, metas: null, unidades: null });
+  assert.match(validarOrcamento({ acao: 'apagar-tudo', ano: 2025 }).erro, /Ação/);
+  assert.match(validarOrcamento({ acao: 'excluir', ano: 'x' }).erro, /Ano/);
+  assert.match(validarOrcamento({ acao: 'alterar', ano: 2026, metas: [m('2027-01-01')] }).erro, /linhas de 2026/);
+  assert.match(validarOrcamento({ acao: 'incluir', ano: 2026, metas: [m('2026-02-30')] }).erro, /Linha 2/);
+  assert.match(validarOrcamento({ acao: 'incluir', ano: 2026, metas: [m('2026-02-01', 'abc')] }).erro, /Linha 2/);
 });
-
