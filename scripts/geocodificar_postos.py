@@ -228,7 +228,9 @@ def rodar(so_listar=False):
         for s in seguros:
             i = por_id.get(s['id'], {})
             if i.get('estado') == 'aplicada':
-                gravados.append({'nome': s['nome'], 'linha': i.get('linha'), 'mapa': s['_mapa']})
+                # cidade, UF e coordenada: o vigia manda também ao banco (/api/sync/locais/banco; 15.3, 25/11/2026)
+                gravados.append({'nome': s['nome'], 'linha': i.get('linha'), 'mapa': s['_mapa'], 'cidade': s['cidade'], 'uf': s['uf'],
+                                 'lat': s['lat'], 'lon': s['lon']})
                 estado[chave(s['nome'])]['resultado'] = 'gravado'
             else:   # planilha aberta ou erro: tenta de novo na próxima rodada
                 estado.pop(chave(s['nome']), None)

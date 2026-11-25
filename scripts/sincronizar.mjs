@@ -709,7 +709,7 @@ async function processarLocais() {
 // busca automática de coordenadas pelo OpenStreetMap (scripts/geocodificar_postos.py): 15 postos a cada 15 min enquanto
 // houver fila (depois, de hora em hora, para os postos novos); só grava na LOCALIZAÇÃO quando o nome bate com segurança
 let proximaGeo = 0;
-function processarGeocodificacao(forcar = false) {
+async function processarGeocodificacao(forcar = false) {
   if (!forcar && Date.now() < proximaGeo) return;
   proximaGeo = Date.now() + INTERVALO_ANP;
   const r = JSON.parse(rodar('py', ['scripts/geocodificar_postos.py', 'rodar']).trim().split(/\r?\n/).pop());
@@ -717,6 +717,11 @@ function processarGeocodificacao(forcar = false) {
   if (r.naFila > 0 && !r.aviso) proximaGeo = Date.now() + 15 * 60 * 1000;
   if (r.gravados && r.gravados.length) {
     log(`Coordenadas encontradas no OpenStreetMap e gravadas na LOCALIZAÇÃO: ${r.gravados.map((g) => g.nome + ' (linha ' + g.linha + ', "' + g.mapa + '")').join('; ')}.`);
+    // 15.3 (25/11/2026): também no banco (depois da virada a planilha não é mais recopiada)
+    try {
+      const b = await api('POST', '/api/sync/locais/banco', { itens: r.gravados.map(({ nome, cidade, uf, lat, lon }) => ({ nome, cidade, uf, lat, lon })) });
+      if (b && b.erros) log(`Coordenadas do OpenStreetMap no banco: ${b.gravados} gravada(s), ${b.erros} com erro.`);
+    } catch (e) { log('Coordenadas do OpenStreetMap: não foi possível gravar no banco (' + String(e.message || e).slice(0, 160) + ').'); }
   }
 }
 
@@ -914,7 +919,7 @@ function compararCadastros() {
     let r = null;
     try { r = JSON.parse(out.trim().split(/\r?\n/).pop()); } catch {}
     if (!r) { log('Comparação dos cadastros banco x planilha: falhou (' + out.trim().slice(-200) + ')'); return; }
-    log(r.igual ? `Comparação dos cadastros banco x planilha: iguais (${r.placas} placas, ${r.motoristas} motoristas, ${r.cartoes} cartões, ${r.precosBomba} preços da bomba).`
+    log(r.igual ? `Comparação dos cadastros banco x planilha: iguais (${r.placas} placas, ${r.motoristas} motoristas, ${r.cartoes} cartões, ${r.precosBomba} preços da bomba, ${r.postos} postos, ${r.negociacoes} negociações, ${r.localizacao} coordenadas).`
       : `Comparação dos cadastros banco x planilha: ATENÇÃO, ${r.diferencas} diferença(s) (${r.relatorio}).`);
   });
   p.on('error', () => clearTimeout(fim));
@@ -947,7 +952,7 @@ if (process.argv.includes('--vigiar')) {
       if (await plantao()) { try { processarReajustes(); } catch (e) { erro('nos reajustes', e); } }
       if (await plantao()) { try { await processarBomba(); } catch (e) { erro('no preço da bomba interna', e); } }
       if (await plantao()) { try { await processarLocais(); } catch (e) { erro('nas coordenadas dos postos', e); } }
-      if (await plantao()) { try { processarGeocodificacao(); } catch (e) { erro('na busca de coordenadas (OpenStreetMap)', e); } }
+      if (await plantao()) { try { await processarGeocodificacao(); } catch (e) { erro('na busca de coordenadas (OpenStreetMap)', e); } }
       if (await plantao()) { try { verificar(false); } catch (e) { erro('na vigia', e); } }
       if (await plantao()) { try { processarSupabase(); } catch (e) { erro('no Supabase', e); } }
     }
@@ -959,7 +964,7 @@ if (process.argv.includes('--vigiar')) {
 } else if (process.argv.includes('--bomba')) {
   processarBomba().catch((e) => { log('ERRO no preço da bomba interna: ' + e.message); process.exitCode = 1; });
 } else if (process.argv.includes('--geocodificar')) {
-  try { processarGeocodificacao(true); } catch (e) { log('ERRO na busca de coordenadas: ' + e.message); process.exitCode = 1; }
+  processarGeocodificacao(true).catch((e) => { log('ERRO na busca de coordenadas: ' + e.message); process.exitCode = 1; });
 } else if (process.argv.includes('--locais')) {
   processarLocais().catch((e) => { log('ERRO nas coordenadas dos postos: ' + e.message); process.exitCode = 1; });
 } else if (process.argv.includes('--petrobras')) {

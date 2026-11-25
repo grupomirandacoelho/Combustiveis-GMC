@@ -140,3 +140,19 @@ test('postos e coordenadas: filas próprias (gestao_aplicar_posto com o usuário
     ['gestao_aplicar_posto', { p_dados: { unidade: 'SALVADOR', posto: 'POSTO A', valor: 6.1 }, p_usuario: 'Ana' }],
     ['gestao_aplicar_local', { p_nome: 'POSTO A', p_cidade: 'JEQUIE', p_uf: 'BA', p_lat: -13.85, p_lon: -40.08 }]]);
 });
+
+test('coordenadas do OpenStreetMap (vigia) vão direto ao banco: token, validação e gestao_aplicar_local', async () => {
+  const { onRequestPost } = await import('../../functions/api/sync/locais/banco.js');
+  const original = globalThis.fetch, chamadas = [];
+  globalThis.fetch = async (url, op) => { chamadas.push([String(url).split('/rpc/')[1], JSON.parse(op.body)]); return new Response('{"ok":true,"linha":9}'); };
+  try {
+    const env = { SYNC_TOKEN: 'segredo', SUPABASE_URL: 'https://b', SUPABASE_KEY: 'k' };
+    const pedir = (token, itens) => onRequestPost({ env, request: new Request('https://x/api/sync/locais/banco', { method: 'POST',
+      headers: { Authorization: 'Bearer ' + token }, body: JSON.stringify({ itens }) }) });
+    assert.equal((await pedir('errado', [])).status, 401);
+    const r = await (await pedir('segredo', [{ nome: 'POSTO A', cidade: 'JEQUIE', uf: 'BA', lat: -13.85, lon: -40.08 },
+      { nome: 'POSTO FORA', lat: 40, lon: -8 }])).json();
+    assert.deepEqual(r, { ok: true, gravados: 1, erros: 1 });
+    assert.deepEqual(chamadas, [['gestao_aplicar_local', { p_nome: 'POSTO A', p_cidade: 'JEQUIE', p_uf: 'BA', p_lat: -13.85, p_lon: -40.08 }]]);
+  } finally { globalThis.fetch = original; }
+});
