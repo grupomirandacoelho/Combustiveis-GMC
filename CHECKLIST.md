@@ -171,6 +171,7 @@ Ordem (cada passo conferido antes do próximo; o vigia continua ligado até o fi
 
 - [x] 24/11: varredura das filas com índice no D1 (o LIKE lia a tabela inteira e estourou o limite diário em 23/11); rotina da nuvem
       que falha repete em 10 min; vigia ignora cópias em conflito do ownCloud.
+- [x] 25/11: índices nas consultas dos cadastros (a limpeza dos dados pessoais estourou o limite do D1 em 24/11, 16:16–21:00).
 - [ ] Antes de 15.4: conferir o consumo diário do D1 (rows read) depois do índice; `bomba-rateio/estado` ainda lê alteracoes_base_copia
       inteira a cada 5 min (~0,7 M/dia).
 

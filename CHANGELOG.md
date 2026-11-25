@@ -4,6 +4,16 @@ Toda alteração pedida e feita no portal Gestão de Combustível, da mais nova 
 Cada alteração nova entra no topo, com a data, o que foi pedido e o que mudou. O detalhe técnico de cada item continua
 no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
+## 25/11/2026
+
+- **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
+  das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
+  dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada
+  (1,57 milhão de linhas no dia), além das consultas dos cadastros nos cartões (vigia e nuvem a cada 5 min). Migração D1 `0030`:
+  índices parciais (só as linhas com dados pessoais) e por tipo/estado/data de aplicação. Novo teste `tests/js/d1-indices.test.mjs`
+  aplica todas as migrações num SQLite e confere que essas consultas usam índice. A repetição em 10 min da nuvem funcionou: a
+  Conferência voltou sozinha às 18:51.
+
 ## 24/11/2026
 
 - **Portal fora do ar em 23/11 das 17:50 às 21:00: limite diário do D1 estourado (corrigido).** A varredura das filas (pg_cron a cada
