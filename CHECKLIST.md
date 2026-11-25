@@ -187,7 +187,9 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 - [ ] Cartões frota, postos dos motoristas e negociações, preço bomba interna, coordenadas dos postos.
 - [x] Real x Orçado: orçamento por upload da planilha na tela, um ano por vez sem substituir (decisões do usuário 25/11); banco é a
       origem desde 25/11 (o próximo envio é o de 2027).
-- [ ] ANP e Petrobras baixados por tarefa agendada na nuvem; conferir se a pasta Reajustes SGB ainda é usada.
+- [ ] ANP e Petrobras baixados por rotina no Supabase (Edge Functions; decisão do usuário 25/11), comparados com o vigia antes de ligar.
+- [ ] Reajustes SGB: botão "Reajustes" no Contratos x ANP para enviar a planilha nova de cada reajuste, com histórico (decisão 25/11).
+- [ ] Busca de coordenadas no OpenStreetMap como rotina da nuvem (hoje o vigia busca e manda ao banco).
 
 ### 15.4 Desligar o vigia
 - [ ] Aviso "Atualizar: dados novos" (`/api/dados/versao`) ainda usa a versão que o vigia publica no KV ("versao"): passar a somar
