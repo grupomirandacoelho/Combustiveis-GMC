@@ -51,6 +51,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   coordenadas do mapa de calor), com as regras do vigia: negociação nova no fim, valor em branco repete o anterior, "Novo contato
   feito? = Sim" nas anteriores, correção de cadastro leva as linhas antigas para o nome novo; coordenada troca a do posto ou cria a
   linha. A planilha continua recebendo tudo pelo vigia.
+- As coordenadas que a busca no OpenStreetMap do vigia grava sozinha na planilha também vão ao banco (`/api/sync/locais/banco`).
+- A comparação diária com as planilhas passou a incluir a lista dos motoristas, as negociações e as coordenadas; ela achou 3 postos
+  com travessão ("–") no nome com a chave diferente no banco, corrigido (`gestao_chave_txt` agora tira todo caractere não ASCII,
+  como o vigia). Tudo igual depois.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada
