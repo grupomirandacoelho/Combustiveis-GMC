@@ -55,3 +55,22 @@ test('a limpeza continua apagando só os dados pessoais com mais de 7 dias', () 
   db.exec(FREQUENTES['limpeza dos dados pessoais (cadastros/pendentes, a cada 10 s)']);
   assert.deepEqual(db.prepare('SELECT id, pessoais FROM alteracoes_cadastros ORDER BY id').all().map((r) => [r.id, r.pessoais]), [[1, null], [2, 'p']]);
 });
+
+// /api/sync/bomba-rateio/estado (vigia, a cada 5 min): a lista dos travados lia a fila inteira (~0,7 M linhas/dia; 25/11/2026).
+// A consulta é lida do próprio arquivo, para o teste acompanhar qualquer mudança nela.
+test('rateio da bomba: travados pelo índice parcial (só as linhas travadas) e com o mesmo resultado', () => {
+  const fonte = fs.readFileSync(new URL('../../functions/api/sync/bomba-rateio/estado.js', import.meta.url), 'utf8');
+  const sql = fonte.match(/`(SELECT DISTINCT placa, data, tanque FROM alteracoes_base_copia[\s\S]*?)`/)[1];
+  const db = banco();
+  const plano = db.prepare('EXPLAIN QUERY PLAN ' + sql).all().map((r) => r.detail).join(' | ');
+  assert.match(plano, /USING (COVERING )?INDEX idx_alteracoes_rateio_travados/, plano);
+  db.exec('PRAGMA foreign_keys = OFF');
+  const ins = db.prepare(`INSERT INTO alteracoes_base_copia (usuario_id, usuario_nome, linha, placa, data, acao, celulas, antes, estado, tanque)
+    VALUES (1, ?, 1, ?, '2026-11-20', 'editar', ?, '{}', ?, 'diesel')`);
+  ins.run('Fulano', 'AAA', '{"P":5.1}', 'aplicada');                          // corrigido à mão: travado
+  ins.run('Rateio das NFs (nota fechada)', 'BBB', '{"T":10}', 'pendente');    // nota fechada: travado
+  ins.run('Rateio das NFs (prévia)', 'CCC', '{"P":5}', 'aplicada');           // prévia do rateio: não trava
+  ins.run('Fulano', 'DDD', '{"AD":"X"}', 'aplicada');                         // só centro de custo: não trava
+  ins.run('Fulano', 'EEE', '{"P":5}', 'erro');                                // com erro: não trava
+  assert.deepEqual(db.prepare(sql).all().map((r) => r.placa).sort(), ['AAA', 'BBB']);
+});

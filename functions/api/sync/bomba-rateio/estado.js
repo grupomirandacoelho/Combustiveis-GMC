@@ -12,7 +12,8 @@ export async function onRequestGet({ request, env }) {
     env.DB.prepare('SELECT base_id, tanque, quando, placa, ja_rateado FROM bomba_rateio_inicio').all(),
     env.DB.prepare('SELECT chave, cc FROM bomba_rateio_cc').all(),
     env.DB.prepare("SELECT DISTINCT linha FROM alteracoes_base_copia WHERE estado IN ('pendente', 'aguardando')").all(),
-    env.DB.prepare(`SELECT DISTINCT placa, data, tanque FROM alteracoes_base_copia
+    // índice parcial com a mesma condição (migrations/0035): lê só as linhas travadas, não a fila inteira (25/11/2026)
+    env.DB.prepare(`SELECT DISTINCT placa, data, tanque FROM alteracoes_base_copia INDEXED BY idx_alteracoes_rateio_travados
       WHERE estado IN ('pendente', 'aguardando', 'aplicada') AND (celulas LIKE '%"P"%' OR celulas LIKE '%"T"%')
         AND (usuario_nome = 'Rateio das NFs (nota fechada)' OR usuario_nome NOT LIKE 'Rateio das NFs%')`).all(),
   ]);

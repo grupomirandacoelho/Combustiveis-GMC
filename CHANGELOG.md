@@ -6,6 +6,9 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 25/11/2026
 
+- **Menos leitura no D1 (rateio das bombas)**: a consulta que o computador da sincronização faz a cada 5 minutos para saber quais
+  abastecimentos de bomba já foram corrigidos à mão lia a fila inteira de correções (2.513 linhas por vez, ~0,7 milhão por dia do
+  limite gratuito de 5 milhões). Com um índice só dessas linhas, passou a ler 1 linha por vez. O resultado é o mesmo.
 - **Abas Metas x mês, Bomba interna e Transações Negadas da Base.xlsx** (decisão do usuário: "Parar de copiar"): nenhuma tela do
   portal usa as cópias delas no banco e o Power BI continua lendo a planilha. A cópia acaba junto com o vigia (depois de 01/12); o
   que já está no banco fica guardado.
