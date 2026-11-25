@@ -1,6 +1,7 @@
 import { usuarioDaSessao, json } from '../../../lib/auth.js';
 import { pode } from '../../../lib/permissoes.js';
 import { chaveNome } from '../../../lib/motoristas.js';
+import { lerCadastros } from '../../../lib/cadastros-fonte.js';
 
 // Operacional > Programa PRIME. A conta (ranking, prêmios) é feita na tela com o arquivo de abastecimentos; aqui ficam as decisões
 // do mês: abastecimentos que não entram (motivo, aviso ao motorista, troca de motorista), a exportação da telemetria, as notas
@@ -35,7 +36,7 @@ export async function onRequestGet({ request, env }) {
     env.DB.prepare('SELECT chave, mes, entra, motivo, aviso, motorista_para, motorista, usuario_nome, criado_em FROM prime_abastecimentos WHERE mes IN (?, ?)').bind(mes, ant).all(),
     env.DB.prepare('SELECT arquivo, periodo, linhas, usuario_nome, enviado_em FROM prime_telemetria WHERE mes = ?').bind(mes).first(),
     env.DB.prepare('SELECT motorista, nota, motivo, usuario_nome, criado_em FROM prime_notas WHERE mes = ?').bind(mes).all(),
-    env.DADOS.get('cadastros', 'json').catch(() => null),
+    lerCadastros(env).catch(() => null),
   ]);
   // só nome, unidade e situação do cadastro (sem CPF nem senhas)
   const cadastro = cad && Array.isArray(cad.motoristas)

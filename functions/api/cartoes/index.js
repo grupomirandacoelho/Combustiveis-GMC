@@ -1,6 +1,7 @@
 import { usuarioDaSessao, json } from '../../../lib/auth.js';
 import { pode } from '../../../lib/permissoes.js';
 import { CARTOES, IDS, SITUACOES, CATEGORIAS_COM_CARTAO, normPlaca, placaValida, validar } from '../../../lib/cartoes.js';
+import { lerCadastros } from '../../../lib/cadastros-fonte.js';
 
 // GET  /api/cartoes   lista da planilha publicada pelo vigia + alterações do portal + avisos dos motoristas
 // POST /api/cartoes   {acao: 'editar'|'adicionar', chave, dados: {ticket, truckpag, veloe}} -> pendente até o vigia gravar
@@ -16,7 +17,7 @@ export async function onRequestGet({ request, env }) {
   if (!pode(u, 'cartoes-frota')) return json({ erro: 'Seu acesso não inclui o controle dos cartões.' }, 403);
   const [{ itens, atualizadoEm }, cad, alt, alertas] = await Promise.all([
     lista(env),
-    env.DADOS.get('cadastros', 'json'),
+    lerCadastros(env),
     env.DB.prepare(`SELECT id, criado_em, usuario_nome, acao, chave, dados, antes, estado, mensagem, aplicada_em, linha
                       FROM alteracoes_cartoes ORDER BY id DESC LIMIT 80`).all(),
     // em aberto (todos) e os resolvidos dos últimos 30 dias
@@ -75,7 +76,7 @@ export async function onRequestPost({ request, env }) {
     return json({ erro: 'A placa ' + placa + ' já está no controle dos cartões' + (atual ? '.' : ' (aguardando gravação).') }, 409);
   } else {
     // o controle segue o cadastro de placas: placa cadastrada entra (ou não) sozinha; à mão, só caminhão ainda sem cadastro
-    const cad = await env.DADOS.get('cadastros', 'json');
+    const cad = await lerCadastros(env);
     const merc = (v) => { const p = normPlaca(v); return /^[A-Z]{3}\d{4}$/.test(p) ? p.slice(0, 4) + 'ABCDEFGHIJ'[Number(p[4])] + p.slice(5) : p; };
     const p = cad && Array.isArray(cad.placas) ? cad.placas.find((x) => merc(x.placa) === merc(placa)) : null;
     if (p) {

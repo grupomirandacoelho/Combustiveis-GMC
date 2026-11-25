@@ -3,6 +3,7 @@ import { pode } from '../../../lib/permissoes.js';
 import { CAMPOS, CHAVE, TIPOS, NOME, PESSOAIS, normalizarChave, validar, validarPessoais } from '../../../lib/cadastros.js';
 import { chaveNome } from '../../../lib/motoristas.js';
 import { rpc } from '../../../lib/supabase.js';
+import { lerCadastros } from '../../../lib/cadastros-fonte.js';
 
 // GET  /api/cadastros/placas|motoristas   lista publicada pelo vigia + alterações do portal
 // POST /api/cadastros/placas|motoristas   {acao: 'editar'|'adicionar', chave, dados, pessoais?}  -> fica pendente até o vigia gravar
@@ -16,8 +17,8 @@ export async function lista(env, tipo) {
     const b = await rpc(env, 'gestao_placas');
     if (b && Array.isArray(b.placas) && b.placas.length) return { itens: b.placas, atualizadoEm: b.atualizadoEm, fonte: 'banco' };
   }
-  const c = await env.DADOS.get('cadastros', 'json');
-  return { itens: c && Array.isArray(c[tipo]) ? c[tipo] : null, atualizadoEm: c ? c.atualizadoEm : null, fonte: 'planilha' };
+  const c = await lerCadastros(env);
+  return { itens: c && Array.isArray(c[tipo]) ? c[tipo] : null, atualizadoEm: c ? c.atualizadoEm : null, fonte: c ? c.fonte : 'planilha' };
 }
 
 export async function onRequestGet({ request, env, params }) {

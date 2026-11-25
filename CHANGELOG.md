@@ -6,6 +6,11 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 25/11/2026
 
+- **15.3 (planilhas no banco) começou: placas e motoristas lidos do banco.** Plano e inventário em `docs/MIGRACAO-15-3.md`
+  (decisões do usuário: tudo pelo portal, ninguém edita as planilhas de cadastro no Excel; orçamento por upload). A lista de placas e
+  motoristas (login da área do motorista, cartões frota, PRIME, placas desabilitadas, tela de cadastros) passa a vir do banco
+  (`gestao_cadastros_lista`, igual à publicada pelo vigia: 308 placas e 166 motoristas). Chave KV `cadastros-fonte` = `banco`
+  (apagar volta à planilha); banco fora do ar usa a lista do vigia.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada

@@ -176,6 +176,8 @@ Ordem (cada passo conferido antes do próximo; o vigia continua ligado até o fi
       inteira a cada 5 min (~0,7 M/dia).
 
 ### 15.3 Demais planilhas no banco
+Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
+- [~] Placas e motoristas: lidos do banco desde 25/11 (`cadastros-fonte`); falta aplicar a fila no banco e a virada.
 - [ ] Placas e motoristas sem a planilha (já gravam no Supabase).
 - [ ] Cartões frota, postos dos motoristas e negociações, preço bomba interna, coordenadas dos postos.
 - [ ] Real x Orçado: orçamento no banco com tela de lançamento.
