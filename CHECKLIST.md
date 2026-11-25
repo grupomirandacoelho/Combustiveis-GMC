@@ -187,6 +187,10 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 - [ ] ANP e Petrobras baixados por tarefa agendada na nuvem; conferir se a pasta Reajustes SGB ainda é usada.
 
 ### 15.4 Desligar o vigia
+- [ ] Aviso "Atualizar: dados novos" (`/api/dados/versao`) ainda usa a versão que o vigia publica no KV ("versao"): passar a somar
+      as versões do banco (`gestao_dados_painel_versao`, `gestao_bomba_versao` e as próximas) antes de desligar o vigia (25/11/2026).
+- [ ] pg_cron `gestao-dados-painel`: ~8 s a cada 2 min mesmo sem mudança e 3 a 6 falhas por dia passando de 2 min (statement timeout);
+      gerar só quando algo mudou (visto em 25/11/2026).
 - [ ] Conferir painéis x banco por alguns dias com o vigia ainda ligado (só lendo).
 - [ ] Desligar a tarefa agendada nos dois computadores e retirar o revezamento.
 - [x] Preço bomba interna: "Lançar negociação" e "Adicionar fornecedor" só com as praças (com negociação ou fornecedor), não o cadastro inteiro de unidades (23/11/2026).
