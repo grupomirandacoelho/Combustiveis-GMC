@@ -30,7 +30,9 @@ def ultima_linha(caminho):
 def publicar(site, token, chave, valor):
     corpo = json.dumps({'chave': chave, 'valor': valor}, ensure_ascii=False).encode('utf-8')
     req = urllib.request.Request(site.rstrip('/') + '/api/sync/kv', data=corpo, method='POST',
-                                 headers={'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'})
+                                 headers={'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json',
+                                          # o padrão 'Python-urllib' é barrado pela Cloudflare (403)
+                                          'User-Agent': 'gestao-combustivel-actions/1.0'})
     with urllib.request.urlopen(req, timeout=120) as r:
         return r.status
 

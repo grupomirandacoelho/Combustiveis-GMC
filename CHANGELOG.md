@@ -89,6 +89,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   Publica no portal pelo `/api/sync/kv` (`scripts/publicar_precos.py`) só quando a variável do repositório `PRECOS_PUBLICAR` = 1;
   até lá o resultado fica guardado para comparar com o do vigia. O vigia para de baixar quando o interruptor `precos-anp` estiver
   "ligado".
+- **ANP e Petrobras pelo GitHub Actions LIGADOS.** O gov.br derruba as conexões das máquinas do GitHub (EUA); a ANP passa por uma ponte
+  em São Paulo (Edge Function `proxy-anp`, só repassa o download). Comparação com o vigia: anp.json idêntico parte a parte (versão
+  c5a34d45ca78) e petrobras.json idêntico. Publicação testada (a Cloudflare barrava o identificador padrão do Python: corrigido).
+  Variável `PRECOS_PUBLICAR` = 1 e interruptor `precos-anp` ligado: o vigia não baixa mais ANP nem Petrobras.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada

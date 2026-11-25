@@ -187,8 +187,7 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 - [ ] Cartões frota, postos dos motoristas e negociações, preço bomba interna, coordenadas dos postos.
 - [x] Real x Orçado: orçamento por upload da planilha na tela, um ano por vez sem substituir (decisões do usuário 25/11); banco é a
       origem desde 25/11 (o próximo envio é o de 2027).
-- [~] ANP e Petrobras pelo GitHub Actions (25/11; o Supabase gratuito não dá conta dos arquivos): em simulação; comparar com o vigia,
-      depois `PRECOS_PUBLICAR=1` no repositório e `precos-anp` ligado.
+- [x] ANP e Petrobras pelo GitHub Actions, LIGADOS em 25/11 (ANP pela ponte `proxy-anp` em São Paulo; resultados idênticos aos do vigia).
 - [x] Reajustes SGB: nada mais lê a planilha (o painel já usava os contratos do portal; o cartão do Início passou a usar também, 25/11).
       O passo `processarReajustes` do vigia e `reajustes.json` saem no 15.4.
 - [ ] Busca de coordenadas no OpenStreetMap como rotina da nuvem (hoje o vigia busca e manda ao banco).
