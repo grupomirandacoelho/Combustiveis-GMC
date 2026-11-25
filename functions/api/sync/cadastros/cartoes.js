@@ -1,4 +1,5 @@
 import { tokenSyncValido, json } from '../../../../lib/auth.js';
+import { aplicarCadastrosDepois } from '../../../../lib/aplicar-cadastros.js';
 
 // O vigia manda aqui o que as APIs dos cartões devolveram para os motoristas do cadastro (código da Ticket, ID da
 // TruckPag): entra na mesma fila do Cadastro > Motoristas (alteracoes_cadastros) e o vigia grava na planilha.
@@ -7,7 +8,7 @@ import { tokenSyncValido, json } from '../../../../lib/auth.js';
 const CAMPOS = ['codigoTicket', 'idTruckpag', 'matricula'];
 const ok = (v) => Number.isInteger(v) && v > 0 && v < 1e12;
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   if (!tokenSyncValido(request, env)) return json({ erro: 'Não autorizado.' }, 401);
   let d;
   try { d = await request.json(); } catch { return json({ erro: 'Dados inválidos.' }, 400); }
@@ -27,5 +28,6 @@ export async function onRequestPost({ request, env }) {
     }
   }
   if (stmts.length) await env.DB.batch(stmts);
+  if (itens.length) aplicarCadastrosDepois({ env, waitUntil });   // números dos cartões também no banco (15.3)
   return json({ ok: true, inseridos: itens.length, limpos: limpar.length });
 }

@@ -11,6 +11,9 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   motoristas (login da área do motorista, cartões frota, PRIME, placas desabilitadas, tela de cadastros) passa a vir do banco
   (`gestao_cadastros_lista`, igual à publicada pelo vigia: 308 placas e 166 motoristas). Chave KV `cadastros-fonte` = `banco`
   (apagar volta à planilha); banco fora do ar usa a lista do vigia.
+- **Placas e motoristas: cada alteração do portal também é gravada direto no banco** (passo 2 do 15.3), com as mesmas regras do
+  vigia na planilha (chave repetida, chave que não existe mais, linha nova no fim). Vale para a tela de cadastros e para os números
+  devolvidos pelas APIs dos cartões; a varredura de 2 em 2 min cobre o banco fora do ar. A planilha continua recebendo tudo pelo vigia.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada

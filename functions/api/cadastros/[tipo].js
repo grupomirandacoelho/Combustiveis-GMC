@@ -4,6 +4,7 @@ import { CAMPOS, CHAVE, TIPOS, NOME, PESSOAIS, normalizarChave, validar, validar
 import { chaveNome } from '../../../lib/motoristas.js';
 import { rpc } from '../../../lib/supabase.js';
 import { lerCadastros } from '../../../lib/cadastros-fonte.js';
+import { aplicarCadastrosDepois } from '../../../lib/aplicar-cadastros.js';
 
 // GET  /api/cadastros/placas|motoristas   lista publicada pelo vigia + alterações do portal
 // POST /api/cadastros/placas|motoristas   {acao: 'editar'|'adicionar', chave, dados, pessoais?}  -> fica pendente até o vigia gravar
@@ -56,7 +57,7 @@ export async function onRequestGet({ request, env, params }) {
   });
 }
 
-export async function onRequestPost({ request, env, params }) {
+export async function onRequestPost({ request, env, params, waitUntil }) {
   const tipo = params.tipo;
   if (!TIPOS.includes(tipo)) return json({ erro: 'Cadastro desconhecido.' }, 404);
   const origem = request.headers.get('Origin');
@@ -150,6 +151,7 @@ export async function onRequestPost({ request, env, params }) {
   // placas: grava também no banco na hora (a planilha continua recebendo pela fila). Falha no banco não desfaz a alteração:
   // a próxima carga do modelo (vigia) traz da planilha
   if (tipo === 'placas') await rpc(env, 'gestao_salvar_placa', { p_acao: acao, p_chave: String(chave), p_dados: dados });
+  aplicarCadastrosDepois({ env, waitUntil });   // aplica também direto no banco (15.3, 25/11/2026)
   return json({ ok: true, aviso, alteracao: { ...r, acao, chave, dados, antes, usuario_nome: u.nome, tipo, nome: NOME[tipo] } }, 201);
 }
 

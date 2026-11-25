@@ -21,6 +21,10 @@ const FREQUENTES = {
     "SELECT id, criado_em, aplicada_em, dados, pessoais FROM alteracoes_cadastros WHERE tipo = 'motoristas' AND acao = 'adicionar' AND estado = 'aplicada' AND sem_cartoes = 0 AND pessoais IS NOT NULL ORDER BY id",
   'motoristas editados':
     "SELECT id, aplicada_em, chave, dados, pessoais FROM alteracoes_cadastros WHERE tipo = 'motoristas' AND acao = 'editar' AND estado = 'aplicada' AND aplicada_em > ? AND usuario_nome NOT LIKE 'APIs dos cartões%' ORDER BY id LIMIT ?",
+  'fila dos cadastros para o banco (varredura a cada 2 min, lib/aplicar-cadastros.js)':
+    "SELECT id, tipo, acao, chave, dados FROM alteracoes_cadastros WHERE banco_aplicado_em IS NULL AND estado <> 'erro' ORDER BY id LIMIT ?",
+  'reserva da fila dos cadastros':
+    "SELECT 1 FROM alteracoes_cadastros WHERE banco_aplicado_em >= 'aplicando:' AND banco_aplicado_em < 'aplicando;' LIMIT 1",
   'placas editadas':
     "SELECT id, aplicada_em, acao, chave, dados FROM alteracoes_cadastros WHERE tipo = 'placas' AND acao IN ('editar', 'adicionar') AND estado = 'aplicada' AND aplicada_em > ? AND usuario_nome NOT LIKE 'APIs dos cartões%' ORDER BY aplicada_em, id LIMIT ?",
 };
