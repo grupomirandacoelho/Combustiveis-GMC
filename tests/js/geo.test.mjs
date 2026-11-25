@@ -27,11 +27,12 @@ test('só é seguro com nome quase igual, palavra própria de 4+ letras, perto d
   assert.equal(escolher({ ...p, nome: 'POSTO BR' }, 'POSTO BR', [lugar('Posto BR')], sede).seguro, false);   // "BR" tem menos de 4 letras
 });
 
-test('tenta de novo depois de 30 dias, ou já se o gravado se perdeu', () => {
+test('tenta de novo depois de 30 dias, ou no dia seguinte se o gravado se perdeu', () => {
   assert.equal(podeTentar(null, '2026-11-25'), true);
   assert.equal(podeTentar({ tentado: '2026-11-01', resultado: 'sem_match' }, '2026-11-25'), false);
   assert.equal(podeTentar({ tentado: '2026-10-20', resultado: 'sem_match' }, '2026-11-25'), true);
   assert.equal(podeTentar({ tentado: '2026-11-24', resultado: 'gravado' }, '2026-11-25'), true);
+  assert.equal(podeTentar({ tentado: '2026-11-25', resultado: 'gravado' }, '2026-11-25'), false);   // gravado hoje: espera a lista nova
 });
 
 function io(ligado, respostas, estado = {}) {

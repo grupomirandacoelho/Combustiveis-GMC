@@ -190,7 +190,7 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 - [x] ANP e Petrobras pelo GitHub Actions, LIGADOS em 25/11 (ANP pela ponte `proxy-anp` em São Paulo; resultados idênticos aos do vigia).
 - [x] Reajustes SGB: nada mais lê a planilha (o painel já usava os contratos do portal; o cartão do Início passou a usar também, 25/11).
       O passo `processarReajustes` do vigia e `reajustes.json` saem no 15.4.
-- [ ] Busca de coordenadas no OpenStreetMap como rotina da nuvem (hoje o vigia busca e manda ao banco).
+- [x] Busca de coordenadas no OpenStreetMap como rotina da nuvem (`geo-postos`), LIGADA em 25/11.
 
 ### 15.4 Desligar o vigia
 - [ ] Aviso "Atualizar: dados novos" (`/api/dados/versao`) ainda usa a versão que o vigia publica no KV ("versao"): passar a somar

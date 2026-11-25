@@ -93,6 +93,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   em São Paulo (Edge Function `proxy-anp`, só repassa o download). Comparação com o vigia: anp.json idêntico parte a parte (versão
   c5a34d45ca78) e petrobras.json idêntico. Publicação testada (a Cloudflare barrava o identificador padrão do Python: corrigido).
   Variável `PRECOS_PUBLICAR` = 1 e interruptor `precos-anp` ligado: o vigia não baixa mais ANP nem Petrobras.
+- **Busca de coordenadas no OpenStreetMap na nuvem (ligada).** Rotina `geo-postos` de hora em hora, com as regras do vigia
+  (`lib/nuvem/geo.js`; nome limpo e nota iguais ao Python nos 173 postos). A lista de postos candidatos vem do banco, refeita a cada
+  3 horas por um agendamento no próprio banco (a consulta é pesada demais para a API); o estado do vigia (360 postos já tentados) foi
+  copiado. Simulação igual ao vigia; ligada, o vigia deixa de buscar.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada
