@@ -83,6 +83,12 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   de 23/07) e comparava a ANP com o preço do contrato, enquanto o painel usa os contratos cadastrados na tela e a variação da ANP desde
   a semana do contrato. Agora usa os mesmos contratos e a mesma regra do painel. Com isso nada no portal depende mais da planilha de
   reajustes (o botão "Reajustes" combinado não é necessário).
+- **ANP e Petrobras pelo GitHub Actions (em simulação).** As funções do Supabase no plano gratuito não dão conta das planilhas grandes
+  da ANP (até 22 MB) nem do PDF da Petrobras; com a decisão do usuário, os mesmos scripts do vigia passam a rodar a cada 3 horas numa
+  tarefa agendada do GitHub (`.github/workflows/precos-anp-petrobras.yml`), com os arquivos já baixados guardados entre as rodadas.
+  Publica no portal pelo `/api/sync/kv` (`scripts/publicar_precos.py`) só quando a variável do repositório `PRECOS_PUBLICAR` = 1;
+  até lá o resultado fica guardado para comparar com o do vigia. O vigia para de baixar quando o interruptor `precos-anp` estiver
+  "ligado".
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada
