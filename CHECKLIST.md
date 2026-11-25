@@ -180,7 +180,7 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 - [~] Placas e motoristas: lidos do banco desde 25/11 (`cadastros-fonte`); fila aplicada também no banco desde 25/11; falta comparar
       banco x planilha com alterações reais e a virada (`supabase_sync` deixa de recopiar `placas`/`motoristas`).
 - [~] Cartões frota: lidos do banco e fila aplicada no banco desde 25/11 (`cartoes-fonte`); falta comparar com alterações reais,
-      levar ao banco a ligação com o cadastro de placas (placa entra/sai sozinha; "vistas") e a virada (`cartoes_placas`).
+      a virada (`cartoes_placas`) chamando `gestao_sincronizar_cartoes(true)` (pronta e conferida em simulação em 25/11).
 - [ ] Placas e motoristas sem a planilha (já gravam no Supabase).
 - [ ] Cartões frota, postos dos motoristas e negociações, preço bomba interna, coordenadas dos postos.
 - [ ] Real x Orçado: orçamento no banco com tela de lançamento.

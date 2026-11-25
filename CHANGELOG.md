@@ -18,6 +18,9 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   Cartões frota e o aviso de cartão faltando dos motoristas) vem do banco (`gestao_cartoes_lista`, igual à da planilha: 195 placas,
   todos os campos iguais), chave KV `cartoes-fonte` = `banco`. As alterações da tela vão também direto ao banco
   (`gestao_aplicar_cartao`, mesmas regras do vigia: troca de placa antiga para Mercosul, placa repetida, linha nova no fim).
+- **Ligação dos cartões frota com o cadastro de placas pronta no banco** (`gestao_sincronizar_cartoes`): placa ativa com motor que
+  falta entra, desabilitada/vendida/sem cartão sai, fora do cadastro fica. Em simulação deu igual ao vigia (nada a mudar); passa a
+  gravar na virada dos cartões.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada
