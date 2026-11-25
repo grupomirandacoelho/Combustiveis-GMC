@@ -4,8 +4,9 @@ import { rpc, temBanco } from '../../../lib/supabase.js';
 
 // Orçamento da frota (Real x Orçado). 15.3, item 6 (25/11/2026; pedido do usuário "Pode seguir com o upload do orçamento"; decisão:
 // o orçamento continua sendo preenchido no Excel e é enviado pelo portal). O navegador lê a planilha Banco_Orçamento_Despesas_Frota
-// (abas Base_Metas e BD_UND, public/gestao/lib/orcamento.js) e manda as linhas; o banco troca o orçamento inteiro numa transação.
-// GET  /api/orcamento   -> {podeEnviar, envio: {arquivo, usuario, em}, atualizadoEm}
+// (abas Base_Metas e BD_UND, public/gestao/lib/orcamento.js) e manda as linhas. Um envio por ano (usuário, 25/11/2026): o banco só
+// acrescenta os anos que ainda não estão no portal; ano que já está não é substituído (gestao_orcamento_importar).
+// GET  /api/orcamento   -> {podeEnviar, envio: {arquivo, usuario, em, anos}, atualizadoEm, anos: [anos já no portal]}
 // POST /api/orcamento   {arquivo, metas: [{unidade, natureza, data: 'AAAA-MM-DD', valor}], unidades: [{unidade, inf_adicional, centro_de_custo}]}
 
 const LIMITE_METAS = 20000, LIMITE_UNIDADES = 500;
@@ -41,7 +42,8 @@ export async function onRequestGet({ request, env }) {
   if (!u) return json({ erro: 'Não conectado.' }, 401);
   if (!pode(u, 'real-orcado')) return json({ erro: 'Seu acesso não inclui o Real x Orçado.' }, 403);
   const info = temBanco(env) ? await rpc(env, 'gestao_orcamento_info', {}, { ms: 8000 }) : null;
-  return json({ podeEnviar: pode(u, 'real-orcado-editar') && temBanco(env), envio: info ? info.envio : null, atualizadoEm: info ? info.atualizadoEm : null });
+  return json({ podeEnviar: pode(u, 'real-orcado-editar') && temBanco(env), envio: info ? info.envio : null, atualizadoEm: info ? info.atualizadoEm : null,
+    anos: info && Array.isArray(info.anos) ? info.anos : [] });
 }
 
 export async function onRequestPost({ request, env }) {
@@ -59,5 +61,5 @@ export async function onRequestPost({ request, env }) {
   const r = await rpc(env, 'gestao_orcamento_importar', { p_arquivo: v.arquivo, p_usuario: u.nome, p_metas: v.metas, p_unidades: v.unidades }, { ms: 30000 });
   if (!r) return json({ erro: 'O banco não respondeu. Nada foi gravado; tente de novo em alguns minutos.' }, 502);
   if (!r.ok) return json({ erro: r.erro || 'Nada foi gravado.' }, 400);
-  return json({ ok: true, metas: r.metas, unidades: r.unidades }, 201);
+  return json({ ok: true, metas: r.metas, unidades: r.unidades, anosNovos: r.anosNovos || [], anosJaExistentes: r.anosJaExistentes || [] }, 201);
 }

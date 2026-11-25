@@ -185,8 +185,8 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
       coordenadas do OpenStreetMap para a nuvem (hoje o vigia busca, grava na planilha e manda ao banco).
 - [ ] Placas e motoristas sem a planilha (já gravam no Supabase).
 - [ ] Cartões frota, postos dos motoristas e negociações, preço bomba interna, coordenadas dos postos.
-- [~] Real x Orçado: orçamento por upload da planilha na tela (decisão do usuário 25/11), lido do banco desde 25/11 (`orcamento-fonte`);
-      falta o primeiro envio real do usuário e a virada (`orcamento_metas`/`orcamento_unidades` sem recópia).
+- [x] Real x Orçado: orçamento por upload da planilha na tela, um ano por vez sem substituir (decisões do usuário 25/11); banco é a
+      origem desde 25/11 (o próximo envio é o de 2027).
 - [ ] ANP e Petrobras baixados por tarefa agendada na nuvem; conferir se a pasta Reajustes SGB ainda é usada.
 
 ### 15.4 Desligar o vigia

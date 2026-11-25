@@ -190,7 +190,9 @@ export async function montar(ctx) {
   // orçamento: último envio e, para quem pode, o envio da planilha (15.3, 25/11/2026: o orçamento continua no Excel e vai ao banco
   // por aqui; o portal lê a planilha no navegador e o banco troca o orçamento inteiro)
   const caixaOrc = pagina.querySelector('#ro-orc');
+  let anosNoPortal = [];
   function mostrarEnvio(info) {
+    anosNoPortal = info && Array.isArray(info.anos) ? info.anos.map(Number) : [];
     const e = info && info.envio;
     const quando = e && e.em ? new Date(e.em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
     caixaOrc.innerHTML = '<span class="ro-orc-info">' + (e && e.usuario ? 'Orçamento enviado por ' + esc(e.usuario) + ' em ' + esc(quando) +
@@ -217,18 +219,27 @@ export async function montar(ctx) {
       };
       const o = lerOrcamento({ baseMetas: aba('Base_Metas'), bdUnd: aba('BD_UND') });
       if (o.erro) { ctx.aviso(o.erro); return; }
-      const r = o.resumo;
+      // um envio por ano (usuário, 25/11/2026): só entram os anos que ainda não estão no portal; os outros ficam como estão
+      const anosArquivo = [...new Set(o.metas.map((l) => Number(l.data.slice(0, 4))))].sort();
+      const novos = anosArquivo.filter((a) => !anosNoPortal.includes(a)), ja = anosArquivo.filter((a) => anosNoPortal.includes(a));
+      if (!novos.length) { ctx.aviso('O orçamento de ' + ja.join(', ') + ' já está no portal e não é substituído. Nada foi enviado.'); return; }
+      o.metas = o.metas.filter((l) => novos.includes(Number(l.data.slice(0, 4))));
+      const meses = o.metas.map((l) => l.data.slice(0, 7)).sort(), porNatureza = {};
+      for (const l of o.metas) porNatureza[l.natureza] = (porNatureza[l.natureza] || 0) + l.valor;
+      const r = { ...o.resumo, linhas: o.metas.length, unidades: new Set(o.metas.map((l) => l.unidade)).size, mesInicio: meses[0],
+        mesFim: meses[meses.length - 1], porNatureza };
       const nat = Object.entries(r.porNatureza).sort((a, b) => b[1] - a[1]).slice(0, 4)
         .map(([n, v]) => n + ' ' + (n === 'KM' ? fmt.int(v) : brl(v))).join('; ');
-      const texto = 'Trocar o orçamento do portal pelo da planilha "' + f.name + '"? ' + r.linhas + ' linhas de ' + r.unidades + ' unidades, de ' +
+      const texto = 'Acrescentar o orçamento de ' + novos.join(', ') + ' da planilha "' + f.name + '"? ' + r.linhas + ' linhas de ' + r.unidades + ' unidades, de ' +
         mesAno(r.mesInicio) + ' a ' + mesAno(r.mesFim) + '. Totais: ' + nat + '.' +
+        (ja.length ? ' O orçamento de ' + ja.join(', ') + ' já está no portal e fica como está.' : '') +
         (o.ignoradas.length ? ' ' + o.ignoradas.length + ' linha(s) incompleta(s) ficam de fora (ex.: linha ' + o.ignoradas.slice(0, 3).join(', ') + ').' : '');
       if (!(await confirmar(texto, { titulo: 'Enviar orçamento', ok: 'Enviar' }))) return;
       const resp = await fetch('/api/orcamento', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ arquivo: f.name, metas: o.metas, unidades: o.unidades }) });
       const j = await resp.json().catch(() => ({}));
       if (!resp.ok) { ctx.aviso(j.erro || 'Não foi possível enviar o orçamento (' + resp.status + ').'); return; }
-      ctx.aviso('Orçamento enviado: ' + j.metas + ' linhas e ' + j.unidades + ' unidades. Atualizando o painel…');
+      ctx.aviso('Orçamento de ' + (j.anosNovos || novos).join(', ') + ' enviado: ' + j.metas + ' linhas' + (j.unidades ? ' e ' + j.unidades + ' unidade(s) nova(s)' : '') + '. Atualizando o painel…');
       usarDados(await recarregarDados());
       abrir(visao, false);
       carregarEnvio();

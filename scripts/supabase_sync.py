@@ -62,8 +62,10 @@ FONTES = {
     'postos_localizacao': {'arquivo': os.path.join(RAIZ, 'LOCALIZAÇÃO DOS POSTOS.xlsx'), 'aba': 'Localização dos postos', 'colunas': 11, 'origem_banco': True},
     'negociacoes': {'arquivo': os.path.join(RAIZ, 'Gestão de negociações de preço.xlsx'), 'aba': 'Base de dados de negociações', 'colunas': 17, 'origem_banco': True},
     'negociacoes_rotas': {'arquivo': os.path.join(RAIZ, 'Gestão de negociações de preço.xlsx'), 'aba': 'ROTAS'},
-    'orcamento_metas': {'arquivo': os.path.join(RAIZ, 'Banco_Orçamento_Despesas_Frota.xlsx'), 'aba': 'Base_Metas'},
-    'orcamento_unidades': {'arquivo': os.path.join(RAIZ, 'Banco_Orçamento_Despesas_Frota.xlsx'), 'aba': 'BD_UND'},
+    # 25/11/2026 (15.3 item 6, virada): o orçamento é enviado pela tela Real x Orçado, um ano por vez (gestao_orcamento_importar);
+    # o banco é a origem. Volta: "sincronizar orcamento_metas orcamento_unidades --voltar-planilha".
+    'orcamento_metas': {'arquivo': os.path.join(RAIZ, 'Banco_Orçamento_Despesas_Frota.xlsx'), 'aba': 'Base_Metas', 'origem_banco': True},
+    'orcamento_unidades': {'arquivo': os.path.join(RAIZ, 'Banco_Orçamento_Despesas_Frota.xlsx'), 'aba': 'BD_UND', 'origem_banco': True},
     'metas_mes': {'arquivo': os.path.join(RAIZ, 'Base.xlsx'), 'aba': 'Metas x mes', 'largo': {'fixas': 2, 'coluna': 'mes', 'valor': 'meta'}},
     'bomba_compras': {'arquivo': os.path.join(RAIZ, 'Base.xlsx'), 'abas': [('Bomba interna', 'DIESEL'), ('Bomba Interna Arla', 'ARLA')], 'fixa': 'produto'},
     'transacoes_negadas': {'arquivo': os.path.join(RAIZ, 'Base.xlsx'), 'aba': 'Transações Negadas'},

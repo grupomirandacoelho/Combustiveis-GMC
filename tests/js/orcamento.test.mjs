@@ -48,3 +48,4 @@ test('servidor confere de novo o que chega', () => {
   assert.match(validarOrcamento({ metas: [{ unidade: 'A', natureza: 'X', data: '2026-02-30', valor: 1 }], unidades: [{ unidade: 'A' }] }).erro, /Linha 2/);
   assert.match(validarOrcamento({ metas: [{ unidade: 'A', natureza: 'X', data: '2026-02-01', valor: 'abc' }], unidades: [{ unidade: 'A' }] }).erro, /Linha 2/);
 });
+

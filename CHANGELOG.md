@@ -69,6 +69,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 - **Correção: o primeiro envio do orçamento não gravou.** A API do Supabase recusa apagar uma tabela inteira sem condição (proteção
   safeupdate), e a troca do orçamento começa apagando o anterior; o teste tinha sido feito pela conexão direta, onde a proteção não
   roda. Nada foi gravado (o orçamento ficou como estava). Corrigido (migração `20261125211000`) e conferido pela própria API.
+- **Orçamento: um envio por ano, sem substituir** (pedido do usuário: o orçamento é enviado uma vez por ano e o próximo é o do ano
+  seguinte). O envio só acrescenta os anos que ainda não estão no portal; ano que já está fica como está, e planilha só com anos já
+  enviados é recusada sem gravar nada. A confirmação mostra quais anos entram e quais já estão. Nada é apagado. **Virada do orçamento:**
+  o banco é a origem (2025 e 2026 já estavam iguais à planilha; o próximo envio é o de 2027).
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada
