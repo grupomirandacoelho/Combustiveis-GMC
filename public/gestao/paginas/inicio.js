@@ -161,7 +161,11 @@ function compararANP(anp, anpSem) {
 }
 
 // Contratos x ANP: última semana publicada da ANP por estado contra o preço de cada contrato
-function compararContratos(anp, reaj) {
+// mesma regra do painel Contratos x ANP (dashboards/contratos-anp.js): contratos cadastrados no portal (/api/contratos-anp), variação =
+// ANP da última semana publicada ÷ ANP da semana da data do contrato − 1 (25/11/2026: antes lia a planilha de reajustes, que saiu)
+const domingoDa = (dia) => dia - ((dia + 4) % 7);   // domingo da semana, como a "DATA INICIAL" da ANP
+const diaDoIso = (iso) => { const [a, m, d] = String(iso).split('-').map(Number); return Math.floor(Date.UTC(a, m - 1, d) / 864e5); };
+export function compararContratos(anp, contratos) {
   const s = anp.series.semanal.estado, ufs = anp.locais.estado.map((e) => e[0]);
   const porEstado = new Map();
   for (let i = 0; i < s.p.length; i++) porEstado.set(ufs[s.l[i]] + '|' + s.p[i], s.v[i] / 1000);
@@ -170,15 +174,22 @@ function compararContratos(anp, reaj) {
     for (let k = 0; k <= 3; k++) { const v = porEstado.get(uf + '|' + (p - 7 * k)); if (v !== undefined) return v; }
     return null;
   };
+  const ativos = contratos.filter((c) => c.ativo && c.uf && c.data_contrato);
   let com = 0, acima = 0, abaixo = 0;
-  for (const c of reaj.contratos) {
-    const v = anpEm(c.uf, ultima);
-    if (v === null || !c.preco) continue;
-    const pct = v / c.preco - 1;
+  for (const c of ativos) {
+    const naBase = anpEm(c.uf, domingoDa(diaDoIso(c.data_contrato))), atual = anpEm(c.uf, ultima);
+    if (naBase === null || atual === null) continue;
+    const pct = atual / naBase - 1;
     com++;
     if (Math.abs(pct) > GATILHO + 1e-9) { if (pct > 0) acima++; else abaixo++; }
   }
-  return { total: reaj.contratos.length, com, acima, abaixo, semana: ultima };
+  return { total: ativos.length, com, acima, abaixo, semana: ultima };
+}
+async function obterContratos() {
+  const r = await fetch('/api/contratos-anp', { credentials: 'same-origin', cache: 'no-store' });
+  if (r.status === 401 || r.redirected) throw new Error('sessão');
+  if (!r.ok) throw new Error(String(r.status));
+  return (await r.json()).contratos || [];
 }
 
 // ---------- desenho (Overview do Figma: indicadores, gráfico + média, números + atalhos) ----------
@@ -223,7 +234,7 @@ export async function montarResumo(caixa, { pode, texto }) {
   const [rd, ra, rr] = await Promise.allSettled([
     precisaBase ? carregarDados() : nada,
     quer.anp || quer.ct ? obterJson('anp.json') : nada,
-    quer.ct ? obterJson('reajustes.json') : nada,
+    quer.ct ? obterContratos() : nada,
   ]);
   if (!caixa.isConnected) return;   // saiu do início enquanto carregava
   const d = rd.status === 'fulfilled' ? rd.value : null;

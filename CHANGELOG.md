@@ -79,6 +79,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   **Incluir ano** (escolhe a planilha; se ela tiver mais de um ano novo, pergunta qual), **Alterar** (troca só aquele ano pelo da
   planilha escolhida, mostrando os totais de hoje e os novos) e **Excluir** (confirmação em vermelho). Só as linhas do ano escolhido
   vão ao banco. Conferido no preview (respostas simuladas, nada gravado) e pela API do Supabase.
+- **Início: cartão "Contratos x ANP" com os contratos do portal.** Ele ainda lia a planilha de reajustes (Reajustes SGB, 19 contratos
+  de 23/07) e comparava a ANP com o preço do contrato, enquanto o painel usa os contratos cadastrados na tela e a variação da ANP desde
+  a semana do contrato. Agora usa os mesmos contratos e a mesma regra do painel. Com isso nada no portal depende mais da planilha de
+  reajustes (o botão "Reajustes" combinado não é necessário).
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada
