@@ -21,6 +21,12 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 - **Ligação dos cartões frota com o cadastro de placas pronta no banco** (`gestao_sincronizar_cartoes`): placa ativa com motor que
   falta entra, desabilitada/vendida/sem cartão sai, fora do cadastro fica. Em simulação deu igual ao vigia (nada a mudar); passa a
   gravar na virada dos cartões.
+- **Virada de placas, motoristas e cartões frota: o banco passou a ser a origem.** Teste do usuário: desabilitar uma placa vendida
+  (JOK7794) e editar o motorista teste. As duas foram gravadas no banco 2 s depois e o vigia gravou nas planilhas; a placa saiu do
+  controle dos cartões; banco x planilha iguais (308 placas, 166 motoristas, 194 cartões). A planilha não é mais recopiada para o
+  banco; ela continua recebendo tudo pelo vigia como cópia, comparada todo dia (`scripts/comparar_cadastros.py`). Placa alterada no
+  banco agora atualiza sozinha o controle dos cartões. Observação: a placa RBD4F07 tinha a fórmula de autonomia com 0,85 na planilha
+  (as outras usam 0,75); o banco usa a regra padrão.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada

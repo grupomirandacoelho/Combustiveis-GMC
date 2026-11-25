@@ -47,9 +47,11 @@ FONTES = {
                         # 19/11/2026 (15.2 passo 3, virada): o banco é a origem; o portal grava direto nele (lib/aplicar-banco.js).
                         # A recópia da planilha fica desligada; só com "sincronizar base_transacoes --voltar-planilha" (volta).
                         'origem_banco': True},
-    'placas': {'arquivo': CTRL('Controle_motoristas_e_placas.xlsx'), 'aba': 'Carros'},
-    'motoristas': {'arquivo': CTRL('Controle_motoristas_e_placas.xlsx'), 'aba': 'Motoristas'},
-    'cartoes_placas': {'arquivo': CTRL('CONTROLE CARTÕES FROTA.xlsx'), 'aba': 'CARTÕES'},
+    # 25/11/2026 (15.3 itens 1 e 2, virada; decisão do usuário: tudo pelo portal): o banco é a origem das placas, dos motoristas e
+    # do controle dos cartões (lib/aplicar-cadastros.js). Volta: "sincronizar placas motoristas cartoes_placas --voltar-planilha".
+    'placas': {'arquivo': CTRL('Controle_motoristas_e_placas.xlsx'), 'aba': 'Carros', 'origem_banco': True},
+    'motoristas': {'arquivo': CTRL('Controle_motoristas_e_placas.xlsx'), 'aba': 'Motoristas', 'origem_banco': True},
+    'cartoes_placas': {'arquivo': CTRL('CONTROLE CARTÕES FROTA.xlsx'), 'aba': 'CARTÕES', 'origem_banco': True},
     'placas_mercosul': {'arquivo': CTRL('CONTROLE CARTÕES FROTA.xlsx'), 'aba': 'Placas MERCOSUL'},
     'bomba_precos': {'arquivo': CTRL('Negociação bomba interna.xlsx'), 'aba': 'Plan1'},
     'bomba_fornecedores': {'arquivo': CTRL('Negociação bomba interna.xlsx'), 'aba': 'Fornecedores'},

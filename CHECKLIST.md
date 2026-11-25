@@ -177,10 +177,9 @@ Ordem (cada passo conferido antes do próximo; o vigia continua ligado até o fi
 
 ### 15.3 Demais planilhas no banco
 Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
-- [~] Placas e motoristas: lidos do banco desde 25/11 (`cadastros-fonte`); fila aplicada também no banco desde 25/11; falta comparar
-      banco x planilha com alterações reais e a virada (`supabase_sync` deixa de recopiar `placas`/`motoristas`).
-- [~] Cartões frota: lidos do banco e fila aplicada no banco desde 25/11 (`cartoes-fonte`); falta comparar com alterações reais,
-      a virada (`cartoes_placas`) chamando `gestao_sincronizar_cartoes(true)` (pronta e conferida em simulação em 25/11).
+- [x] Placas e motoristas: banco é a origem desde 25/11 (lidos do banco, fila aplicada no banco, virada depois do teste do usuário).
+      Comparação diária com a planilha (`comparar_cadastros.py`) até 15.4.
+- [x] Cartões frota: banco é a origem desde 25/11 (virada junto com as placas; ligação com o cadastro de placas no banco).
 - [ ] Placas e motoristas sem a planilha (já gravam no Supabase).
 - [ ] Cartões frota, postos dos motoristas e negociações, preço bomba interna, coordenadas dos postos.
 - [ ] Real x Orçado: orçamento no banco com tela de lançamento.

@@ -40,6 +40,7 @@ test('aplica na ordem, anota a linha ou o erro de cada pedido e pula os de antes
   pedir(db, 5, 'motoristas', 'editar', '999999', { nome: 'X' });
   const chamadas = [];
   const rpcFn = async (_e, f, a) => {
+    if (f === 'gestao_sincronizar_cartoes') return { gravado: true };   // depois das placas (virada de 25/11)
     chamadas.push([f, a.p_tipo, a.p_acao, a.p_chave]);
     return a.p_chave === '999999' ? { ok: false, erro: '999999 não está mais no cadastro' } : { ok: true, linha: 10 + chamadas.length };
   };
@@ -62,7 +63,7 @@ test('banco fora do ar: para sem marcar e tenta de novo depois, na mesma ordem',
   assert.equal(r.parou, true);
   assert.deepEqual(estado(db), [[1, null, null], [2, null, null]]);
   const ordem = [];
-  await aplicarCadastrosPendentes(env(DB), { rpcFn: async (_e, _f, a) => { ordem.push(a.p_chave); return { ok: true, linha: 1 }; } });
+  await aplicarCadastrosPendentes(env(DB), { rpcFn: async (_e, f, a) => { if (f === 'gestao_aplicar_cadastro') ordem.push(a.p_chave); return { ok: true, linha: 1 }; } });
   assert.deepEqual(ordem, ['AAA1A11', 'BBB2B22']);
 });
 
@@ -97,4 +98,16 @@ test('cartões frota: fila própria (alteracoes_cartoes) com gestao_aplicar_cart
   assert.deepEqual(chamadas, [['gestao_aplicar_cartao', { p_acao: 'adicionar', p_chave: 'BBB2B22', p_dados: { truckpag: 'SEM CARTÃO' } }]]);
   assert.deepEqual(db.prepare('SELECT banco_mensagem FROM alteracoes_cartoes ORDER BY id').all().map((x) => x.banco_mensagem), [null, 'linha 7']);
   assert.equal(db.prepare('SELECT banco_aplicado_em FROM alteracoes_cadastros WHERE id = 3').get().banco_aplicado_em, null);
+});
+
+test('placa alterada no banco: o controle dos cartões segue o cadastro (gestao_sincronizar_cartoes); só motorista não chama', async () => {
+  const { db, DB } = d1();
+  pedir(db, 1, 'motoristas', 'editar', '000001', { situacao: 'DESLIGADO' });
+  const chamadas = [];
+  const rpcFn = async (_e, f, a) => { chamadas.push([f, a.p_gravar]); return { ok: true, linha: 1 }; };
+  await aplicarCadastrosPendentes(env(DB), { rpcFn });
+  assert.deepEqual(chamadas.map((c) => c[0]), ['gestao_aplicar_cadastro']);
+  pedir(db, 2, 'placas', 'editar', 'AAA1A11', { situacao: 'VENDIDO' });
+  await aplicarCadastrosPendentes(env(DB), { rpcFn });
+  assert.deepEqual(chamadas.slice(1), [['gestao_aplicar_cadastro', undefined], ['gestao_sincronizar_cartoes', true]]);
 });

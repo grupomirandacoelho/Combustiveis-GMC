@@ -897,8 +897,27 @@ function rodarComparacao() {
     COMPARACAO.dia = dia;
     log(r.igual ? `Comparação banco x planilha: iguais (${r.banco} abastecimentos).`
       : `Comparação banco x planilha: ATENÇÃO, ${r.so_na_planilha} só na planilha, ${r.so_no_banco} só no banco, ${r.diferentes} diferente(s) (${r.relatorio}).`);
+    compararCadastros();
   });
   p.on('error', () => { clearTimeout(fim); COMPARACAO.rodando = false; });
+}
+// 15.3 (virada de placas, motoristas e cartões frota em 25/11/2026): mesma conferência diária para as planilhas de cadastro
+function compararCadastros() {
+  let out = '';
+  const p = spawn('py', ['scripts/comparar_cadastros.py'], { cwd: PROJETO, windowsHide: true, shell: process.platform === 'win32',
+    env: { ...process.env, PYTHONIOENCODING: 'utf-8' } });
+  const fim = setTimeout(() => { try { p.kill(); } catch {} }, 10 * 60 * 1000);
+  p.stdout.on('data', (d) => { out += d; });
+  p.stderr.on('data', (d) => { out += d; });
+  p.on('close', () => {
+    clearTimeout(fim);
+    let r = null;
+    try { r = JSON.parse(out.trim().split(/\r?\n/).pop()); } catch {}
+    if (!r) { log('Comparação dos cadastros banco x planilha: falhou (' + out.trim().slice(-200) + ')'); return; }
+    log(r.igual ? `Comparação dos cadastros banco x planilha: iguais (${r.placas} placas, ${r.motoristas} motoristas, ${r.cartoes} cartões).`
+      : `Comparação dos cadastros banco x planilha: ATENÇÃO, ${r.diferencas} diferença(s) (${r.relatorio}).`);
+  });
+  p.on('error', () => clearTimeout(fim));
 }
 function processarSupabase() {
   rodarSupabase(SUPABASE.planilhas, 'planilhas');
