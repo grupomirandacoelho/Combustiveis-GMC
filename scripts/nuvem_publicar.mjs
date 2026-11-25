@@ -26,6 +26,7 @@ export const COPIAS = {
   'conferencia.js': 'lib/nuvem/conferencia.js',
   'conciliacao.js': 'lib/nuvem/conciliacao.js',
   'cadastros-cartoes.js': 'lib/nuvem/cadastros-cartoes.js',
+  'geo.js': 'lib/nuvem/geo.js',   // busca de coordenadas no OpenStreetMap (25/11/2026)
 };
 // em _shared tudo fica na mesma pasta: os imports do portal passam a apontar para o lado
 export const ajustarImports = (texto) => texto.replace(/'\.\.\/\.\.\/public\/gestao\/lib\/([\w-]+\.js)'/g, "'./$1'");

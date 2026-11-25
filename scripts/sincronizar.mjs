@@ -954,7 +954,8 @@ if (process.argv.includes('--vigiar')) {
       if (await plantao()) { try { processarReajustes(); } catch (e) { erro('nos reajustes', e); } }
       if (await plantao()) { try { await processarBomba(); } catch (e) { erro('no preço da bomba interna', e); } }
       if (await plantao()) { try { await processarLocais(); } catch (e) { erro('nas coordenadas dos postos', e); } }
-      if (await plantao()) { try { await processarGeocodificacao(); } catch (e) { erro('na busca de coordenadas (OpenStreetMap)', e); } }
+      // 15.3 (25/11/2026): com 'geo-postos' ligado, a busca no OpenStreetMap roda na nuvem; o vigia pula
+      if (!(await nuvemLigada('geo-postos')) && await plantao()) { try { await processarGeocodificacao(); } catch (e) { erro('na busca de coordenadas (OpenStreetMap)', e); } }
       if (await plantao()) { try { verificar(false); } catch (e) { erro('na vigia', e); } }
       if (await plantao()) { try { processarSupabase(); } catch (e) { erro('no Supabase', e); } }
     }
