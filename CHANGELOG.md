@@ -31,6 +31,11 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   banco; ela continua recebendo tudo pelo vigia como cópia, comparada todo dia (`scripts/comparar_cadastros.py`). Placa alterada no
   banco agora atualiza sozinha o controle dos cartões. Observação: a placa RBD4F07 tinha a fórmula de autonomia com 0,85 na planilha
   (as outras usam 0,75); o banco usa a regra padrão.
+- **Preço bomba interna (item 3 do 15.3): lido do banco e cada lançamento também gravado nele.** Os preços negociados e o cadastro dos
+  fornecedores que os painéis (Preço por fornecedor), o Rateio das NFs e as Movimentações usam vêm do banco (`gestao_bomba_extras`,
+  igual ao da planilha: 2.979 preços e 25 fornecedores), chave KV `bomba-fonte` = `banco`. Os lançamentos da tela vão também direto
+  ao banco (`gestao_aplicar_bomba`: mesmo dia troca o preço, exclusão deixa o preço vazio, CNPJ formatado). A repetição diária do
+  preço do Arla está pronta no banco (`gestao_bomba_repetir_arla`; hoje não achou nada a fazer, igual ao vigia) e liga na virada.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada

@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { aplicarCadastrosPendentes, aplicarCartoesPendentes } from '../../lib/aplicar-cadastros.js';
+import { aplicarCadastrosPendentes, aplicarCartoesPendentes, aplicarBombaPendentes } from '../../lib/aplicar-cadastros.js';
 
 const PASTA = new URL('../../migrations/', import.meta.url);
 function d1() {
@@ -110,4 +110,19 @@ test('placa alterada no banco: o controle dos cartões segue o cadastro (gestao_
   pedir(db, 2, 'placas', 'editar', 'AAA1A11', { situacao: 'VENDIDO' });
   await aplicarCadastrosPendentes(env(DB), { rpcFn });
   assert.deepEqual(chamadas.slice(1), [['gestao_aplicar_cadastro', undefined], ['gestao_sincronizar_cartoes', true]]);
+});
+
+test('preço bomba interna: fila própria (alteracoes_bomba) com gestao_aplicar_bomba, na ordem', async () => {
+  const { db, DB } = d1();
+  const pedirBomba = (id, tipo, dados) => db.prepare(
+    `INSERT INTO alteracoes_bomba (id, usuario_id, usuario_nome, tipo, dados) VALUES (?, 1, 'x', ?, ?)`).run(id, tipo, JSON.stringify(dados));
+  pedirBomba(1, 'negociacao', { data: '2026-11-01', fornecedor: 'A', produto: 'DIESEL', unidade: 'SP', preco: 5 });
+  db.exec("UPDATE alteracoes_bomba SET banco_aplicado_em = 'anterior'");
+  pedirBomba(2, 'negociacao', { data: '2026-11-25', fornecedor: 'A', produto: 'DIESEL', unidade: 'SP', preco: 5.3 });
+  pedirBomba(3, 'fornecedor', { fornecedor: 'B', produto: 'ARLA', unidades: ['SP'], ativo: true });
+  const chamadas = [];
+  const r = await aplicarBombaPendentes(env(DB), { rpcFn: async (_e, f, a) => { chamadas.push([f, a.p_tipo]); return { ok: true, linha: a.p_tipo === 'fornecedor' ? null : 9 }; } });
+  assert.deepEqual(r, { aplicados: 2, erros: 0, parou: false });
+  assert.deepEqual(chamadas, [['gestao_aplicar_bomba', 'negociacao'], ['gestao_aplicar_bomba', 'fornecedor']]);
+  assert.deepEqual(db.prepare('SELECT banco_mensagem FROM alteracoes_bomba ORDER BY id').all().map((x) => x.banco_mensagem), [null, 'linha 9', 'linha null']);
 });

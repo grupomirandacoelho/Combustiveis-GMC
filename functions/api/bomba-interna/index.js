@@ -1,5 +1,6 @@
 import { usuarioDaSessao, json } from '../../../lib/auth.js';
 import { pode } from '../../../lib/permissoes.js';
+import { aplicarCadastrosDepois } from '../../../lib/aplicar-cadastros.js';
 
 // Operacional > Preço bomba interna: negociações e fornecedores lançados no site; o vigia grava na planilha
 // CONTROLES\Negociação bomba interna.xlsx (scripts/planilha_bomba.py).
@@ -22,7 +23,7 @@ export async function onRequestGet({ request, env }) {
   return json({ podeEditar: pode(u, 'preco-fornecedor-editar'), alteracoes: results.map((r) => ({ ...r, dados: JSON.parse(r.dados) })) });
 }
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   const origem = request.headers.get('Origin');
   if (origem && origem !== new URL(request.url).origin) return json({ erro: 'Origem não permitida.' }, 403);
   const u = await usuarioDaSessao(env.DB, request);
@@ -73,5 +74,6 @@ export async function onRequestPost({ request, env }) {
   const res = await env.DB.batch(novos.map(([tipo, dados]) => env.DB.prepare(
     `INSERT INTO alteracoes_bomba (usuario_id, usuario_nome, tipo, dados) VALUES (?, ?, ?, ?)
      RETURNING id, criado_em, usuario_nome, tipo, dados, estado, mensagem, aplicada_em, linha`).bind(u.id, u.nome, tipo, JSON.stringify(dados))));
+  aplicarCadastrosDepois({ env, waitUntil }, 'bomba');   // aplica também direto no banco (15.3 item 3, 25/11/2026)
   return json({ ok: true, alteracoes: res.map((r) => r.results[0]).map((r) => ({ ...r, dados: JSON.parse(r.dados) })) }, 201);
 }

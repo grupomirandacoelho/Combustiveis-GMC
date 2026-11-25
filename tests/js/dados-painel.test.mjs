@@ -70,3 +70,36 @@ test('geradoDoBanco: busca pela versão, guarda e reaproveita; chave por arquivo
     assert.equal(chamadas.filter((c) => c === 'gestao_dados_gerados').length, 1);
   });
 });
+
+// 15.3 item 3 (25/11/2026): preços e fornecedores da bomba interna do banco ("bomba-fonte" = "banco")
+test('extras do banco: a bomba interna troca as chaves do KV e a versão dela entra no etag', async () => {
+  const kv = kvFalso({ versao: '{"versao":"V"}', 'abastecimentos-fonte': 'banco', 'bomba-fonte': 'banco',
+    'abastecimentos-extras': '{"locais":{"P":[1,2]},"negociacao":{"velha":1},"fornecedoresBomba":[["VELHO"]]}' });
+  const env = ENV(kv);
+  await comBanco({ gestao_dados_painel_versao: { versao: '7' }, gestao_dados_painel: '{"linhas":1}', gestao_bomba_versao: '"abcdef0123456789"',   // a API devolve texto como string JSON
+    gestao_bomba_extras: { negociacao: { dic: {}, col: { preco: [5.1] } }, fornecedoresBomba: [['NOVO', 'ARLA', 'SP', true, null]] } }, async () => {
+    const a = await abastecimentosDoBanco(env);
+    assert.equal(a.etag, '"b7-V-abcdef012345"');
+    assert.deepEqual(JSON.parse(a.corpo), { linhas: 1, locais: { P: [1, 2] }, negociacao: { dic: {}, col: { preco: [5.1] } },
+      fornecedoresBomba: [['NOVO', 'ARLA', 'SP', true, null]] });
+  });
+  // chave desligada: fica a do KV e o etag não muda de formato
+  kv.m.delete('bomba-fonte'); kv.m.delete('abastecimentos-nuvem');
+  await comBanco({ gestao_dados_painel_versao: { versao: '7' }, gestao_dados_painel: '{"linhas":1}' }, async () => {
+    const a = await abastecimentosDoBanco(env);
+    assert.equal(a.etag, '"b7-V"');
+    assert.deepEqual(JSON.parse(a.corpo).fornecedoresBomba, [['VELHO']]);
+  });
+});
+
+test('cadastro dos fornecedores da bomba: do banco com a chave ligada, senão do KV', async () => {
+  const { cadastroFornecedores } = await import('../../lib/bomba.js');
+  const DB = { prepare: () => ({ all: async () => ({ results: [] }) }) };
+  const kv = kvFalso({ 'fornecedores-bomba': JSON.stringify({ fornecedores: [['KV', 'DIESEL', 'SP', true, null]] }) });
+  await comBanco({ gestao_bomba_fornecedores_lista: [['BANCO', 'ARLA', 'BA', false, '12345678000199']] }, async () => {
+    assert.equal((await cadastroFornecedores({ ...ENV(kv), DB }))[0].fornecedor, 'KV');
+    kv.m.set('bomba-fonte', { value: 'banco', metadata: null });
+    const l = await cadastroFornecedores({ ...ENV(kv), DB });
+    assert.deepEqual(l, [{ fornecedor: 'BANCO', produto: 'ARLA', unidade: 'BA', ativo: false, cnpj: '12345678000199' }]);
+  });
+});
