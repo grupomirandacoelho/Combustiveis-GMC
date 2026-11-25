@@ -57,8 +57,10 @@ FONTES = {
     # gestao_aplicar_bomba; Arla pelo pg_cron). Volta: "sincronizar bomba_precos bomba_fornecedores --voltar-planilha".
     'bomba_precos': {'arquivo': CTRL('Negociação bomba interna.xlsx'), 'aba': 'Plan1', 'origem_banco': True},
     'bomba_fornecedores': {'arquivo': CTRL('Negociação bomba interna.xlsx'), 'aba': 'Fornecedores', 'origem_banco': True},
-    'postos_localizacao': {'arquivo': os.path.join(RAIZ, 'LOCALIZAÇÃO DOS POSTOS.xlsx'), 'aba': 'Localização dos postos', 'colunas': 11},
-    'negociacoes': {'arquivo': os.path.join(RAIZ, 'Gestão de negociações de preço.xlsx'), 'aba': 'Base de dados de negociações', 'colunas': 17},
+    # 25/11/2026 (15.3 itens 4 e 5, virada; teste do usuário: rodada de 7 preços + 1 coordenada): o banco é a origem das negociações e
+    # das coordenadas dos postos. Volta: "sincronizar negociacoes postos_localizacao --voltar-planilha". ROTAS segue recopiada.
+    'postos_localizacao': {'arquivo': os.path.join(RAIZ, 'LOCALIZAÇÃO DOS POSTOS.xlsx'), 'aba': 'Localização dos postos', 'colunas': 11, 'origem_banco': True},
+    'negociacoes': {'arquivo': os.path.join(RAIZ, 'Gestão de negociações de preço.xlsx'), 'aba': 'Base de dados de negociações', 'colunas': 17, 'origem_banco': True},
     'negociacoes_rotas': {'arquivo': os.path.join(RAIZ, 'Gestão de negociações de preço.xlsx'), 'aba': 'ROTAS'},
     'orcamento_metas': {'arquivo': os.path.join(RAIZ, 'Banco_Orçamento_Despesas_Frota.xlsx'), 'aba': 'Base_Metas'},
     'orcamento_unidades': {'arquivo': os.path.join(RAIZ, 'Banco_Orçamento_Despesas_Frota.xlsx'), 'aba': 'BD_UND'},

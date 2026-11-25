@@ -55,6 +55,11 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 - A comparação diária com as planilhas passou a incluir a lista dos motoristas, as negociações e as coordenadas; ela achou 3 postos
   com travessão ("–") no nome com a chave diferente no banco, corrigido (`gestao_chave_txt` agora tira todo caractere não ASCII,
   como o vigia). Tudo igual depois.
+- **Virada das negociações e da localização dos postos: o banco passou a ser a origem.** Teste do usuário: rodada de preços com 7
+  postos e uma coordenada (POSTO BELEM 04). O banco estava lento na hora (consulta simples em 7 s) e a gravação direta estourou o tempo;
+  a planilha foi recopiada antes e, quando o banco voltou, a varredura aplicou de novo: 7 negociações ficaram em dobro no banco
+  (linhas 2246–2252). Corrigido recopiando a aba da planilha (2.244 negociações, cada uma uma vez); as 7 que o banco gravou sozinho
+  eram idênticas às da planilha. Depois da virada a planilha não é mais recopiada, então isso não se repete. Comparação: tudo igual.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada
