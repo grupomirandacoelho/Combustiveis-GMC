@@ -32,6 +32,13 @@ class Diferencas(unittest.TestCase):
         self.assertNotIn('1111', repr(d))
         self.assertNotIn('2222', repr(d))
 
+    def test_precos_da_bomba_por_dia_fornecedor_e_repeticao(self):
+        n = {'dic': {'fornecedor': ['A'], 'produto': ['ARLA'], 'unidade': ['SP', 'BA']},
+             'col': {'data': [1, 1, 1], 'fornecedor': [0, 0, 0], 'produto': [0, 0, 0], 'unidade': [0, 0, 1], 'preco': [3.1, 3.2, 3.0]}}
+        self.assertEqual(C.precos(n), [{'chave': '1|A|ARLA|SP|1', 'preco': 3.1}, {'chave': '1|A|ARLA|SP|2', 'preco': 3.2},
+                                       {'chave': '1|A|ARLA|BA|1', 'preco': 3.0}])
+        self.assertEqual(C.precos(None), [])
+
 
 if __name__ == '__main__':
     unittest.main()

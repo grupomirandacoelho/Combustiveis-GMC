@@ -180,8 +180,7 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 - [x] Placas e motoristas: banco é a origem desde 25/11 (lidos do banco, fila aplicada no banco, virada depois do teste do usuário).
       Comparação diária com a planilha (`comparar_cadastros.py`) até 15.4.
 - [x] Cartões frota: banco é a origem desde 25/11 (virada junto com as placas; ligação com o cadastro de placas no banco).
-- [~] Preço bomba interna: lido do banco e fila aplicada no banco desde 25/11 (`bomba-fonte`); falta comparar com lançamentos reais e
-      a virada (`bomba_precos`/`bomba_fornecedores` sem recópia + `gestao_bomba_repetir_arla` de hora em hora no pg_cron).
+- [x] Preço bomba interna: banco é a origem desde 25/11 (virada depois do teste do usuário; Arla de hora em hora no pg_cron).
 - [ ] Placas e motoristas sem a planilha (já gravam no Supabase).
 - [ ] Cartões frota, postos dos motoristas e negociações, preço bomba interna, coordenadas dos postos.
 - [ ] Real x Orçado: orçamento no banco com tela de lançamento.

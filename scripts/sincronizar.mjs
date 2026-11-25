@@ -914,7 +914,7 @@ function compararCadastros() {
     let r = null;
     try { r = JSON.parse(out.trim().split(/\r?\n/).pop()); } catch {}
     if (!r) { log('Comparação dos cadastros banco x planilha: falhou (' + out.trim().slice(-200) + ')'); return; }
-    log(r.igual ? `Comparação dos cadastros banco x planilha: iguais (${r.placas} placas, ${r.motoristas} motoristas, ${r.cartoes} cartões).`
+    log(r.igual ? `Comparação dos cadastros banco x planilha: iguais (${r.placas} placas, ${r.motoristas} motoristas, ${r.cartoes} cartões, ${r.precosBomba} preços da bomba).`
       : `Comparação dos cadastros banco x planilha: ATENÇÃO, ${r.diferencas} diferença(s) (${r.relatorio}).`);
   });
   p.on('error', () => clearTimeout(fim));

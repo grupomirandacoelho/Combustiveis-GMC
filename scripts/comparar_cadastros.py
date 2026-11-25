@@ -21,6 +21,8 @@ import openpyxl
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import planilha_cadastros as pcad  # noqa: E402
 import planilha_cartoes as pcart  # noqa: E402
+import importar_base as ib  # noqa: E402
+import tempfile  # noqa: E402
 import supabase_sync as ss  # noqa: E402
 
 PASTA = os.path.join(ss.PROJETO, '.dados', 'comparacao-cadastros')
@@ -53,6 +55,19 @@ def diferencas(nome, planilha, banco, chave):
     return difs
 
 
+def precos(n):
+    """negociação colunar (importar_base / gestao_bomba_extras) -> [{chave: dia|fornecedor|produto|unidade|n, preco}]; n = repetição
+    da mesma chave (a planilha pode ter dois preços no mesmo dia, um vazio)"""
+    if not n:
+        return []
+    d, c, vistos, out = n['dic'], n['col'], {}, []
+    for i in range(len(c['data'])):
+        k = '|'.join([str(c['data'][i]), d['fornecedor'][c['fornecedor'][i]], d['produto'][c['produto'][i]], d['unidade'][c['unidade'][i]]])
+        vistos[k] = vistos.get(k, 0) + 1
+        out.append({'chave': k + '|' + str(vistos[k]), 'preco': c['preco'][i]})
+    return out
+
+
 def comparar():
     copia = os.path.join(os.path.dirname(pcart.COPIAS), 'comparando-cadastros.xlsx')
     os.makedirs(os.path.dirname(copia), exist_ok=True)
@@ -64,17 +79,23 @@ def comparar():
         os.remove(copia)
     with zipfile.ZipFile(pcart.planilha()) as z:
         cartoes = pcart.ler_cartoes(z)[0]
+    with tempfile.TemporaryDirectory() as tmp:   # bomba interna (virada de 25/11/2026), lida como o vigia lê para os painéis
+        neg, forn = ib.ler_bomba_interna(ib.BOMBA_PADRAO, tmp)
     with ss.conectar() as conn, conn.cursor() as cur:
-        cur.execute('select public.gestao_cadastros_lista(), public.gestao_cartoes_lista()')
-        cad, cart = cur.fetchone()
+        cur.execute('select public.gestao_cadastros_lista(), public.gestao_cartoes_lista(), public.gestao_bomba_extras()')
+        cad, cart, bomba = cur.fetchone()
     difs = (diferencas('placas', plan['placas'], cad['placas'], 'placa')
             + diferencas('motoristas', plan['motoristas'], cad['motoristas'], 'usuario')
-            + diferencas('cartoes', cartoes, cart['cartoes'], 'placa'))
+            + diferencas('cartoes', cartoes, cart['cartoes'], 'placa')
+            + diferencas('bomba-precos', precos(neg), precos(bomba['negociacao']), 'chave')
+            + diferencas('bomba-fornecedores', [{'chave': '|'.join(map(str, f[:3])), 'ativo': f[3], 'cnpj': f[4]} for f in forn or []],
+                         [{'chave': '|'.join(map(str, f[:3])), 'ativo': f[3], 'cnpj': f[4]} for f in bomba['fornecedoresBomba'] or []], 'chave'))
     os.makedirs(PASTA, exist_ok=True)
     rel = os.path.join(PASTA, dt.datetime.now().strftime('%Y-%m-%d_%H%M') + '.json')
     with open(rel, 'w', encoding='utf-8') as f:
         json.dump({'diferencas': difs}, f, ensure_ascii=False, indent=1)
     return {'igual': not difs, 'placas': len(cad['placas']), 'motoristas': len(cad['motoristas']), 'cartoes': len(cart['cartoes']),
+            'precosBomba': len(bomba['negociacao']['col']['preco']),
             'diferencas': len(difs), 'relatorio': os.path.relpath(rel, ss.PROJETO), 'exemplos': difs[:5]}
 
 
