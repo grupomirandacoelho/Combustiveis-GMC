@@ -6,6 +6,9 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 25/11/2026
 
+- **Abas Metas x mês, Bomba interna e Transações Negadas da Base.xlsx** (decisão do usuário: "Parar de copiar"): nenhuma tela do
+  portal usa as cópias delas no banco e o Power BI continua lendo a planilha. A cópia acaba junto com o vigia (depois de 01/12); o
+  que já está no banco fica guardado.
 - **Botão "Atualizar: dados novos" aceso sem motivo** (correção; pedido do usuário "Pode seguir"): desde que os painéis passaram a
   ler do banco, a tela comparava a versão do banco com a da última carga do vigia; as duas nunca batiam e o botão ficava aceso o tempo
   todo (clicar não apagava). Agora o aviso usa a mesma versão do arquivo que a tela carregou (abastecimentos + negociações,

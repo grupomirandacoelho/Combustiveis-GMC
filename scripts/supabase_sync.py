@@ -66,6 +66,8 @@ FONTES = {
     # o banco é a origem. Volta: "sincronizar orcamento_metas orcamento_unidades --voltar-planilha".
     'orcamento_metas': {'arquivo': os.path.join(RAIZ, 'Banco_Orçamento_Despesas_Frota.xlsx'), 'aba': 'Base_Metas', 'origem_banco': True},
     'orcamento_unidades': {'arquivo': os.path.join(RAIZ, 'Banco_Orçamento_Despesas_Frota.xlsx'), 'aba': 'BD_UND', 'origem_banco': True},
+    # metas_mes, bomba_compras e transacoes_negadas: decisão do usuário em 25/11/2026, param de ser copiadas quando o vigia for
+    # desligado (nenhuma tela lê; o Power BI lê a Base.xlsx direto); o que está no banco fica como histórico
     'metas_mes': {'arquivo': os.path.join(RAIZ, 'Base.xlsx'), 'aba': 'Metas x mes', 'largo': {'fixas': 2, 'coluna': 'mes', 'valor': 'meta'}},
     'bomba_compras': {'arquivo': os.path.join(RAIZ, 'Base.xlsx'), 'abas': [('Bomba interna', 'DIESEL'), ('Bomba Interna Arla', 'ARLA')], 'fixa': 'produto'},
     'transacoes_negadas': {'arquivo': os.path.join(RAIZ, 'Base.xlsx'), 'aba': 'Transações Negadas'},

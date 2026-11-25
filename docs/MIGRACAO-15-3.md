@@ -25,7 +25,7 @@ origem (não pode voltar a ser recopiada da planilha), senão a carga desfaz o q
 | 5 | LOCALIZAÇÃO DOS POSTOS | `/api/locais` → `alteracoes_locais` → `planilha_locais.py`; geocodificação (OpenStreetMap) | extras `locais`/`locaisSuspeitos`, CSV dos postos | `public.postos_localizacao`, `gestao.postos` | **VIRADA 25/11: banco é a origem** (`gestao_aplicar_local`; OpenStreetMap ainda pelo vigia, com ponte para o banco) |
 | 6 | Banco_Orçamento_Despesas_Frota | só à mão | extras `orcamento` (Real x Orçado) | `public.orcamento_*`, `gestao.orcamento` | **VIRADA 25/11: banco é a origem**; envio pela tela Real x Orçado, um ano por vez, sem substituir (`gestao_orcamento_importar`, KV `orcamento-fonte`) |
 | 7 | ANP / Petrobras / Reajustes SGB | downloads do vigia; reajustes = planilha na pasta local | KV `anp`, `petrobras`, `reajustes` | nada | ANP e Petrobras pelo GitHub Actions (simulação desde 25/11; Supabase gratuito não dá conta); reajustes: planilha sem uso (contratos no portal) |
-| 8 | Abas da Base.xlsx (Metas x mês, compras da bomba, negadas, ANP) | sistema externo (só leitura) | só a carga do modelo | espelhos + `gestao` | decidir no fim (importação só leitura ou sai) |
+| 8 | Abas da Base.xlsx (Metas x mês, compras da bomba, negadas, ANP) | sistema externo (só leitura) | só a carga do modelo | espelhos + `gestao` | **decidido 25/11 (usuário): parar de copiar.** Nenhuma tela lê; o Power BI lê a Base.xlsx direto. O que está no banco fica como histórico e a cópia acaba com o vigia (ANP já saiu em 25/11) |
 
 Todos os itens de `abastecimentos-extras` (negociação e fornecedores da bomba, coordenadas, `negPostos`, orçamento) precisam vir do
 banco antes de desligar `verificar()`/`importar_base.py` do vigia.
