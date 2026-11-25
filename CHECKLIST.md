@@ -163,7 +163,7 @@ Ordem (cada passo conferido antes do próximo; o vigia continua ligado até o fi
         `/api/sync/banco/aplicar` (vigia, 1x/min); colunas `banco_aplicado_em`/`banco_mensagem`.
   - [x] 3.3 Virada (19/11, antecipada a pedido do usuário): `supabase_sync.py` não recopia mais `base_transacoes`
         (volta: `py scripts/supabase_sync.py sincronizar base_transacoes --voltar-planilha`).
-  - [ ] 3.2 Teste até 01/12/2026: `scripts/comparar_base.py` diário (vigia, 7h) igual + nenhum `banco_mensagem` com "erro".
+  - [ ] 3.2 Teste até 27/11/2026 (adiantado de 01/12 pelo usuário em 25/11): `scripts/comparar_base.py` diário (vigia, 7h) igual + nenhum `banco_mensagem` com "erro".
   - [x] 3.4 Varredura no agendador da nuvem (23/11: pg_cron `nuvem-varredura-filas`).
 - [~] 4. Rotinas dos cartões nas Edge Functions (plano e situação em `docs/MIGRACAO-PASSO4.md`; infraestrutura pronta em 19/11;
       estornos TruckPag e APIs dos cartões com Rateio das NFs LIGADOS em 23/11; recálculo do KM e varredura das filas também na nuvem; falta Conferência, conciliação e cadastros nos cartões): tempo real e D-1 (Ticket/TruckPag), estornos TruckPag, cadastro de motoristas e
@@ -207,4 +207,4 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 ## 16. Espaço do Supabase (25/11/2026; plano gratuito = 500 MB, em 25/11: 334 MB)
 - [x] Limpeza diária do histórico do pg_cron (mais de 7 dias).
 - [ ] Tirar a ANP do espelho (`supabase_sync.py`) e da carga (`gestao_carga.py`) e apagar `public.anp_precos` e `gestao.anp_precos` (89 MB; o site não usa).
-- [ ] Apagar `backup.base_transacoes_20261119` (33 MB) depois de 01/12 (fim da conferência banco x planilha).
+- [ ] Apagar `backup.base_transacoes_20261119` (33 MB) depois de 01/12 (a conferência banco x planilha termina em 27/11; a cópia fica uns dias a mais por segurança).

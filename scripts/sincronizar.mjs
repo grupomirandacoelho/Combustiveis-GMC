@@ -881,7 +881,7 @@ function baseCopiaMudou() {
   try { const m = fs.statSync(planilhaBaseCopia()).mtimeMs; if (m !== mtimeBaseCopia) { const antes = mtimeBaseCopia; mtimeBaseCopia = m; return antes !== 0; } } catch {}
   return false;
 }
-// Comparação diária banco x planilha (15.2 passo 3, item 2; teste até 01/12/2026): uma vez por dia, a partir das 7h.
+// Comparação diária banco x planilha (15.2 passo 3, item 2; teste até 27/11/2026, adiantado de 01/12): uma vez por dia, a partir das 7h.
 const COMPARACAO = { dia: '', rodando: false };
 function rodarComparacao() {
   const agora = new Date(), dia = agora.toISOString().slice(0, 10);

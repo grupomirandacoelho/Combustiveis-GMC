@@ -46,7 +46,7 @@ computador novo, rode `npx wrangler login` para entrar na conta Cloudflare.
   correções e exclusões do Editar abastecimentos, Rateio das NFs, estornos, recálculo do KM) é aplicado também no banco (Supabase,
   `base_transacoes`) logo depois de gravado, na ordem em que foi pedido. A planilha continua recebendo tudo pelo vigia, como reserva.
 - Se o banco estiver fora do ar, o pedido fica pendente e o vigia reaplica uma vez por minuto (`/api/sync/banco/aplicar`).
-- **Desde 19/11/2026 o banco é a origem:** a Base_copia não é mais recopiada para o banco. Teste até 01/12: o vigia compara banco x
+- **Desde 19/11/2026 o banco é a origem:** a Base_copia não é mais recopiada para o banco. Teste até 27/11 (adiantado de 01/12): o vigia compara banco x
   planilha uma vez por dia (`py scripts/comparar_base.py`; resultado no log e em `.dados/comparacao-base/`). Para voltar à planilha:
   `py scripts/supabase_sync.py sincronizar base_transacoes --voltar-planilha`.
 - Para ver o resultado de cada pedido: colunas `banco_aplicado_em` e `banco_mensagem` das tabelas `consolidador_lotes` e

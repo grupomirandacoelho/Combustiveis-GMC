@@ -212,7 +212,7 @@ insere e renumera `linha` por data; refaz `chave`) e `gestao_aplicar_alteracao(p
 Execução só para `service_role`. Quem chama: `lib/aplicar-banco.js` (portal, ao gravar e na varredura `/api/sync/banco/aplicar`).
 No D1, `banco_aplicado_em` (hora, 'anterior' ou 'aplicando:<hora>' enquanto reservado) e `banco_mensagem` mostram o resultado.
 Desde 19/11/2026 10:47 `base_transacoes` não é mais recopiada da Base_copia: o banco é a origem (volta: `supabase_sync.py sincronizar
-base_transacoes --voltar-planilha`). `scripts/comparar_base.py` compara os dois até 01/12/2026.
+base_transacoes --voltar-planilha`). `scripts/comparar_base.py` compara os dois até 27/11/2026 (adiantado de 01/12).
 
 ## Rotinas da nuvem (desde 19/11/2026, passo 4)
 `public.nuvem_rotinas` (nome, modo desligado|simular|ligado, intervalo_min, estado jsonb, disparada_em, ultima_execucao,

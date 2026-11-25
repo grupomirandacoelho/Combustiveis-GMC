@@ -1,7 +1,7 @@
 """Compara a planilha Base_copia (aba Transações) com o banco (public.base_transacoes), abastecimento por abastecimento.
 Migração 15.2 passo 3, item 2 (19/11/2026, pedido do usuário: "Já pode desligar a recópia hoje e começar as comparações"):
 desde a virada o banco vive só dos pedidos do portal e a planilha segue recebendo os mesmos pedidos pelo vigia; as duas
-precisam continuar iguais até o fim do teste (01/12/2026).
+precisam continuar iguais até o fim do teste (27/11/2026; adiantado de 01/12).
 
     py scripts/comparar_base.py            compara tudo; resumo em JSON no stdout, relatório completo em .dados/comparacao-base/
     py scripts/comparar_base.py --desde 2026-11-01   só abastecimentos a partir da data

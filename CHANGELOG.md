@@ -6,6 +6,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 25/11/2026
 
+- **Fim da transição adiantado** (pedido do usuário: "vamos comparar até o dia 27/11, quero adiantar isso"): as comparações diárias
+  planilhas x banco vão até 27/11 (não mais 01/12). Em 26/11 entram as últimas alterações e na sexta, 27/11, a transição das
+  planilhas para o Supabase é finalizada (vigia desligado nos dois computadores). A cópia de segurança antiga das transações no banco
+  continua até 01/12.
 - **Menos leitura no D1 (rateio das bombas)**: a consulta que o computador da sincronização faz a cada 5 minutos para saber quais
   abastecimentos de bomba já foram corrigidos à mão lia a fila inteira de correções (2.513 linhas por vez, ~0,7 milhão por dia do
   limite gratuito de 5 milhões). Com um índice só dessas linhas, passou a ler 1 linha por vez. O resultado é o mesmo.
