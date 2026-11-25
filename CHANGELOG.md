@@ -36,6 +36,8 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   igual ao da planilha: 2.979 preços e 25 fornecedores), chave KV `bomba-fonte` = `banco`. Os lançamentos da tela vão também direto
   ao banco (`gestao_aplicar_bomba`: mesmo dia troca o preço, exclusão deixa o preço vazio, CNPJ formatado). A repetição diária do
   preço do Arla está pronta no banco (`gestao_bomba_repetir_arla`; hoje não achou nada a fazer, igual ao vigia) e liga na virada.
+- **ANP fora do espelho e do modelo do banco** (espaço do Supabase: 334 de 500 MB; a ANP ocupava 89 MB e nada a lia, o Preço x ANP usa
+  o arquivo baixado do gov.br). As duas tabelas ainda existem; apagar só com a confirmação do usuário.
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada

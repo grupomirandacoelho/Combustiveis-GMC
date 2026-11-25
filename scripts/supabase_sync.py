@@ -63,7 +63,7 @@ FONTES = {
     'metas_mes': {'arquivo': os.path.join(RAIZ, 'Base.xlsx'), 'aba': 'Metas x mes', 'largo': {'fixas': 2, 'coluna': 'mes', 'valor': 'meta'}},
     'bomba_compras': {'arquivo': os.path.join(RAIZ, 'Base.xlsx'), 'abas': [('Bomba interna', 'DIESEL'), ('Bomba Interna Arla', 'ARLA')], 'fixa': 'produto'},
     'transacoes_negadas': {'arquivo': os.path.join(RAIZ, 'Base.xlsx'), 'aba': 'Transações Negadas'},
-    'anp_precos': {'arquivo': os.path.join(RAIZ, 'Base.xlsx'), 'aba': 'ANP', 'colunas': 26},
+    # 'anp_precos' saiu em 25/11/2026 (89 MB no plano de 500 MB e nada lia: o Preço x ANP usa o anp.json do gov.br, scripts/anp_precos.py)
 }
 
 

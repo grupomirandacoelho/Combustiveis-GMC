@@ -219,8 +219,7 @@ class Carga:
             'bprec': P('select * from public.bomba_precos'),
             'bcomp': P('select * from public.bomba_compras'),
             'negadas': P('select * from public.transacoes_negadas'),
-            'anp': P('select mes, estado, municipio, produto, regiao, numero_de_postos_pesquisados, preco_medio_revenda, desvio_padrao_revenda, '
-                     'preco_minimo_revenda, preco_maximo_revenda, coef_de_variacao_revenda from public.anp_precos'),
+            # ANP fora do modelo desde 25/11/2026: o site usa o anp.json baixado do gov.br (scripts/anp_precos.py), não estas tabelas
         }
         e['d1'] = {t: P(f'select * from public."{t}"') for t in (
             'bomba_bases', 'bomba_movimentacoes', 'bomba_rateio_inicio', 'bomba_rateio_cc', 'bomba_rateio_validacoes',
@@ -235,7 +234,7 @@ class Carga:
         e = getattr(self, 'esp', None) or self.ler_espelho()
         base, placas, motoristas, orc_und, orc = e['base'], e['placas'], e['motoristas'], e['orc_und'], e['orc']
         negoc, rotas, loc, cart, merc, metas = e['negoc'], e['rotas'], e['loc'], e['cart'], e['merc'], e['metas']
-        bforn, bprec, bcomp, negadas, anp, d1 = e['bforn'], e['bprec'], e['bcomp'], e['negadas'], e['anp'], e['d1']
+        bforn, bprec, bcomp, negadas, d1 = e['bforn'], e['bprec'], e['bcomp'], e['negadas'], e['d1']
         self.ultimo = time.time()
 
         # ---------- empresas e unidades ----------
@@ -656,7 +655,7 @@ class Carga:
                                            'plataforma', 'tipo', 'valor', 'orientacao', 'contato', 'novo_contato', 'observacao', 'transacao_ref',
                                            'linha_planilha'], rows)
 
-        # ---------- contratos, orçamento, negadas (a ANP vai numa conexão própria: carregar_anp) ----------
+        # ---------- contratos, orçamento, negadas ----------
         self.inserir('contratos_anp', ['id', 'praca', 'uf', 'unidade_id', 'data_contrato', 'produto', 'observacao', 'ativo'],
                      [[x['id'], x['unidade'], x['uf'], U(x['unidade']), x['data_contrato'] or None, x['produto'], x['observacao'], bool(x['ativo'])]
                       for x in d1['contratos_anp']])
@@ -744,25 +743,6 @@ class Carga:
         log(f'rateio: {novas} NF(s) novas nas compras, {completadas} completada(s)')
         self.rateio_resumo = {'novas': novas, 'completadas': completadas}
 
-    def carregar_anp(self):
-        """ANP (96 mil linhas) numa conexão e transação próprias: depois dos abastecimentos, a mesma conexão do pooler cai.
-        Não tem chave para outras tabelas, então pode ir separada."""
-        anp = self.esp['anp']
-        rows = {}
-        for x in anp:
-            u = N.uf(x['estado'])
-            if not (x['mes'] and u and x['municipio'] and x['produto']):
-                continue
-            k = (x['mes'], u, N.chave(x['municipio']), N.chave(x['produto']))
-            if k in rows:
-                self.pend['ANP repetida (mês, UF, município, produto)'].append('|'.join(map(str, k)))
-                continue
-            pp = num(x['numero_de_postos_pesquisados'])
-            rows[k] = list(k) + [N.chave(x['regiao']) or None, int(pp) if pp is not None else None, num(x['preco_medio_revenda']),
-                                 num(x['desvio_padrao_revenda']), num(x['preco_minimo_revenda']), num(x['preco_maximo_revenda']),
-                                 num(x['coef_de_variacao_revenda'])]
-        self.inserir('anp_precos', ['mes', 'uf', 'municipio', 'produto', 'regiao', 'postos_pesquisados', 'preco_medio', 'desvio_padrao',
-                                    'preco_minimo', 'preco_maximo', 'coef_variacao'], list(rows.values()))
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -859,18 +839,7 @@ def carregar():
         return k, carga_id
     k, carga_id = com_tentativas(principal, 'carga principal')
 
-    # 3) ANP numa conexão própria (sem chave para as outras tabelas)
-    def anp(cur):
-        cur.execute('truncate gestao.anp_precos')
-        ka = Carga(cur)
-        ka.esp = esp
-        ka.carregar_anp()
-        return ka
-    ka = com_tentativas(anp, 'ANP')
-    k.linhas.update(ka.linhas)
-    for n, v in ka.pend.items():
-        k.pend[n].extend(v)
-    # 4) conferência e registro da carga
+    # 3) conferência e registro da carga
     with conectar() as con, con.transaction():
         with con.cursor() as cur:
             conf = conferir(cur)
