@@ -1,13 +1,14 @@
 import { usuarioDaSessao, json } from '../../../lib/auth.js';
 import { pode } from '../../../lib/permissoes.js';
 import { CARTOES, IDS, SITUACOES, CATEGORIAS_COM_CARTAO, normPlaca, placaValida, validar } from '../../../lib/cartoes.js';
-import { lerCadastros } from '../../../lib/cadastros-fonte.js';
+import { lerCadastros, lerCartoes } from '../../../lib/cadastros-fonte.js';
+import { aplicarCadastrosDepois } from '../../../lib/aplicar-cadastros.js';
 
 // GET  /api/cartoes   lista da planilha publicada pelo vigia + alterações do portal + avisos dos motoristas
 // POST /api/cartoes   {acao: 'editar'|'adicionar', chave, dados: {ticket, truckpag, veloe}} -> pendente até o vigia gravar
 
 async function lista(env) {
-  const c = await env.DADOS.get('cartoes', 'json');
+  const c = await lerCartoes(env);   // planilha (KV) ou banco ("cartoes-fonte", 15.3)
   return { itens: c && Array.isArray(c.cartoes) ? c.cartoes : null, atualizadoEm: c ? c.atualizadoEm : null };
 }
 
@@ -37,7 +38,7 @@ export async function onRequestGet({ request, env }) {
   });
 }
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   const origem = request.headers.get('Origin');
   if (origem && origem !== new URL(request.url).origin) return json({ erro: 'Origem não permitida.' }, 403);
   const u = await usuarioDaSessao(env.DB, request);
@@ -91,5 +92,6 @@ export async function onRequestPost({ request, env }) {
     `INSERT INTO alteracoes_cartoes (usuario_id, usuario_nome, acao, chave, dados, antes)
      VALUES (?, ?, ?, ?, ?, ?) RETURNING id, criado_em, estado`)
     .bind(u.id, u.nome, acao, placa, JSON.stringify(dados), JSON.stringify(antes)).first();
+  aplicarCadastrosDepois({ env, waitUntil }, 'cartoes');   // aplica também direto no banco (15.3 item 2, 25/11/2026)
   return json({ ok: true, alteracao: { ...r, acao, chave: placa, dados, antes, usuario_nome: u.nome } }, 201);
 }

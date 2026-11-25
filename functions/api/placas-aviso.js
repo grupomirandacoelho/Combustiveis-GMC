@@ -1,6 +1,7 @@
 import { json } from '../../lib/auth.js';
 import { normPlaca } from '../../lib/cartoes.js';
 import { placasDesabilitadas } from './placas-desabilitadas.js';
+import { lerCartoes } from '../../lib/cadastros-fonte.js';
 
 // GET /api/placas-aviso?q=ABC1   sugestões de placa para o aviso de cartão faltando (página dos motoristas, sem login).
 // Procura nas placas do controle de cartões (chave "cartoes" do KV) o que o motorista digitou: começo da placa, parte
@@ -41,7 +42,7 @@ export async function onRequestGet({ request, env }) {
   if (site && site !== 'same-origin') return json({ erro: 'Origem não permitida.' }, 403);
   const q = normPlaca(new URL(request.url).searchParams.get('q')).slice(0, 7);
   if (q.length < 3) return json({ sugestoes: [], exata: false, controle: true });
-  const dados = await env.DADOS.get('cartoes', 'json');
+  const dados = await lerCartoes(env).catch(() => null);
   const desab = await placasDesabilitadas(env);   // placa desabilitada no cadastro não é sugerida
   const lista = (dados && Array.isArray(dados.cartoes) ? dados.cartoes : []).filter((c) => c && c.placa && !desab.has(normPlaca(c.placa)));
   const consultas = [q, q.length === 7 ? outraForma(q) : null].filter(Boolean);

@@ -14,6 +14,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 - **Placas e motoristas: cada alteração do portal também é gravada direto no banco** (passo 2 do 15.3), com as mesmas regras do
   vigia na planilha (chave repetida, chave que não existe mais, linha nova no fim). Vale para a tela de cadastros e para os números
   devolvidos pelas APIs dos cartões; a varredura de 2 em 2 min cobre o banco fora do ar. A planilha continua recebendo tudo pelo vigia.
+- **Cartões frota (item 2 do 15.3): lidos do banco e cada alteração também gravada nele.** A lista do controle dos cartões (tela
+  Cartões frota e o aviso de cartão faltando dos motoristas) vem do banco (`gestao_cartoes_lista`, igual à da planilha: 195 placas,
+  todos os campos iguais), chave KV `cartoes-fonte` = `banco`. As alterações da tela vão também direto ao banco
+  (`gestao_aplicar_cartao`, mesmas regras do vigia: troca de placa antiga para Mercosul, placa repetida, linha nova no fim).
 - **Portal fora do ar de novo em 24/11, das 16:16 às 21:00 (limite diário do D1), corrigido.** O índice de 24/11 resolveu a varredura
   das filas, mas o dia já tinha 3 milhões de linhas lidas antes da correção, e sobrou outro leitor grande: a limpeza dos dados pessoais
   dos cadastros (`/api/sync/cadastros/pendentes`, chamada pelo vigia a cada 10 s) lia a tabela de cadastros inteira a cada chamada

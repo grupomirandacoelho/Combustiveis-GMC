@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { aplicarCadastrosPendentes } from '../../lib/aplicar-cadastros.js';
+import { aplicarCadastrosPendentes, aplicarCartoesPendentes } from '../../lib/aplicar-cadastros.js';
 
 const PASTA = new URL('../../migrations/', import.meta.url);
 function d1() {
@@ -81,4 +81,20 @@ test('outra rodada em andamento: não aplica; reserva esquecida há mais de 5 mi
 test('sem banco configurado: não faz nada', async () => {
   const { DB } = d1();
   assert.equal((await aplicarCadastrosPendentes({ DB })).semBanco, true);
+});
+
+test('cartões frota: fila própria (alteracoes_cartoes) com gestao_aplicar_cartao; os de antes ficam de fora', async () => {
+  const { db, DB } = d1();
+  const pedirCartao = (id, acao, chave, dados) => db.prepare(
+    `INSERT INTO alteracoes_cartoes (id, usuario_id, usuario_nome, acao, chave, dados) VALUES (?, 1, 'x', ?, ?, ?)`).run(id, acao, chave, JSON.stringify(dados));
+  pedirCartao(1, 'editar', 'AAA1A11', { ticket: 'ATIVO' });
+  db.exec("UPDATE alteracoes_cartoes SET banco_aplicado_em = 'anterior'");
+  pedirCartao(2, 'adicionar', 'BBB2B22', { truckpag: 'SEM CARTÃO' });
+  pedir(db, 3, 'placas', 'editar', 'CCC3C33', { meta: 1 });   // a fila dos cadastros não entra nesta rodada
+  const chamadas = [];
+  const r = await aplicarCartoesPendentes(env(DB), { rpcFn: async (_e, f, a) => { chamadas.push([f, a]); return { ok: true, linha: 7 }; } });
+  assert.deepEqual(r, { aplicados: 1, erros: 0, parou: false });
+  assert.deepEqual(chamadas, [['gestao_aplicar_cartao', { p_acao: 'adicionar', p_chave: 'BBB2B22', p_dados: { truckpag: 'SEM CARTÃO' } }]]);
+  assert.deepEqual(db.prepare('SELECT banco_mensagem FROM alteracoes_cartoes ORDER BY id').all().map((x) => x.banco_mensagem), [null, 'linha 7']);
+  assert.equal(db.prepare('SELECT banco_aplicado_em FROM alteracoes_cadastros WHERE id = 3').get().banco_aplicado_em, null);
 });

@@ -1,7 +1,7 @@
 // 15.3 item 1 (25/11/2026): lista de placas e motoristas da planilha (KV "cadastros") ou do banco (KV "cadastros-fonte" = "banco").
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { lerCadastros, limparCacheCadastros } from '../../lib/cadastros-fonte.js';
+import { lerCadastros, lerCartoes, limparCacheCadastros } from '../../lib/cadastros-fonte.js';
 
 const PLANILHA = { placas: [{ linha: 2, placa: 'AAA1A11' }], motoristas: [{ linha: 2, nome: 'X', usuario: '000001' }], atualizadoEm: 'p' };
 const BANCO = { placas: [{ linha: 2, placa: 'BBB2B22' }], motoristas: [{ linha: 2, nome: 'Y', usuario: '000002' }], atualizadoEm: 'b' };
@@ -29,4 +29,14 @@ test('banco fora do ar ou lista vazia: volta para a planilha', async () => {
     const c = await lerCadastros(env('banco'), { rpcFn: async () => resposta });
     assert.equal(c.fonte, 'planilha');
   }
+});
+
+test('cartões frota: chave própria ("cartoes-fonte"), lista do banco ou do KV "cartoes"', async () => {
+  limparCacheCadastros();
+  const kv = (fonte) => ({ DADOS: { get: async (k, t) => (k === 'cartoes-fonte' ? fonte : k === 'cartoes' && t === 'json' ? { cartoes: [{ placa: 'KV' }] } : null) } });
+  const rpcFn = async (_e, f) => (f === 'gestao_cartoes_lista' ? { cartoes: [{ placa: 'BANCO' }] } : null);
+  assert.equal((await lerCartoes(kv(null), { rpcFn })).cartoes[0].placa, 'KV');
+  assert.equal((await lerCartoes(kv('banco'), { rpcFn })).cartoes[0].placa, 'BANCO');
+  limparCacheCadastros();
+  assert.equal((await lerCartoes(kv('banco'), { rpcFn: async () => ({ cartoes: [] }) })).fonte, 'planilha');
 });
