@@ -198,7 +198,10 @@ Funções (só a chave secreta): `gestao_cadastro_listas()`, `gestao_cadastro_sa
 `public.dados_painel` (uma linha) guarda a parte dos abastecimentos do arquivo dos painéis, montada por
 `gestao_gerar_dados_painel()` a partir de `base_transacoes` e `gestao.veiculos` com as mesmas regras do `scripts/importar_base.py`
 (dicionários por ordem de aparição, KM impossível corrigido pelo hodômetro, cartão usado, endereços). O pg_cron (`gestao-dados-painel`)
-roda a cada 2 minutos e só refaz quando a assinatura (md5) muda. O portal lê por `gestao_dados_painel_versao()` e `gestao_dados_painel()`.
+roda a cada 2 minutos e chama `gestao_dados_painel_rodar()` (desde 25/11/2026): gatilhos por comando em `base_transacoes`,
+`gestao.veiculos` e `gestao.unidades` somam `painel_mudancas.contador`; só quando ele andou (ou uma vez por dia) os geradores rodam, e
+cada um só refaz quando a assinatura (md5) muda. Tabela nova lida por um gerador precisa do mesmo gatilho (teste
+`tests/py/test_painel_gatilhos.py`). O portal lê por `gestao_dados_painel_versao()` e `gestao_dados_painel()`.
 
 
 ## Filas do portal aplicadas no banco (desde 19/11/2026, 15.2 passo 3)

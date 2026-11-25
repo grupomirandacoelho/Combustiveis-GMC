@@ -6,6 +6,11 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 25/11/2026
 
+- **Rotina dos painéis mais leve** (pedido do usuário "Pode rodar"): o banco refazia a cada 2 minutos uma conta sobre os 63 mil
+  abastecimentos só para saber se algo tinha mudado (até 55 s por vez nas horas de pico, 3 horas de banco por dia, 78 falhas em 24 h;
+  é a causa provável das lentidões do banco). Agora o próprio banco anota quando os abastecimentos ou o cadastro de placas mudam e a
+  rotina só trabalha nesses casos (sem mudança ela volta na hora); uma vez por dia confere tudo de qualquer jeito. Os arquivos dos
+  painéis continuam iguais.
 - **Espaço do Supabase** (pergunta do usuário depois da queda do D1 em 24/11): banco com 334 MB de 500 MB (plano gratuito). Rotina pg_cron
   `limpar-historico-cron` (todo dia 03:17 UTC) apaga o histórico das rotinas com mais de 7 dias (crescia ~1.000 linhas/dia).
   Pendentes, passados para a sessão da migração: tirar a ANP do espelho e da carga e apagar as tabelas (89 MB; o site não usa) e
