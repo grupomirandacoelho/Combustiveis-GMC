@@ -19,6 +19,7 @@ import os
 import re
 import sys
 import unicodedata
+import urllib.parse
 import urllib.request
 
 import openpyxl
@@ -64,9 +65,19 @@ def saida(obj):
     sys.stdout.write(json.dumps(obj, ensure_ascii=False) + '\n')
 
 
+def pedido(url, cabecalhos=None, metodo='GET'):
+    """Pedido ao gov.br. No GitHub Actions (variável ANP_PROXY) passa pela ponte em São Paulo (Edge Function proxy-anp, chave
+    CHAVE_NUVEM): o gov.br derruba as conexões de fora do Brasil (25/11/2026). No vigia vai direto, como antes."""
+    cab = {'User-Agent': 'Mozilla/5.0 (portal gestao-combustivel)', **(cabecalhos or {})}
+    ponte = os.environ.get('ANP_PROXY')
+    if ponte:
+        cab.update({'x-chave-nuvem': os.environ.get('CHAVE_NUVEM', ''), 'x-region': 'sa-east-1'})
+        url = ponte + ('&' if '?' in ponte else '?') + 'url=' + urllib.parse.quote(url, safe='')
+    return urllib.request.Request(url, method=metodo, headers=cab)
+
+
 def pedir(url, metodo='GET'):
-    req = urllib.request.Request(url, method=metodo, headers={'User-Agent': 'Mozilla/5.0 (portal gestao-combustivel)'})
-    return urllib.request.urlopen(req, timeout=180)
+    return urllib.request.urlopen(pedido(url, metodo=metodo), timeout=180)
 
 
 def links(pagina, padrao):
@@ -100,7 +111,7 @@ def assinatura(u):
     """Tamanho total do arquivo no servidor, sem baixá-lo: o gov.br recusa HEAD (403), então pede 1 byte (Range)
     e lê o total em Content-Range. Os arquivos da série crescem a cada semana/mês publicado."""
     try:
-        req = urllib.request.Request(u, headers={'User-Agent': 'Mozilla/5.0 (portal gestao-combustivel)', 'Range': 'bytes=0-0'})
+        req = pedido(u, {'Range': 'bytes=0-0'})
         with urllib.request.urlopen(req, timeout=60) as r:
             total = (r.headers.get('Content-Range') or '').rsplit('/', 1)[-1] or r.headers.get('Content-Length')
             return '|'.join([total or '', r.headers.get('ETag') or '', r.headers.get('Last-Modified') or ''])

@@ -3,7 +3,7 @@
 # Roda os mesmos scripts do vigia (scripts/anp_precos.py e scripts/petrobras_precos.py); a pasta .dados (estado e arquivos já
 # baixados) fica no cache do Actions entre as rodadas, então só é baixado o que mudou no servidor.
 # Publicar no portal só com a variável do repositório PRECOS_PUBLICAR = 1 (antes disso: simulação; o resultado fica como artefato
-# para comparar com o do vigia). Segredo SYNC_TOKEN e variável SITE_URL no repositório.
+# para comparar com o do vigia). Segredos SYNC_TOKEN e CHAVE_NUVEM, variáveis SITE_URL e ANP_PROXY no repositório.
 name: Preços ANP e Petrobras
 
 on:
@@ -37,6 +37,10 @@ jobs:
           restore-keys: precos-
 
       - name: ANP
+        # o gov.br derruba as conexões de fora do Brasil: os pedidos passam pela ponte em São Paulo (Edge Function proxy-anp)
+        env:
+          ANP_PROXY: ${{ vars.ANP_PROXY }}
+          CHAVE_NUVEM: ${{ secrets.CHAVE_NUVEM }}
         run: python scripts/anp_precos.py atualizar | tee saida-anp.json
 
       - name: Petrobras
