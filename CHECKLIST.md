@@ -189,3 +189,8 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 - [ ] Conferir painéis x banco por alguns dias com o vigia ainda ligado (só lendo).
 - [ ] Desligar a tarefa agendada nos dois computadores e retirar o revezamento.
 - [x] Preço bomba interna: "Lançar negociação" e "Adicionar fornecedor" só com as praças (com negociação ou fornecedor), não o cadastro inteiro de unidades (23/11/2026).
+
+## 16. Espaço do Supabase (25/11/2026; plano gratuito = 500 MB, em 25/11: 334 MB)
+- [x] Limpeza diária do histórico do pg_cron (mais de 7 dias).
+- [ ] Tirar a ANP do espelho (`supabase_sync.py`) e da carga (`gestao_carga.py`) e apagar `public.anp_precos` e `gestao.anp_precos` (89 MB; o site não usa).
+- [ ] Apagar `backup.base_transacoes_20261119` (33 MB) depois de 01/12 (fim da conferência banco x planilha).

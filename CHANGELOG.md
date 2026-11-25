@@ -6,6 +6,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 25/11/2026
 
+- **Espaço do Supabase** (pergunta do usuário depois da queda do D1 em 24/11): banco com 334 MB de 500 MB (plano gratuito). Rotina pg_cron
+  `limpar-historico-cron` (todo dia 03:17 UTC) apaga o histórico das rotinas com mais de 7 dias (crescia ~1.000 linhas/dia).
+  Pendentes, passados para a sessão da migração: tirar a ANP do espelho e da carga e apagar as tabelas (89 MB; o site não usa) e
+  apagar a cópia `backup.base_transacoes_20261119` (33 MB) depois de 01/12. Teste `tests/js/limpeza-banco.test.mjs`.
 - **15.3 (planilhas no banco) começou: placas e motoristas lidos do banco.** Plano e inventário em `docs/MIGRACAO-15-3.md`
   (decisões do usuário: tudo pelo portal, ninguém edita as planilhas de cadastro no Excel; orçamento por upload). A lista de placas e
   motoristas (login da área do motorista, cartões frota, PRIME, placas desabilitadas, tela de cadastros) passa a vir do banco
