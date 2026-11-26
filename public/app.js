@@ -1,240 +1,96 @@
 (function () {
   'use strict';
-
-  var POSTOS = [];          // só os autorizados
-  var unidadeAtual = null;
+  // Tela de login (/), 26/11/2026: protótipo prototipos/login-v2 (HANDOFF.md) ligado ao POST /api/login. Um login para todos:
+  // usuário de 6 números = motorista (vai para /motorista/: postos autorizados + média; 30 dias conectado); qualquer outro = gestão
+  // (vai para /gestao/; "Manter conectado" = 48 h). Os postos autorizados saíram desta página (só com login, na área do motorista).
+  // "Falta cartão no caminhão?" continua sem login (o mesmo formulário de antes).
   var $ = function (id) { return document.getElementById(id); };
-
-  // ---------- dados ----------
-  function parseCSV(texto) {
-    if (texto.charCodeAt(0) === 0xFEFF) texto = texto.slice(1);
-    var linhas = texto.replace(/\r/g, '').split('\n').filter(function (l) { return l.trim(); });
-    var cab = linhas[0].split(';').map(function (h) { return h.trim(); });
-    return linhas.slice(1).map(function (l) {
-      var cols = l.split(';'), o = {};
-      cab.forEach(function (h, i) { o[h] = (cols[i] || '').trim(); });
-      return o;
-    });
-  }
-
-  function autorizado(r) { return (r.Status || '').toUpperCase().indexOf('AUTORIZ') !== -1; }
-
-  function semAcento(s) {
-    return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-  }
-
-  function esc(s) {
-    return String(s || '').replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
-  }
-
-  var CORES_CARTAO = {
-    TICKETLOG: ['#2F7D32', '#FFFFFF'],
-    VELOE: ['#4B2E83', '#FFFFFF'],
-    TRUCKPAG: ['#278187', '#FFFFFF'],
-    IDENTIFICACAO: ['#1D4E9B', '#FFFFFF']
-  };
-  function corCartao(nome) {
-    return CORES_CARTAO[semAcento(nome).toUpperCase()] || ['#5F6663', '#FFFFFF'];
-  }
-
-  function ordenar(lista) {
-    return lista.slice().sort(function (a, b) {
-      return a.Cidade.localeCompare(b.Cidade, 'pt-BR') || a.Posto.localeCompare(b.Posto, 'pt-BR');
-    });
-  }
-
-  function filtrar(lista, termo) {
-    var t = semAcento(termo.trim());
-    if (!t) return lista;
-    return lista.filter(function (r) {
-      return semAcento(r.Posto).indexOf(t) !== -1 || semAcento(r.Cidade).indexOf(t) !== -1;
-    });
-  }
-
-  function qtdTexto(n) { return n === 1 ? '1 posto' : n + ' postos'; }
-
-  // ---------- desenho ----------
-  var ICONE_MAPA = '<svg viewBox="0 0 256 256" aria-hidden="true" fill="currentColor"><path d="M234.35,129,152,152,129,234.35a8,8,0,0,1-15.21.27l-65.28-176A8,8,0,0,1,58.63,48.46l176,65.28A8,8,0,0,1,234.35,129Z" opacity="0.45"/><path d="M237.33,106.21,61.41,41l-.16-.05A16,16,0,0,0,40.9,61.25a1,1,0,0,0,.05.16l65.26,175.92A15.77,15.77,0,0,0,121.28,248h.3a15.77,15.77,0,0,0,15-11.29l.06-.2,21.84-78,78-21.84.2-.06a16,16,0,0,0,.62-30.38ZM149.84,144.3a8,8,0,0,0-5.54,5.54L121.3,232l-.06-.17L56,56l175.82,65.22.16.06Z"/></svg>';
-
-  // nome do cartão como no resto do portal ("Ticket", não "TICKETLOG")
-  var NOME_CARTAO = { TICKETLOG: 'Ticket', TICKET: 'Ticket', TRUCKPAG: 'TruckPag', VELOE: 'Veloe', IDENTIFICACAO: 'Identificação', VIBRA: 'Vibra' };
-  function nomeCartao(c) {
-    var k = semAcento(c || '').toUpperCase().replace(/\s+/g, '');
-    return NOME_CARTAO[k] || c || 'Não informado';
-  }
-
-  // posto compacto: nome, cidade e cartão; o mapa é o botão à direita (a linha inteira também abre o mapa)
-  function htmlPosto(r, mostrarUnidade) {
-    var cor = corCartao(r.Cartao);
-    var url = (r.Latitude && r.Longitude) ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(r.Latitude + ',' + r.Longitude) : '';
-    var mapa = url
-      ? '<a class="btn-mapa" target="_blank" rel="noopener" href="' + url + '" aria-label="Abrir ' + esc(r.Posto) + ' no mapa" title="Abrir no mapa">' + ICONE_MAPA + '</a>'
-      : '<span class="sem-mapa">Sem mapa</span>';
-    return '<li class="posto' + (url ? ' com-mapa' : '') + '">' +
-      '<div class="posto-linha"><div class="posto-texto">' +
-        '<h3>' + esc(r.Posto) + '</h3>' +
-        '<p class="cidade">' + esc(r.Cidade) + (mostrarUnidade ? ' <span class="unid">· ' + esc(r.Unidade) + '</span>' : '') + '</p>' +
-        '<span class="cartao" style="background:' + cor[0] + ';color:' + cor[1] + '">' + esc(nomeCartao(r.Cartao)) + '</span>' +
-      '</div>' + mapa + '</div>' +
-      (r.Aviso ? '<p class="aviso">' + esc(r.Aviso) + '</p>' : '') +
-    '</li>';
-  }
-  // tocar em qualquer parte do posto abre o mapa (como o botão)
-  function abrirMapaDaLinha(e) {
-    if (e.target.closest('a, button')) return;
-    var li = e.target.closest('li.posto.com-mapa');
-    if (li) li.querySelector('.btn-mapa').click();
-  }
-
-  // linha do topo: os cartões aceitos (os números de unidades e postos não ajudam o motorista a achar onde abastecer)
-  function desenharKpis() {
-    var cartoes = {};
-    // "Identificação" não entra na lista (pedido do usuário); o selo continua no posto
-    POSTOS.forEach(function (r) { if (r.Cartao && nomeCartao(r.Cartao) !== 'Identificação') cartoes[nomeCartao(r.Cartao)] = 1; });
-    var nomes = Object.keys(cartoes).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
-    $('kpis').innerHTML = nomes.length ? '<p class="cartoes-aceitos"><span>Cartões aceitos:</span> ' + esc(nomes.join(', ')) + '</p>' : '';
-  }
-
-  function desenharUnidades() {
-    var contagem = {};
-    POSTOS.forEach(function (r) { contagem[r.Unidade] = (contagem[r.Unidade] || 0) + 1; });
-    var nomes = Object.keys(contagem).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
-    $('lista-unidades').innerHTML = nomes.map(function (u) {
-      return '<li><button type="button" class="unidade" data-unidade="' + esc(u) + '">' +
-        '<span class="nome">' + esc(u) + '</span>' +
-        '<span class="qtd">' + qtdTexto(contagem[u]) + '</span>' +
-        '<span class="seta" aria-hidden="true">›</span></button></li>';
-    }).join('');
-  }
-
-  function desenharBuscaGeral() {
-    var termo = $('busca-geral').value;
-    var ativo = termo.trim().length > 0;
-    $('resultado-geral').classList.toggle('oculto', !ativo);
-    $('placa').classList.toggle('oculto', ativo);
-    if (!ativo) return;
-    var lista = ordenar(filtrar(POSTOS, termo));
-    $('lista-geral').innerHTML = lista.map(function (r) { return htmlPosto(r, true); }).join('');
-    $('vazio-geral').classList.toggle('oculto', lista.length > 0);
-  }
-
-  function desenharPostos() {
-    var daUnidade = POSTOS.filter(function (r) { return r.Unidade === unidadeAtual; });
-    var lista = ordenar(filtrar(daUnidade, $('busca-unidade').value));
-    $('lista-postos').innerHTML = lista.map(function (r) { return htmlPosto(r, false); }).join('');
-    $('vazio-unidade').classList.toggle('oculto', lista.length > 0);
-  }
-
-  // ---------- navegação ----------
   function guardar(chave, valor) {
     try { valor ? localStorage.setItem(chave, valor) : localStorage.removeItem(chave); } catch (e) {}
   }
   function ler(chave) { try { return localStorage.getItem(chave); } catch (e) { return null; } }
 
-  function abrirUnidade(u) {
-    var total = POSTOS.filter(function (r) { return r.Unidade === u; }).length;
-    if (!total) return voltarUnidades();
-    unidadeAtual = u;
-    guardar('unidade', u);
-    $('nome-unidade').textContent = u;
-    $('qtd-unidade').textContent = qtdTexto(total) + ' para abastecer';
-    $('busca-unidade').value = '';
-    $('tela-unidades').classList.add('oculto');
-    $('tela-postos').classList.remove('oculto');
-    desenharPostos();
-    window.scrollTo(0, 0);
+  // /gestao ou /motorista sem sessão mandam para /?entrar=1: aqui o formulário já é a página
+  if (/[?&]entrar=1/.test(location.search)) history.replaceState(null, '', location.pathname);
+
+  var form = $('form'), usuario = $('usuario'), senha = $('senha'), aviso = $('aviso');
+  var ICONES = {
+    erro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>',
+    relogio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+  };
+  // a mesma regra do servidor (lib/motoristas.js usuarioMotorista): só números, 6 (ou o CPF inteiro, 11, por costume)
+  function ehUsuarioMotorista(s) {
+    if (!/^[\d.\-\s]+$/.test(s)) return false;
+    var d = s.replace(/\D/g, '');
+    return d.length === 6 || d.length === 11;
   }
 
-  function voltarUnidades() {
-    unidadeAtual = null;
-    guardar('unidade', null);
-    $('tela-postos').classList.add('oculto');
-    $('tela-unidades').classList.remove('oculto');
-    window.scrollTo(0, 0);
+  var ehMotorista = false;
+  var dicaLiberada = false;   // a regra do usuário do motorista só aparece depois de um erro
+  function atualizarTipo() {
+    ehMotorista = ehUsuarioMotorista(usuario.value.trim());
+    $('tipo-conta').classList.toggle('oculto', !ehMotorista);
+    $('dica-motorista').classList.toggle('oculto', !(ehMotorista && dicaLiberada));
+    $('manter-rot').classList.toggle('oculto', ehMotorista);   // motorista já fica 30 dias conectado
+    if (ehMotorista) $('manter').checked = false;
+    senha.inputMode = ehMotorista ? 'numeric' : 'text';
+    atualizarAjuda();
   }
-
-  $('lista-unidades').addEventListener('click', function (e) {
-    var b = e.target.closest('[data-unidade]');
-    if (b) abrirUnidade(b.getAttribute('data-unidade'));
+  usuario.addEventListener('input', function () { $('campo-usuario').classList.remove('invalido'); esconderAviso(); atualizarTipo(); });
+  senha.addEventListener('input', function () { $('campo-senha').classList.remove('invalido'); esconderAviso(); });
+  ['keydown', 'keyup'].forEach(function (t) {
+    senha.addEventListener(t, function (e) { if (e.getModifierState) $('caps').classList.toggle('ver', e.getModifierState('CapsLock')); });
   });
-  $('btn-trocar').addEventListener('click', voltarUnidades);
-  $('lista-postos').addEventListener('click', abrirMapaDaLinha);
-  $('lista-geral').addEventListener('click', abrirMapaDaLinha);
-  $('busca-geral').addEventListener('input', desenharBuscaGeral);
-  $('busca-unidade').addEventListener('input', desenharPostos);
+  senha.addEventListener('blur', function () { $('caps').classList.remove('ver'); });
 
-  fetch('postos.csv', { cache: 'no-cache' })
-    .then(function (r) { if (!r.ok) throw new Error(); return r.text(); })
-    .then(function (t) {
-      POSTOS = parseCSV(t).filter(autorizado);
-      $('carregando').classList.add('oculto');
-      desenharKpis();
-      desenharUnidades();
-      var salva = ler('unidade');
-      if (salva) abrirUnidade(salva);
-    })
-    .catch(function () {
-      $('carregando').textContent = 'Não foi possível carregar a lista de postos. Verifique a internet e abra de novo.';
-    });
-
-  // ---------- login da gestão ----------
-  var dlg = $('dialog-login');
-  var logado = false;
-
-  fetch('/api/me', { credentials: 'same-origin' })
-    .then(function (r) { if (r.ok) { logado = true; $('abrir-login').textContent = 'Gestão'; } })
-    .catch(function () {});
-
-  function mostrarErro(msg) {
-    var el = $('erro-login');
-    el.textContent = msg;
-    el.classList.toggle('oculto', !msg);
-  }
-
-  // motorista entra com o usuário de 6 números (ou digita o CPF inteiro, por costume): a sessão dele já dura 30 dias,
-  // então "Mantenha conectado" só aparece para a gestão. A senha pode ter letras (ele pode trocar): teclado normal
-  function ajustarManter() {
-    var mot = /^[\d.\-\s]+$/.test($('usuario').value.trim());
-    document.querySelector('#form-login .manter').hidden = mot;
-    $('nota-motorista').hidden = !mot || !$('usuario').value.trim();
-    if (mot) $('manter').checked = false;
-  }
-  $('usuario').addEventListener('input', ajustarManter);
-  function abrirLogin() {
-    mostrarErro('');
-    $('form-login').reset();
-    ajustarManter();
-    dlg.showModal();
-    $('usuario').focus();
-  }
-  $('abrir-login').addEventListener('click', function () {
-    if (logado) { location.href = '/gestao/'; return; }
-    abrirLogin();
+  $('olho').addEventListener('click', function () {
+    var ver = senha.type === 'password';
+    senha.type = ver ? 'text' : 'password';
+    $('olho').setAttribute('aria-pressed', String(ver));
+    $('olho').setAttribute('aria-label', ver ? 'Esconder senha' : 'Mostrar senha');
+    $('ic-olho').innerHTML = ver
+      ? '<path d="M3 3l18 18M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.7 17.7 0 0 1-3.2 4.2M6.6 6.6A17.4 17.4 0 0 0 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'
+      : '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>';
+    senha.focus();
   });
-  // /gestao sem sessão manda para /?entrar=1
-  if (/[?&]entrar=1/.test(location.search)) {
-    history.replaceState(null, '', location.pathname);
-    abrirLogin();
-  }
-  $('cancelar-login').addEventListener('click', function () { dlg.close(); });
-  dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
 
-  $('form-login').addEventListener('submit', function (e) {
+  function atualizarAjuda() {
+    $('ajuda-senha').innerHTML = ehMotorista
+      ? '<strong>Motorista:</strong> se você trocou a senha e esqueceu, peça à gestão de combustível para voltar à senha inicial.'
+      : '<strong>Equipe de gestão:</strong> peça a um administrador do portal para gerar uma senha nova. No primeiro acesso você escolhe a sua.';
+  }
+  $('btn-esqueci').addEventListener('click', function () {
+    var abrir = $('ajuda-senha').classList.contains('oculto');
+    atualizarAjuda();
+    $('ajuda-senha').classList.toggle('oculto', !abrir);
+    $('btn-esqueci').setAttribute('aria-expanded', String(abrir));
+  });
+
+  function mostrarAviso(tipo, texto) {
+    aviso.className = 'aviso surgir ' + tipo;
+    aviso.innerHTML = (tipo === 'bloqueio' ? ICONES.relogio : ICONES.erro) + '<span></span>';
+    aviso.querySelector('span').textContent = texto;
+  }
+  function esconderAviso() { aviso.className = 'aviso erro oculto'; }
+  function carregando(sim) {
+    $('btn-entrar').disabled = sim;
+    $('btn-entrar').classList.toggle('carregando', sim);
+    $('txt-entrar').textContent = sim ? 'Entrando…' : 'Entrar';
+  }
+
+  form.addEventListener('submit', function (e) {
     e.preventDefault();
-    var usuario = $('usuario').value.trim();
-    var senha = $('senha').value;
-    if (!usuario || !senha) { mostrarErro('Preencha usuário e senha.'); return; }
-    var btn = $('btn-entrar');
-    btn.disabled = true; btn.textContent = 'Entrando…';
+    esconderAviso();
+    var faltaU = !usuario.value.trim(), faltaS = !senha.value;
+    $('campo-usuario').classList.toggle('invalido', faltaU);
+    $('campo-senha').classList.toggle('invalido', faltaS);
+    if (faltaU || faltaS) { (faltaU ? usuario : senha).focus(); return; }
+    carregando(true);
     fetch('/api/login', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario: usuario, senha: senha, manter: $('manter').checked })
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario: usuario.value.trim(), senha: senha.value, manter: !ehMotorista && $('manter').checked })
     })
-      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { status: r.status, ok: r.ok, d: d }; }); })
       .then(function (res) {
         if (res.ok) {
           // login novo: os filtros guardados da sessão anterior começam limpos
@@ -242,17 +98,24 @@
           location.href = res.d.motorista ? '/motorista/' : '/gestao/';
           return;
         }
-        mostrarErro(res.d.erro || 'Não foi possível entrar. Tente de novo.');
-        $('senha').value = ''; $('senha').focus();
+        carregando(false);
+        if (res.status === 429) mostrarAviso('bloqueio', res.d.erro || 'Muitas tentativas erradas. Tente de novo em alguns minutos.');
+        else if (res.status === 401) {
+          // motorista: a regra do usuário e da senha inicial aparece embaixo do campo
+          mostrarAviso('erro', 'Usuário ou senha incorretos.');
+          if (ehMotorista) { dicaLiberada = true; atualizarTipo(); }
+          senha.select();
+        } else mostrarAviso('erro', res.d.erro || 'Não foi possível entrar. Tente de novo.');
       })
-      .catch(function () { mostrarErro('Sem conexão com o servidor. Verifique a internet.'); })
-      .then(function () { btn.disabled = false; btn.textContent = 'Entrar'; });
+      .catch(function () { carregando(false); mostrarAviso('erro', 'Sem conexão com o servidor. Verifique a internet e tente de novo.'); });
   });
+
+  atualizarTipo();
 
   // ---------- aviso de cartão faltando no caminhão (vai para a gestão: Operacional > Cartões frota) ----------
   var dlgCartao = $('dialog-cartao'), formCartao = $('form-cartao');
   function erroCartao(msg) { $('erro-cartao').textContent = msg; $('erro-cartao').classList.toggle('oculto', !msg); }
-  $('abrir-aviso-cartao').addEventListener('click', function () {
+  $('btn-cartao').addEventListener('click', function () {
     formCartao.reset();
     erroCartao('');
     formCartao.classList.remove('oculto');
@@ -372,34 +235,6 @@
   });
 
   // ---------- app instalável ----------
+  // ---------- app instalável (o service worker também recebe as notificações no celular) ----------
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function () {});
-
-  var instalado = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-  var faixa = $('faixa-instalar'), pedido = null;
-  var fechouFaixa = ler('faixa-fechada') === '1';
-
-  if (!instalado && !fechouFaixa) {
-    if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
-      faixa.classList.remove('oculto');
-      $('faixa-texto').textContent = 'Instale no iPhone para abrir mais rápido';
-      $('btn-instalar').textContent = 'Como instalar';
-      $('btn-instalar').addEventListener('click', function () {
-        $('ios-ajuda').classList.remove('oculto'); faixa.classList.add('oculto');
-      });
-    } else {
-      window.addEventListener('beforeinstallprompt', function (e) {
-        e.preventDefault(); pedido = e; faixa.classList.remove('oculto');
-      });
-      $('btn-instalar').addEventListener('click', function () {
-        if (!pedido) return;
-        pedido.prompt();
-        pedido.userChoice.then(function () { faixa.classList.add('oculto'); pedido = null; });
-      });
-    }
-  }
-  $('btn-fechar-instalar').addEventListener('click', function () {
-    faixa.classList.add('oculto'); guardar('faixa-fechada', '1');
-  });
-  $('btn-ios-ok').addEventListener('click', function () { $('ios-ajuda').classList.add('oculto'); });
-  window.addEventListener('appinstalled', function () { faixa.classList.add('oculto'); });
 })();

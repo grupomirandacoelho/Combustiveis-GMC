@@ -1,0 +1,181 @@
+/* Tela de login (/), implantada em 26/11/2026 a partir do protótipo prototipos/login-v2 (HANDOFF.md). Estrutura e
+   proporções do Figma "Login Page Perfect UI" (frames Sign-In-Form-Desktop-Layout-1440x900 e Mobile-Layout-375x812); cores,
+   fonte, logo e foto da identidade do Grupo Miranda Coelho (design-system/MASTER.md). Um login para todos: motorista
+   (usuário de 6 números) vai para /motorista/ (postos autorizados + média), a gestão para /gestao/. */
+:root {
+  color-scheme: dark;
+  --fundo: #161616; --lateral: #121212; --cartao: #262626; --cartao-2: #2E2E2E;
+  --texto: #FFFFFF; --texto-2: #D0D0D0; --suave: #9A9A9A;
+  --borda: #333333; --linha-campo: rgba(255,255,255,.08);
+  /* marca do Grupo Miranda Coelho: laranja #F6A42B, texto escuro em cima dele (8,8:1) */
+  --primaria: #F6A42B; --primaria-escura: #E0921C; --sobre-primaria: #161616; --primaria-suave: rgba(246,164,43,.16);
+  --erro: #FF5A5A; --erro-fundo: rgba(249,47,47,.12);
+  --alerta: #F6C25E; --alerta-fundo: rgba(246,194,94,.12);
+  --foco: rgba(246,164,43,.45);
+  --r: 5px; --r-pilula: 25px;
+  --painel: 456px;          /* Figma: Frame 28986, 456 px */
+  --form: 360px;            /* Figma: Frame 28985, 360 px */
+  --campo: 48px;            /* Figma: Login-Input, 48 px */
+  --botao: 40px;            /* Figma: Primary-button-40px */
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { min-height: 100%; background: var(--fundo); color: var(--texto); font: 400 14px/1.45 'Plus Jakarta Sans', system-ui, sans-serif; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+svg { flex: none; }
+.oculto { display: none !important; }
+
+/* ---------- desktop: foto à esquerda ocupando tudo, painel fixo de 456 px à direita ---------- */
+/* tela fixa na altura da janela (sem rolagem): os espaços do painel encolhem com a altura disponível (vh),
+   do tamanho do Figma (900 px de altura) até ~600 px */
+.tela { display: grid; grid-template-columns: minmax(0, 1fr) var(--painel); height: 100vh; height: 100dvh; overflow: hidden; }
+@media (min-width: 901px) { html, body { height: 100%; overflow: hidden; } }
+
+.foto { position: relative; overflow: hidden; background: #0d0d0d; }
+.foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 75% 55%;
+  /* parte do visual: sem menu "Copiar/Salvar imagem", sem arrastar */
+  pointer-events: none; user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none; }
+/* Figma: legenda pequena no canto inferior esquerdo da foto ("Photo by …") → assinatura discreta da empresa */
+.foto-legenda { position: absolute; left: 48px; bottom: 48px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,.85); text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+
+.painel { background: var(--fundo); display: flex; flex-direction: column; justify-content: space-between; gap: clamp(12px, 2.5vh, 24px); padding: clamp(24px, 5.3vh, 48px) 48px; height: 100%; overflow: hidden; }
+.topo { display: flex; flex-direction: column; gap: clamp(20px, 5.3vh, 48px); width: 100%; max-width: var(--form); }
+
+/* logo (Figma: UI-Unicorn-Logo, 48 px de altura) → logo negativa do Grupo Miranda Coelho + nome do portal */
+.marca { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.marca img { height: 40px; width: auto; pointer-events: none; user-select: none; -webkit-user-drag: none; -webkit-touch-callout: none; }
+.marca span { display: block; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--primaria); padding-left: 2px; }
+
+/* formulário (Figma: Sign-In-Form-Web) */
+.form-bloco { display: flex; flex-direction: column; gap: clamp(12px, 2.7vh, 24px); }
+.form-bloco h1 { font-size: 20px; line-height: 28px; font-weight: 600; }
+form { display: flex; flex-direction: column; gap: clamp(16px, 3.6vh, 32px); }
+.campos { display: flex; flex-direction: column; gap: clamp(12px, 2.2vh, 20px); }
+.campos-lista { display: flex; flex-direction: column; gap: clamp(10px, 1.8vh, 16px); }
+.campo { display: flex; flex-direction: column; gap: 8px; }
+.campo label { padding: 0 16px; font-size: 12px; line-height: 12px; font-weight: 500; color: var(--texto-2); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.tipo-conta { font-size: 11px; line-height: 16px; font-weight: 600; padding: 0 8px; border-radius: var(--r-pilula); background: var(--primaria-suave); color: var(--primaria); }
+/* campo preenchido (Figma: Input-BG #F2F2F2 + borda 0,5 px, canto 6) → no escuro, --cartao com borda sutil */
+.caixa { position: relative; display: flex; align-items: center; height: var(--campo); background: var(--cartao); border: 1px solid var(--linha-campo); border-radius: 6px; transition: border-color .15s, box-shadow .15s, background .15s; }
+.caixa:hover { background: var(--cartao-2); }
+.caixa:focus-within { border-color: var(--primaria); box-shadow: 0 0 0 3px var(--foco); background: var(--cartao); }
+.caixa input { flex: 1; min-width: 0; height: 100%; padding: 0 16px; background: none; border: 0; outline: none; font-size: 16px; /* 16 px evita zoom no iPhone */ }
+.caixa input::placeholder { color: #8A8A8A; }
+.olho { width: 44px; height: 44px; margin-right: 2px; display: grid; place-items: center; background: none; border: 0; color: var(--texto-2); cursor: pointer; border-radius: var(--r); }
+.olho:hover { color: #fff; }
+.olho svg { width: 18px; height: 18px; }
+.campo.invalido .caixa { border-color: var(--erro); }
+.msg-campo { padding: 0 16px; font-size: 12px; color: var(--erro); display: none; }
+.campo.invalido .msg-campo { display: block; }
+.dica { padding: 0 16px; font-size: 12px; color: var(--texto-2); }
+.caps { padding: 0 16px; font-size: 12px; color: var(--alerta); display: none; }
+.caps.ver { display: block; }
+
+/* linha "Manter conectado" + "Esqueci a senha" (Figma: Frame 28978, interruptor 40×20) */
+.opcoes { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 20px; }
+.interruptor { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; min-height: 32px; }
+.interruptor input { appearance: none; position: relative; width: 40px; height: 20px; margin: 0; border-radius: 36px; background: var(--cartao-2); border: 1px solid var(--linha-campo); cursor: pointer; transition: background .18s; }
+.interruptor input::after { content: ''; position: absolute; top: 1px; left: 1px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 1px 1px 2px -1px rgba(0,0,0,.4); transition: transform .18s ease; }
+.interruptor input:checked { background: var(--primaria); border-color: var(--primaria); }
+.interruptor input:checked::after { transform: translateX(20px); }
+.link { background: none; border: 0; padding: 0; color: var(--primaria); font-size: 12px; font-weight: 500; cursor: pointer; min-height: 32px; text-align: right; }
+.link:hover { text-decoration: underline; }
+.ajuda-senha { font-size: 12px; color: var(--texto-2); background: var(--cartao); border-radius: 6px; padding: 12px 16px; margin-top: -12px; }
+.ajuda-senha strong { color: var(--texto); }
+
+.aviso { display: flex; gap: 10px; align-items: flex-start; padding: 12px 16px; border-radius: 6px; font-size: 13px; }
+.aviso svg { width: 16px; height: 16px; margin-top: 1px; }
+.aviso.erro { background: var(--erro-fundo); color: #FFB3B3; }
+.aviso.erro svg { color: var(--erro); }
+.aviso.bloqueio { background: var(--alerta-fundo); color: #F9DDA4; }
+.aviso.bloqueio svg { color: var(--alerta); }
+
+/* botões (Figma: Primary-button-40px #007AFF → laranja da marca; Google-Big-Button #333 → botão escuro) */
+.acoes { display: flex; flex-direction: column; gap: clamp(14px, 3.6vh, 32px); }
+.btn { min-height: var(--botao); width: 100%; padding: 8px 16px; border: 0; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; text-align: center; transition: background .15s; }
+.btn-entrar { background: var(--primaria); color: var(--sobre-primaria); font-weight: 700; letter-spacing: .02em; }
+.btn-entrar:hover { background: var(--primaria-escura); }
+.btn-entrar[disabled] { cursor: progress; opacity: .85; }
+.giro { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(22,22,22,.3); border-top-color: var(--sobre-primaria); animation: girar .7s linear infinite; display: none; }
+.btn-entrar.carregando .giro { display: block; }
+.divisoria { height: 1px; background: var(--borda); }
+.btn-escuro { background: var(--cartao-2); color: var(--texto); font-size: 13px; font-weight: 500; }
+.btn-escuro:hover { background: #363636; }
+.btn-escuro svg { width: 18px; height: 18px; color: var(--alerta); }
+.oferta { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; font-size: 12px; margin-top: clamp(12px, 2.7vh, 24px); text-align: center; }
+.oferta span { color: var(--texto-2); }
+.oferta b { color: var(--primaria); font-weight: 500; }
+
+/* rodapé do painel (Figma: Bottom-Panel) */
+.rodape { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 12px; color: var(--suave); max-width: var(--form); width: 100%; }
+.marca-celular { display: none; }
+
+
+@keyframes girar { to { transform: rotate(360deg); } }
+@keyframes surgir { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.surgir { animation: surgir .2s cubic-bezier(.2,.8,.2,1); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* ---------- celular e telas estreitas (Figma: Sign-In-Form-Mobile-Layout-375x812): sem foto, formulário no topo,
+   logo centralizada abaixo dele e rodapé no fim. Alvos de 44 px e texto mínimo de 14 px (área dos motoristas). ---------- */
+@media (max-width: 900px) {
+  .tela { display: block; height: auto; overflow: visible; }
+  .foto { display: none; }
+  .painel { height: auto; overflow: visible; min-height: 100vh; min-height: 100dvh; padding: 40px 16px 72px; align-items: center; }
+  .topo { max-width: 400px; gap: 0; }
+  .topo > .marca { display: none; }
+  .marca-celular { display: flex; justify-content: center; margin-top: 64px; }
+  .marca-celular .marca { align-items: center; }
+  .marca-celular .marca img { height: 32px; }
+  .rodape { max-width: 400px; margin-top: 40px; }
+  .campo label, .interruptor, .link, .dica, .msg-campo, .caps, .ajuda-senha, .oferta, .rodape, .aviso { font-size: 14px; }
+  .campo label { line-height: 16px; }
+  .btn { min-height: 44px; font-size: 16px; }
+  .btn-escuro { font-size: 15px; }
+  .marca span { font-size: 14px; }
+  .interruptor, .link { min-height: 44px; }
+}
+/* telas muito baixas (≤ 640 px úteis): logo, título e respiros menores para tudo caber sem rolagem.
+   Fica no fim do CSS para valer sobre as regras de cima. */
+@media (min-width: 901px) and (max-height: 640px) {
+  .painel { padding-top: 20px; padding-bottom: 20px; }
+  .topo { gap: 16px; }
+  .marca img { height: 32px; }
+  .marca { gap: 6px; }
+  .form-bloco h1 { font-size: 18px; line-height: 24px; }
+}
+
+/* ---------- janela "Falta cartão no caminhão?" (a mesma de antes, sem login; classes ac-* para não misturar com as do login) ---------- */
+dialog.entrar { margin: auto; max-height: calc(100dvh - 32px); overflow: auto; border: 1px solid #4D4D4D; border-radius: var(--r); padding: 0; width: min(420px, calc(100vw - 32px)); background: var(--cartao); color: var(--texto); box-shadow: 0 18px 48px rgba(0,0,0,.55); }
+dialog.entrar::backdrop { background: rgba(0,0,0,.6); }
+.entrar form { display: block; padding: 25px; }   /* sem o espaçamento do formulário do login */
+.entrar h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.entrar .explica { margin: 6px 0 18px; font-size: 14px; color: var(--texto-2); }
+.ac-campo { margin-bottom: 14px; }
+.ac-campo label { display: block; font-size: 14px; font-weight: 500; color: var(--texto-2); margin-bottom: 6px; }
+.ac-campo input { width: 100%; min-height: 44px; padding: 0 15px; font-size: 16px; border: 1px solid rgba(255,255,255,.85); border-radius: var(--r); background: transparent; }
+.ac-campo input:focus { outline: none; border-color: var(--primaria); box-shadow: 0 0 0 1px var(--primaria); }
+.ac-campo small { font-weight: 400; color: var(--suave); }
+.sugestoes-placa { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.sugestoes-placa p { flex-basis: 100%; margin: 0; font-size: 14px; font-weight: 500; color: var(--texto-2); }
+.sugestao-placa { min-height: 40px; padding: 0 15px; border: 1px solid var(--primaria); border-radius: var(--r-pilula); background: transparent; color: var(--primaria); font-size: 15px; font-weight: 600; letter-spacing: .5px; cursor: pointer; }
+.sugestao-placa:active { background: var(--primaria); color: var(--sobre-primaria); }
+.ac-erro { margin: 0 0 14px; padding: 10px 14px; border-radius: var(--r); background: var(--erro-fundo); color: #FF7A7A; font-size: 14px; font-weight: 500; }
+.cartoes-faltando { border: 0; padding: 0; margin: 0 0 14px; }
+.cartoes-faltando legend { padding: 0; font-size: 14px; font-weight: 500; color: var(--texto-2); margin-bottom: 6px; }
+.ac-campo .opcao-cartao, .opcao-cartao { display: flex; color: var(--texto); align-items: center; gap: 12px; min-height: 46px; padding: 4px 12px; margin-bottom: 8px; border: 1px solid var(--borda); border-radius: var(--r); cursor: pointer; }
+.opcao-cartao:has(input:checked) { border-color: var(--primaria); background: var(--cartao-2); }
+.opcao-cartao input { width: 20px; height: 20px; margin: 0; flex-shrink: 0; accent-color: var(--primaria); }
+.opcao-cartao .cartao { display: inline-flex; align-items: center; height: 26px; padding: 0 12px; border-radius: var(--r-pilula); font-size: 13px; font-weight: 600; }
+.isca { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.ac-acoes { display: flex; gap: 10px; margin-top: 6px; }
+.ac-btn { flex: 1 1 0; min-height: 44px; border-radius: var(--r); font-weight: 600; font-size: 14px; cursor: pointer; }
+.ac-primario { background: var(--primaria); color: var(--sobre-primaria); border: 1px solid var(--primaria); }
+.ac-primario:hover { background: var(--primaria-escura); }
+.ac-primario:disabled { opacity: .6; cursor: wait; }
+.ac-secundario { background: transparent; color: var(--texto); border: 1px solid rgba(255,255,255,.85); font-weight: 500; }
+.ac-secundario:hover { background: var(--cartao-2); }
+.aviso-enviado { padding: 28px 25px 25px; text-align: center; }
+.aviso-enviado h2 { margin: 0; font-size: 20px; font-weight: 600; color: var(--primaria); }
+.aviso-enviado p { margin: 8px 0 18px; font-size: 14px; color: var(--texto-2); }
+.aviso-enviado .ac-btn { width: 100%; }

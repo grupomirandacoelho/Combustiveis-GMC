@@ -1,9 +1,10 @@
-const CACHE_NAME = 'postos-autorizados-v18';   // v18: notificações no celular (push); v17: logos brancas do Grupo Miranda Coelho (variante monocromática); v16: identidade do grupo (laranja, logo, ícone)
+const CACHE_NAME = 'postos-autorizados-v19';   // v19: tela de login no lugar da lista pública de postos (26/11/2026); v18: notificações no celular (push); v17: logos brancas do Grupo Miranda Coelho (variante monocromática); v16: identidade do grupo (laranja, logo, ícone)
+// sem '/' (quem já entrou é redirecionado para a área dele: o cache guardaria a página errada) e sem '/postos.csv' (só com login)
 const SHELL_FILES = [
-  '/',
   '/app.css',
   '/app.js',
-  '/postos.csv',
+  '/login.css',
+  '/caminhao-rajalog-720.webp',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',

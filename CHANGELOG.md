@@ -6,6 +6,13 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 26/11/2026
 
+- **Tela de login nova** (pedido do usuário: implementar o protótipo `prototipos/login-v2` e tirar os postos autorizados da tela
+  inicial): a página inicial agora é só o login, com a foto do caminhão no computador e o formulário no topo no celular. Um login
+  para todos: o motorista entra com o usuário de 6 números e vai para a área dele (postos autorizados e média); a gestão vai para
+  o portal. Erro, bloqueio por tentativas, Caps Lock, mostrar a senha, "Esqueci a senha" e a dica do usuário do motorista (só
+  depois de errar) como no protótipo. "Falta cartão no caminhão? Avisar" continua sem login. **Os postos autorizados só aparecem
+  com login** (área do motorista; a lista `/postos.csv` deixou de ser pública). Quem já está conectado e abre o site vai direto
+  para a sua área.
 - **Estoque de Jequié x TruckPag conferido** (usuário mandou o relatório de 23/10 a hoje): todas as transações do portal estão no
   relatório; das 10 que só o relatório tinha, 9 eram lançamentos refeitos (a original e a refeita aparecem) e 1 era a RND0H44 de
   12/11 08:30 (216,66 L) lançada duas vezes e descontada duas vezes no tanque da TruckPag. A TruckPag cancelou a duplicada e os

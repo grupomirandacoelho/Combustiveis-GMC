@@ -4,153 +4,141 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>Raja frota</title>
+<meta name="robots" content="noindex, nofollow">
+<title>Entrar · Gestão de frotas · Grupo Miranda Coelho</title>
 <meta name="apple-mobile-web-app-title" content="Raja frota">
 <meta name="application-name" content="Raja frota">
-<meta name="description" content="Postos onde os motoristas podem abastecer, por unidade.">
-<meta name="theme-color" content="#121212">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" href="icon-192.png">
+<meta name="description" content="Gestão de frotas do Grupo Miranda Coelho: área do motorista e portal da gestão.">
+<meta name="theme-color" content="#161616">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/login.css">
 </head>
 <body>
+<!-- Tela de login (26/11/2026; protótipo prototipos/login-v2, HANDOFF.md). Os postos autorizados saíram daqui: ficam na área do
+     motorista (/motorista/), com login. "Falta cartão no caminhão?" continua sem login. -->
+<div class="tela">
+  <aside class="foto" aria-hidden="true">
+    <img src="/caminhao-rajalog-1200.webp" srcset="/caminhao-rajalog-720.webp 720w, /caminhao-rajalog-1200.webp 1200w" sizes="calc(100vw - 456px)" alt="" width="1200" height="2150" draggable="false">
+    <span class="foto-legenda">RajaLog Transportes · Grupo Miranda Coelho</span>
+  </aside>
 
-<header class="topo">
-  <div class="topo-in">
-    <img class="topo-logo" src="/logo-grupo-negativo.png" alt="Grupo Miranda Coelho" width="155" height="30">
-    <h1>Raja frota</h1>
-    <button type="button" class="link-gestao" id="abrir-login">Entrar</button>
-  </div>
-</header>
-
-<div class="instalar oculto" id="faixa-instalar">
-  <div class="instalar-in">
-    <span id="faixa-texto">Instale no celular para abrir mais rápido</span>
-    <button type="button" class="btn-inst" id="btn-instalar">Instalar</button>
-    <button type="button" class="btn-fechar" id="btn-fechar-instalar" aria-label="Fechar">×</button>
-  </div>
-</div>
-<div class="ios-ajuda oculto" id="ios-ajuda">
-  <p>No iPhone: toque em <strong>Compartilhar</strong> na barra do Safari e escolha <strong>Adicionar à Tela de Início</strong>.</p>
-  <button type="button" class="btn-trocar" id="btn-ios-ok">Entendi</button>
-</div>
-
-<main>
-  <!-- indicadores (mesmo cartão KPI da gestão): unidades, postos autorizados, bandeiras de cartão -->
-  <div class="kpis" id="kpis" aria-live="polite"></div>
-
-  <!-- aviso de cartão faltando no caminhão: vai para a gestão (Operacional > Cartões frota) -->
-  <button type="button" class="btn-aviso-cartao" id="abrir-aviso-cartao">
-    <svg viewBox="0 0 256 256" aria-hidden="true" fill="currentColor"><path d="M208,192H48a8,8,0,0,1-6.88-12C47.71,168.6,56,147.81,56,112a72,72,0,0,1,144,0c0,35.82,8.3,56.6,14.9,68A8,8,0,0,1,208,192Z" opacity="0.45"/><path d="M224,71.1a8,8,0,0,1-10.78-3.42,94.13,94.13,0,0,0-33.46-36.91,8,8,0,1,1,8.54-13.54,111.46,111.46,0,0,1,39.12,43.09A8,8,0,0,1,224,71.1ZM35.71,72a8,8,0,0,0,7.1-4.32A94.13,94.13,0,0,1,76.27,30.77a8,8,0,1,0-8.54-13.54A111.46,111.46,0,0,0,28.61,60.32,8,8,0,0,0,35.71,72Zm186.1,103.94A16,16,0,0,1,208,200H167.2a40,40,0,0,1-78.4,0H48a16,16,0,0,1-13.79-24.06C43.22,160.39,48,138.28,48,112a80,80,0,0,1,160,0C208,138.27,212.78,160.38,221.81,175.94ZM150.62,200H105.38a24,24,0,0,0,45.24,0ZM208,184c-10.64-18.27-16-42.49-16-72a64,64,0,0,0-128,0c0,29.52-5.38,53.74-16,72Z"/></svg>
-    <span><b>Falta cartão no caminhão?</b><small>A equipe de gestão recebe o aviso na hora.</small></span>
-    <strong class="btn-avisar">Avisar</strong>
-  </button>
-
-  <!-- tela 1: escolher unidade -->
-  <section id="tela-unidades" aria-labelledby="titulo-unidades">
-    <div class="busca">
-      <label for="busca-geral">Procurar posto ou cidade</label>
-      <input type="search" id="busca-geral" autocomplete="off" placeholder="Ex.: Marabá, Magnolia…">
-    </div>
-
-    <div id="resultado-geral" class="oculto">
-      <ul class="postos" id="lista-geral"></ul>
-      <p class="mensagem oculto" id="vazio-geral">Nenhum posto autorizado com esse nome ou cidade.</p>
-    </div>
-
-    <nav class="placa" id="placa" aria-labelledby="titulo-unidades">
-      <div class="placa-cab"><h2 class="placa-titulo" id="titulo-unidades">Qual é a sua unidade?</h2><span class="placa-dica">Toque para ver os postos</span></div>
-      <ul id="lista-unidades"></ul>
-    </nav>
-    <p class="mensagem" id="carregando">Carregando postos…</p>
-  </section>
-
-  <!-- tela 2: postos da unidade -->
-  <section id="tela-postos" class="oculto" aria-labelledby="nome-unidade">
-    <div class="unidade-atual">
-      <div>
-        <h2 id="nome-unidade"></h2>
-        <p id="qtd-unidade"></p>
+  <main class="painel">
+    <div class="topo">
+      <div class="marca">
+        <img src="/logo-grupo-negativo.png" alt="Grupo Miranda Coelho" width="208" height="40" draggable="false">
+        <span>Gestão de frotas</span>
       </div>
-      <button type="button" class="btn-trocar" id="btn-trocar">Trocar unidade</button>
-    </div>
-    <div class="busca">
-      <label for="busca-unidade">Procurar nesta unidade</label>
-      <input type="search" id="busca-unidade" autocomplete="off" placeholder="Posto ou cidade…">
-    </div>
-    <ul class="postos" id="lista-postos"></ul>
-    <p class="mensagem oculto" id="vazio-unidade">Nenhum posto com esse nome ou cidade nesta unidade.</p>
-  </section>
 
-  <p class="rodape">Lista atualizada pela equipe de negociação de combustível.</p>
-</main>
+      <section class="form-bloco" id="painel-form" aria-labelledby="titulo">
+        <h1 id="titulo">Que bom te ver de novo</h1>
 
-<dialog class="entrar" id="dialog-login" aria-labelledby="titulo-login">
-  <form id="form-login" novalidate>
-    <h2 id="titulo-login">Entrar</h2>
-    <p class="explica">Motorista: o seu usuário são os 6 primeiros números do seu CPF. A senha também, até você trocar na sua área.</p>
-    <p class="erro oculto" id="erro-login" role="alert"></p>
-    <div class="campo">
-      <label for="usuario">Usuário</label>
-      <input id="usuario" name="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        <form id="form" novalidate>
+          <div class="campos">
+            <div class="aviso erro oculto" id="aviso" role="alert"></div>
+
+            <div class="campos-lista">
+              <div class="campo" id="campo-usuario">
+                <label for="usuario">Usuário <span class="tipo-conta oculto" id="tipo-conta">Motorista</span></label>
+                <div class="caixa">
+                  <input id="usuario" name="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="64" placeholder="Digite seu usuário" aria-describedby="erro-usuario dica-motorista" required>
+                </div>
+                <span class="msg-campo" id="erro-usuario">Digite o seu usuário.</span>
+                <span class="dica oculto" id="dica-motorista">Motorista: o usuário são os 6 primeiros números do seu CPF, e a senha é o mesmo número, se você ainda não trocou.</span>
+              </div>
+
+              <div class="campo" id="campo-senha">
+                <label for="senha">Senha</label>
+                <div class="caixa">
+                  <input id="senha" name="senha" type="password" autocomplete="current-password" maxlength="200" placeholder="Digite sua senha" aria-describedby="erro-senha caps" required>
+                  <button type="button" class="olho" id="olho" aria-label="Mostrar senha" aria-pressed="false">
+                    <svg id="ic-olho" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+                <span class="msg-campo" id="erro-senha">Digite a sua senha.</span>
+                <span class="caps" id="caps" aria-live="polite">Caps Lock está ligado.</span>
+              </div>
+            </div>
+
+            <div class="opcoes">
+              <label class="interruptor" id="manter-rot">
+                <input type="checkbox" role="switch" id="manter" name="manter">
+                <span>Manter conectado</span>
+              </label>
+              <button type="button" class="link" id="btn-esqueci" aria-expanded="false" aria-controls="ajuda-senha">Esqueci a senha</button>
+            </div>
+            <p class="ajuda-senha oculto" id="ajuda-senha"></p>
+          </div>
+
+          <div class="acoes">
+            <button type="submit" class="btn btn-entrar" id="btn-entrar"><span class="giro" aria-hidden="true"></span><span id="txt-entrar">Entrar</span></button>
+            <div class="divisoria" role="presentation"></div>
+            <button type="button" class="btn btn-escuro" id="btn-cartao">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M6.5 15h4"/></svg>
+              Falta cartão no caminhão? Avisar
+            </button>
+          </div>
+        </form>
+
+        <p class="oferta"><span>Não tem acesso?</span><b>Fale com a gestão de combustível</b></p>
+      </section>
+
+      <div class="marca-celular">
+        <div class="marca">
+          <img src="/logo-grupo-negativo.png" alt="Grupo Miranda Coelho" width="166" height="32" draggable="false">
+          <span>Gestão de frotas</span>
+        </div>
+      </div>
     </div>
-    <div class="campo">
-      <label for="senha">Senha</label>
-      <input id="senha" name="senha" type="password" autocomplete="current-password" required>
-    </div>
-    <label class="manter">
-      <input type="checkbox" id="manter" name="manter">
-      <span><strong>Mantenha conectado</strong> por 48 horas neste aparelho</span>
-    </label>
-    <p class="nota-motorista" id="nota-motorista" hidden>Você fica conectado por 30 dias neste aparelho.</p>
-    <div class="acoes">
-      <button type="button" class="btn btn-secundario" id="cancelar-login">Cancelar</button>
-      <button type="submit" class="btn btn-primario" id="btn-entrar">Entrar</button>
-    </div>
-  </form>
-</dialog>
+
+    <footer class="rodape">
+      <span>Gestão de frotas</span>
+      <span>© 2026 Grupo Miranda Coelho</span>
+    </footer>
+  </main>
+</div>
 
 <dialog class="entrar" id="dialog-cartao" aria-labelledby="titulo-cartao">
   <form id="form-cartao" novalidate>
     <h2 id="titulo-cartao">Avisar cartão faltando</h2>
     <p class="explica">A equipe de gestão recebe o aviso na hora.</p>
-    <p class="erro oculto" id="erro-cartao" role="alert"></p>
-    <div class="campo">
+    <p class="ac-erro oculto" id="erro-cartao" role="alert"></p>
+    <div class="ac-campo">
       <label for="ac-placa">Placa do caminhão</label>
       <input id="ac-placa" name="placa" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" placeholder="ABC1D23" aria-describedby="ac-sugestoes">
       <div class="sugestoes-placa oculto" id="ac-sugestoes" aria-live="polite"></div>
     </div>
-    <fieldset class="campo cartoes-faltando">
+    <fieldset class="ac-campo cartoes-faltando">
       <legend>Qual cartão está faltando?</legend>
       <label class="opcao-cartao"><input type="checkbox" name="cartao" value="ticket"><span class="cartao" style="background:#2F7D32;color:#fff">Ticket Log</span></label>
       <label class="opcao-cartao"><input type="checkbox" name="cartao" value="truckpag"><span class="cartao" style="background:#278187;color:#fff">TruckPag</span></label>
       <label class="opcao-cartao"><input type="checkbox" name="cartao" value="veloe"><span class="cartao" style="background:#4B2E83;color:#fff">Veloe</span></label>
     </fieldset>
-    <div class="campo">
+    <div class="ac-campo">
       <label for="ac-nome">Seu nome</label>
       <input id="ac-nome" name="motorista" autocomplete="name" maxlength="80">
     </div>
-    <div class="campo">
+    <div class="ac-campo">
       <label for="ac-obs">O que aconteceu? <small>(opcional)</small></label>
       <input id="ac-obs" name="observacao" maxlength="300" placeholder="Ex.: perdi, quebrou, não veio no caminhão…">
     </div>
     <input class="isca" name="site" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <div class="acoes">
-      <button type="button" class="btn btn-secundario" id="cancelar-cartao">Cancelar</button>
-      <button type="submit" class="btn btn-primario" id="enviar-cartao">Enviar aviso</button>
+    <div class="ac-acoes">
+      <button type="button" class="ac-btn ac-secundario" id="cancelar-cartao">Cancelar</button>
+      <button type="submit" class="ac-btn ac-primario" id="enviar-cartao">Enviar aviso</button>
     </div>
   </form>
   <div class="aviso-enviado oculto" id="ok-cartao" role="status">
     <h2>Aviso enviado</h2>
     <p>A equipe de gestão já recebeu. Obrigado por avisar!</p>
-    <button type="button" class="btn btn-primario" id="fechar-cartao">Fechar</button>
+    <button type="button" class="ac-btn ac-primario" id="fechar-cartao">Fechar</button>
   </div>
 </dialog>
 
-<script src="app.js"></script>
+<script src="/app.js"></script>
 </body>
 </html>

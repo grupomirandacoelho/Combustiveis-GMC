@@ -1,7 +1,7 @@
 {
   "name": "Raja frota",
   "short_name": "Raja frota",
-  "description": "Postos onde os motoristas podem abastecer, por unidade",
+  "description": "Gestão de frotas do Grupo Miranda Coelho: área do motorista (postos autorizados e média) e portal da gestão",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

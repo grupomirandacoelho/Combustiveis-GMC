@@ -126,7 +126,15 @@ tabela com um cartão lateral. Escuro por padrão; claro no interruptor do menu.
 
 ---
 
-## Handoff Spec: Página dos motoristas (`/`), Minha média (`/motorista/`) e Trocar senha
+## Tela de login (`/`, desde 26/11/2026)
+Implantada do protótipo `prototipos/login-v2` (spec completa em `prototipos/login-v2/HANDOFF.md`; base Figma "Login Page Perfect
+UI"): foto do caminhão + painel de 456 px no computador (tela fixa, sem rolagem), sem foto no celular (≤ 900 px). Um login para
+todos (motorista com o usuário de 6 números → `/motorista/`; gestão → `/gestao/`), "Falta cartão no caminhão?" sem login.
+Arquivos: `public/index.html`, `public/login.css` (tokens do protótipo; a janela do cartão usa classes `ac-*`), `public/app.js`,
+`functions/index.js` (quem já está conectado vai direto para a área dele). Os postos autorizados saíram da página pública: ficam na
+área do motorista e `/postos.csv` exige login.
+
+## Handoff Spec: Página dos motoristas (antes de 26/11/2026 em `/`), Minha média (`/motorista/`) e Trocar senha
 
 ### Overview
 Usada no celular, na estrada. Agora é um mini-painel no mesmo visual: barra escura, **3 KPIs** (unidades, postos

@@ -228,4 +228,8 @@ Decisões do usuário: começar pela equipe de gestão (depois os motoristas); e
 - [x] Publicar nos dashboards (snapshot até D-1; `painel_publicacao`, migração `20261126110000`). Primeira publicação 26/11 (até 25/11).
 - [ ] Usuário: conferir o Controle Ticket Log com o Power BI (as medidas Média 6 meses e 50% foram deduzidas, o usuário confirmou a leitura).
 - [ ] Usuário: testar o toque longo no app (Operação por motorista, Programa PRIME, Real x Orçado, Mapa de calor).
+- [x] Tela de login (protótipo login-v2) e postos autorizados só com login (26/11/2026).
+- [ ] Usuário: testar o login de um motorista no celular (app instalado abre no login e depois na área com os postos).
+- [ ] Mapa de calor: erro "Cannot read properties of null (reading 'clientHeight')" em enquadrar ao sair da tela (ResizeObserver
+      sem desligar; visto no console em 26/11).
 
