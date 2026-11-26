@@ -6,6 +6,16 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 26/11/2026
 
+- **Botões mais suaves, notificação com o logo e economia no ranking do PRIME** (pedido do usuário):
+  - a borda dos botões de todo o portal ficou bem mais clara (novo token `--contorno-botao`, nos dois temas); os botões só com
+    ícone (atualizar, engrenagem, lixeira, editar, abrir detalhe, "mais") ficaram sem borda e mostram um fundo ao passar o mouse.
+    Os campos de digitar continuam com a borda de antes;
+  - a notificação do app no Android mostrava um quadrado branco na barra de cima: agora usa o símbolo do Grupo (`badge-96.png`,
+    branco e transparente). No celular, pode ser preciso fechar e abrir o app uma vez para pegar a versão nova;
+  - Fechamento abastecimentos > Ranking: colunas **Litros economizados** e **Valor economizado** (ordenáveis), com a mesma conta do
+    Resultado PRIME: litros pela meta − litros abastecidos (negativo em vermelho = gastou mais que a meta) × preço médio do diesel
+    do mês no centro de custo do motorista.
+
 - **"Para quem" por função e personalizado em lista** (pedido do usuário): nova opção **Por função** (recebe quem tem a função
   marcada; administrador e acesso personalizado não têm função) e **Personalizado (escolher as pessoas)** no lugar de "Só estes
   usuários". As duas em lista com busca, uma linha por item: as funções com quantas pessoas têm cada uma; as pessoas com a função

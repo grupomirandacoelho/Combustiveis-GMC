@@ -456,6 +456,33 @@ export async function montar(ctx) {
       (r.origem === 'manual' ? '<small class="cidade-linha">manual' + (r.tel && r.tel.pontos !== null ? ' · telemetria ' + fmt.d2(r.tel.pontos) : '') + '</small>' : '');
   };
 
+  // economia de cada motorista (26/11/2026, pedido do usuário: colunas de litros e valor economizado no ranking), a mesma conta
+  // do Resultado PRIME: litros = litros pela meta (km ÷ meta da placa) − litros abastecidos; negativo = gastou mais que a meta;
+  // valor = litros × preço médio do diesel do mês no centro de custo do motorista (todos os abastecimentos de diesel do mês;
+  // sem abastecimento no centro de custo, a média geral). Vale também para o mês fechado (o resultado gravado tem litros e litrosMeta).
+  let precoCache = null;
+  function precoDiesel() {
+    if (precoCache && precoCache.mes === mes) return precoCache;
+    const ini = inicioDoMes(mes), fim = inicioDoMes(mes + 1) - 1, por = new Map();
+    let v = 0, l = 0;
+    for (const x of dados.linhas) {
+      if (x.dia < ini || x.dia > fim || !ehDiesel(x.combustivel) || !(x.litros > 0)) continue;
+      const a = por.get(x.cc) || { v: 0, l: 0 };
+      a.v += x.despesa || 0; a.l += x.litros; por.set(x.cc, a);
+      v += x.despesa || 0; l += x.litros;
+    }
+    precoCache = { mes, por, geral: l ? v / l : null };
+    return precoCache;
+  }
+  const litrosEcon = (r) => (r.litrosMeta ? r.litrosMeta - (r.litros || 0) : null);
+  function valorEcon(r) {
+    const e = litrosEcon(r);
+    if (e === null) return null;
+    const pr = precoDiesel(), a = pr.por.get(r.unidade), pm = a && a.l ? a.v / a.l : pr.geral;
+    return pm ? e * pm : null;
+  }
+  const econHtml = (v, txt) => (v === null ? '—' : '<span class="num' + (v < 0 ? ' neg-txt' : '') + '">' + txt + '</span>');
+
   function desenharRanking(ranking) {
     el('pr-conta').textContent = fmt.int(ranking.length) + ' motoristas';
     if (!ranking.length) { el('pr-corpo').innerHTML = '<div class="vazio">Nenhum abastecimento de diesel neste mês na Base.</div>'; return; }
@@ -463,19 +490,22 @@ export async function montar(ctx) {
     const pos = new Map(ranking.map((r, i) => [r.chave, i + 1]));
     const tb = chaveNome(buscaRank);
     const lista = ordenar(ranking.filter((r) => !tb || chaveNome(r.nome + ' ' + (r.unidade || '')).includes(tb)), 'ranking', { pos: (r) => pos.get(r.chave), nome: (r) => r.nome, nota: (r) => r.nota, km: (r) => r.km, media: (r) => r.media,
-      pct: (r) => r.pct, premioSS: (r) => r.premioSS, premioComb: (r) => r.premioComb, total: (r) => r.total });
+      pct: (r) => r.pct, econL: litrosEcon, econR: valorEcon, premioSS: (r) => r.premioSS, premioComb: (r) => r.premioComb, total: (r) => r.total });
     if (tb) el('pr-conta').textContent = fmt.int(lista.length) + ' de ' + fmt.int(ranking.length) + ' motoristas';
     el('pr-corpo').innerHTML = '<div class="tabela-ferramentas"><input type="search" id="pr-rank-busca" placeholder="Motorista ou unidade…" aria-label="Procurar motorista no ranking" value="' + esc(buscaRank) + '"></div>' +
       '<div class="tabela-rolagem tabela-alta pr-alta"><table class="dados pr-tabela pr-rank"><thead><tr>' + th('ranking', 'pos', '#', true) + th('ranking', 'nome', 'Motorista') + th('ranking', 'nota', 'Nota telemetria') +
-      th('ranking', 'km', 'Km rodado', true) + th('ranking', 'media', 'Média (meta)', true) + th('ranking', 'pct', '% da meta') + th('ranking', 'premioSS', 'Prêmio telemetria', true) +
+      th('ranking', 'km', 'Km rodado', true) + th('ranking', 'media', 'Média (meta)', true) + th('ranking', 'pct', '% da meta') +
+      th('ranking', 'econL', 'Litros economizados', true) + th('ranking', 'econR', 'Valor economizado', true) + th('ranking', 'premioSS', 'Prêmio telemetria', true) +
       th('ranking', 'premioComb', 'Prêmio combustível', true) + th('ranking', 'total', 'Total', true) + '</tr></thead><tbody>' +
       lista.map((r) => '<tr class="pr-linha-mot' + (abertoRank === r.chave ? ' selecionado' : '') + '" data-mot="' + esc(r.chave) + '" tabindex="0" aria-expanded="' + (abertoRank === r.chave) + '">' +
         '<td class="n num pr-pos">' + pos.get(r.chave) + '</td><td class="pr-nome"><strong>' + esc(r.nome) + '</strong><small class="cidade-linha">' + esc(r.unidade || '—') + '</small></td>' +
         '<td data-rot="Nota telemetria">' + notaHtml(r) + '</td><td class="n" data-rot="Km rodado"><span class="num">' + fmt.int(r.km) + '</span><small class="cidade-linha">' + (r.km < (calc.P.kmMinimo || 0) ? 'abaixo de ' + fmt.int(calc.P.kmMinimo) + ' km: sem prêmio' : r.faixa ? 'faixa ' + fmt.int(r.faixa) : 'abaixo de ' + fmt.int(Math.min(...calc.P.faixasKm))) + '</small></td>' +
         '<td class="n" data-rot="Média (meta)"><span class="num">' + (r.media ? fmt.d2(r.media) : '—') + '</span><small class="cidade-linha">meta ' + (r.meta ? fmt.d2(r.meta) : '—') + '</small></td>' +
-        '<td data-rot="% da meta">' + (r.pct ? metaHtml(r.pct, pct2(r.pct)) : '—') + '</td><td class="n num" data-rot="Prêmio telemetria">' + rs(r.premioSS) + '</td><td class="n num" data-rot="Prêmio combustível">' + rs(r.premioComb) + '</td>' +
+        '<td data-rot="% da meta">' + (r.pct ? metaHtml(r.pct, pct2(r.pct)) : '—') + '</td>' +
+        '<td class="n" data-rot="Litros economizados">' + econHtml(litrosEcon(r), fmt.d2(litrosEcon(r)) + ' L') + '</td>' +
+        '<td class="n" data-rot="Valor economizado">' + econHtml(valorEcon(r), 'R$ ' + fmt.d2(valorEcon(r))) + '</td><td class="n num" data-rot="Prêmio telemetria">' + rs(r.premioSS) + '</td><td class="n num" data-rot="Prêmio combustível">' + rs(r.premioComb) + '</td>' +
         '<td class="n pr-total" data-rot="Total"><strong class="num">' + rs(r.total) + '</strong></td></tr>' +
-        (abertoRank === r.chave ? '<tr class="pr-det"><td colspan="9">' + htmlDetalheMotorista(r) + '</td></tr>' : '')).join('') + '</tbody></table></div>';
+        (abertoRank === r.chave ? '<tr class="pr-det"><td colspan="11">' + htmlDetalheMotorista(r) + '</td></tr>' : '')).join('') + '</tbody></table></div>';
   }
 
   // ----- abastecimentos -----

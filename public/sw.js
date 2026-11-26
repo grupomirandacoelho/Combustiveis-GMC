@@ -1,4 +1,4 @@
-const CACHE_NAME = 'postos-autorizados-v19';   // v19: tela de login no lugar da lista pública de postos (26/11/2026); v18: notificações no celular (push); v17: logos brancas do Grupo Miranda Coelho (variante monocromática); v16: identidade do grupo (laranja, logo, ícone)
+const CACHE_NAME = 'postos-autorizados-v20';   // v20: ícone da barra de notificações com a logo (badge-96.png); v19: tela de login no lugar da lista pública de postos (26/11/2026); v18: notificações no celular (push); v17: logos brancas do Grupo Miranda Coelho (variante monocromática); v16: identidade do grupo (laranja, logo, ícone)
 // sem '/' (quem já entrou é redirecionado para a área dele: o cache guardaria a página errada) e sem '/postos.csv' (só com login)
 const SHELL_FILES = [
   '/app.css',
@@ -62,7 +62,8 @@ self.addEventListener('push', function (event) {
   event.waitUntil(self.registration.showNotification(d.titulo || 'Gestão de combustível', {
     body: d.texto || '',
     icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    // ícone pequeno da barra do Android: só a silhueta conta (o opaco virava um quadrado branco): símbolo do grupo em branco e transparente
+    badge: '/badge-96.png',
     tag: d.tag || undefined,
     renotify: !!d.tag,
     requireInteraction: d.nivel === 'critico',

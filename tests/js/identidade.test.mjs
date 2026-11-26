@@ -48,3 +48,31 @@ test('logos: com o nome no lugar da antiga; símbolo no menu recolhido; ícone d
   assert.match(sw, /postos-autorizados-v(1[7-9]|[2-9][0-9])/);
   assert.match(sw, /'\/logo-grupo-negativo\.png'/);
 });
+
+// 26/11/2026: o ícone pequeno da barra do Android (badge) só usa a silhueta: o icon-192 (opaco) virava um quadrado branco
+test('notificação no celular: badge é o símbolo do grupo em PNG transparente', () => {
+  const sw = ler('public/sw.js');
+  assert.match(sw, /badge: '\/badge-96\.png'/);
+  assert.doesNotMatch(sw, /badge: '\/icon-192\.png'/);
+  const png = fs.readFileSync(new URL('../../public/badge-96.png', import.meta.url));
+  assert.equal(png.readUInt32BE(16), 96);   // largura
+  assert.equal(png.readUInt32BE(20), 96);   // altura
+  assert.equal(png[25], 6);                 // tipo de cor RGBA (tem transparência)
+});
+
+// 26/11/2026 (pedido do usuário): bordas dos botões mais suaves e botões só com ícone sem borda
+test('botões: borda suave (--contorno-botao) nos dois temas e sem borda nos botões de ícone', () => {
+  const t = ler('public/gestao/gestao.css');
+  assert.equal((t.match(/--contorno-botao:rgba\(/g) || []).length, 2);
+  for (const sel of ['\n.btn{', '\n.btn-linha{', '\n.paginacao button{', '\n.filtro-botao{', '\n.sel-cartao{']) {
+    const i = t.indexOf(sel);
+    assert.ok(i >= 0, sel);
+    assert.match(t.slice(i, t.indexOf('}', i)), /border:1px solid var\(--contorno-botao\)/, sel);
+  }
+  assert.match(t, /\.btn-icone\{[^}]*border-color:transparent/);
+  assert.match(t, /\.btn\.btn-atualizar:not\(\.tem-novo\)\{border-color:transparent;\}/);
+  for (const sel of ['.btn-opcoes{', '.btn-cartao{', '.om-abrir{', '.ea-excluir, .btn-lixeira{']) {
+    const i = t.indexOf(sel);
+    assert.match(t.slice(i, t.indexOf('}', i)), /border:1px solid transparent/, sel);
+  }
+});

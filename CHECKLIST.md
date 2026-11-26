@@ -234,4 +234,7 @@ Decisões do usuário: começar pela equipe de gestão (depois os motoristas); e
       sem desligar; visto no console em 26/11).
 - [x] Aviso personalizado (postos e abastecimentos) e unidades do login para separar por unidade (26/11/2026).
 - [ ] Usuário: cadastrar os encarregados (Gerenciar acessos > Unidades) e criar o aviso de mudanças nos postos com "Separar por unidade".
+- [x] Bordas dos botões mais suaves e botões de ícone sem borda; badge da notificação com o símbolo do grupo; litros e valor
+      economizado no ranking do PRIME (26/11/2026).
+- [ ] Usuário: conferir no Android se a notificação mostra o símbolo do grupo na barra (abrir o app uma vez para atualizar).
 
