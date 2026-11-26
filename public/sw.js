@@ -1,4 +1,4 @@
-const CACHE_NAME = 'postos-autorizados-v17';   // v17: logos brancas do Grupo Miranda Coelho (variante monocromática); v16: identidade do grupo (laranja, logo, ícone)
+const CACHE_NAME = 'postos-autorizados-v18';   // v18: notificações no celular (push); v17: logos brancas do Grupo Miranda Coelho (variante monocromática); v16: identidade do grupo (laranja, logo, ícone)
 const SHELL_FILES = [
   '/',
   '/app.css',
@@ -51,4 +51,35 @@ self.addEventListener('fetch', function (event) {
       return caches.match(url.pathname);
     })
   );
+});
+
+// Notificações no celular (26/11/2026): a nuvem manda por Web Push (Edge Function notificacoes-push); aqui o aparelho mostra.
+// Conteúdo: {titulo, texto, url, tag, nivel}. tag = a ocorrência (o mesmo aviso de novo substitui o anterior, não empilha).
+self.addEventListener('push', function (event) {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; } catch (e) { d = { texto: event.data ? event.data.text() : '' }; }
+  event.waitUntil(self.registration.showNotification(d.titulo || 'Gestão de combustível', {
+    body: d.texto || '',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: d.tag || undefined,
+    renotify: !!d.tag,
+    requireInteraction: d.nivel === 'critico',
+    data: { url: d.url || '/gestao/' }
+  }));
+});
+
+// toque na notificação: abre a tela do aviso (reaproveita a janela do portal se já estiver aberta)
+self.addEventListener('notificationclick', function (event) {
+  event.notification.close();
+  const alvo = new URL((event.notification.data && event.notification.data.url) || '/gestao/', self.location.origin);
+  if (alvo.origin !== self.location.origin) return;
+  event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (janelas) {
+    for (const j of janelas) {
+      if (new URL(j.url).pathname.startsWith('/gestao') && 'focus' in j) {
+        return j.focus().then(function (f) { return f && 'navigate' in f ? f.navigate(alvo.href) : f; });
+      }
+    }
+    return self.clients.openWindow(alvo.href);
+  }));
 });

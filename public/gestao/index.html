@@ -7,6 +7,12 @@
 <title>RajaLog - Gestão de combustíveis</title>
 <meta name="theme-color" content="#161616">
 <link rel="icon" href="/icon-192.png">
+<!-- instalar na tela inicial (celular): abre na gestão em tela cheia; no iPhone é o que permite receber notificações (26/11/2026) -->
+<link rel="manifest" href="/manifest-gestao.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RajaLog Gestão">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -223,6 +229,7 @@
             <button type="button" class="link-acao" id="sino-lidas">Marcar como lidas</button>
             <button type="button" class="sino-fechar" id="sino-fechar" aria-label="Fechar notificações"><svg aria-hidden="true"><use href="#i-x"/></svg></button></div>
           <ul class="sino-lista" id="sino-lista" aria-live="polite"></ul>
+          <div class="sino-celular" id="sino-celular" hidden></div>
           <div class="sino-rodape" id="sino-rodape"><a href="#/notificacoes" id="sino-config"><svg aria-hidden="true"><use href="#i-engrenagem"/></svg>Configurar notificações</a></div>
         </div>
       </div>

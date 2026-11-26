@@ -9,15 +9,16 @@ import { DE_USUARIOS, CAMPOS_USUARIO } from '../../../lib/usuarios.js';
 // GET  ?minhas=1 -> {regras, contexto}: as ativas que valem para quem está logado (qualquer login)
 // GET            -> {regras, contexto, usuarios: [{id, nome, permissoes, acessos}], telas: [{grupo, itens: [{id, rotulo}]}], usamDados}
 //                   (permissão "notificacoes"). destinatarios: {modo: 'todos' | 'telas' (telas: [...]) | 'usuarios' (ids: [...])}
-// POST {acao: 'salvar', id?, nome, tipo, ativa, condicao, mensagem, nivel, destinatarios, repetir}
+// POST {acao: 'salvar', id?, nome, tipo, ativa, condicao, mensagem, nivel, destinatarios, repetir, celular}
+//      celular (26/11/2026): também manda para o celular de quem ativou as notificações no aparelho (lib/nuvem/push.js)
 //      {acao: 'ativar', id, ativa} · {acao: 'excluir', id}                      (permissão "notificacoes")
 // contexto: {base: {baseSalvaEm, geradoEm, copiaEm}, alertasCartao: [{id, criado_em, placa, cartoes, motorista}] (quem vê os Cartões frota)}
 const NIVEIS = ['info', 'alerta', 'critico'];
 const ler = (s, p) => { try { return s ? JSON.parse(s) : p; } catch { return p; } };
 const agora = "strftime('%Y-%m-%dT%H:%M:%SZ','now')";
-const regra = (r) => ({
+export const regra = (r) => ({
   id: r.id, nome: r.nome, tipo: r.tipo, ativa: r.ativa === 1, condicao: ler(r.condicao, {}), mensagem: r.mensagem, nivel: r.nivel,
-  destinatarios: ler(r.destinatarios, { modo: 'todos' }), repetir: r.repetir,
+  destinatarios: ler(r.destinatarios, { modo: 'todos' }), repetir: r.repetir, celular: r.celular === 1,
   criado_por: r.criado_por, criado_em: r.criado_em, atualizado_por: r.atualizado_por, atualizado_em: r.atualizado_em,
 });
 
@@ -107,7 +108,7 @@ function validar(d) {
   if (dst.erro) erros.push(dst.erro);
   const destinatarios = dst.valor || { modo: 'todos' };
   const repetir = /^(sessao|diaria|horas:([1-9]|1\d|2[0-3]))$/.test(String(d.repetir || '')) ? d.repetir : 'diaria';
-  return { erros, valor: { nome, tipo, ativa: d.ativa === false ? 0 : 1, condicao, mensagem, nivel, destinatarios, repetir } };
+  return { erros, valor: { nome, tipo, ativa: d.ativa === false ? 0 : 1, condicao, mensagem, nivel, destinatarios, repetir, celular: d.celular === true ? 1 : 0 } };
 }
 
 export async function onRequestPost({ request, env }) {
@@ -134,15 +135,15 @@ export async function onRequestPost({ request, env }) {
   if (d.acao !== 'salvar') return json({ erro: 'Ação desconhecida.' }, 400);
   const { erros, valor: v } = validar(d);
   if (erros.length) return json({ erro: erros.join(' ') }, 400);
-  const campos = [v.nome, v.tipo, v.ativa, JSON.stringify(v.condicao), v.mensagem, v.nivel, JSON.stringify(v.destinatarios), v.repetir, quem];
+  const campos = [v.nome, v.tipo, v.ativa, JSON.stringify(v.condicao), v.mensagem, v.nivel, JSON.stringify(v.destinatarios), v.repetir, v.celular, quem];
   let r;
   if (Number.isInteger(id) && id > 0) {
     r = await env.DB.prepare(`UPDATE notificacoes SET nome = ?, tipo = ?, ativa = ?, condicao = ?, mensagem = ?, nivel = ?, destinatarios = ?, repetir = ?,
-      atualizado_por = ?, atualizado_em = ${agora} WHERE id = ? RETURNING *`).bind(...campos, id).first();
+      celular = ?, atualizado_por = ?, atualizado_em = ${agora} WHERE id = ? RETURNING *`).bind(...campos, id).first();
     if (!r) return json({ erro: 'Essa notificação não existe mais.' }, 404);
   } else {
-    r = await env.DB.prepare(`INSERT INTO notificacoes (nome, tipo, ativa, condicao, mensagem, nivel, destinatarios, repetir, criado_por, atualizado_por)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`).bind(...campos, quem).first();
+    r = await env.DB.prepare(`INSERT INTO notificacoes (nome, tipo, ativa, condicao, mensagem, nivel, destinatarios, repetir, celular, criado_por, atualizado_por)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *`).bind(...campos, quem).first();
   }
   return json({ ok: true, regra: regra(r) });
 }

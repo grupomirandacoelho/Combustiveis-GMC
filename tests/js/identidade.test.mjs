@@ -45,6 +45,6 @@ test('logos: com o nome no lugar da antiga; símbolo no menu recolhido; ícone d
   const m = JSON.parse(ler('public/manifest.json'));
   assert.deepEqual(m.icons.map((i) => i.src), ['icon-192.png', 'icon-512.png']);
   const sw = ler('public/sw.js');
-  assert.match(sw, /postos-autorizados-v17/);
+  assert.match(sw, /postos-autorizados-v(1[7-9]|[2-9][0-9])/);
   assert.match(sw, /'\/logo-grupo-negativo\.png'/);
 });

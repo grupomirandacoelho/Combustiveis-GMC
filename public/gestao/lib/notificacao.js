@@ -85,12 +85,15 @@ const fmtL = (v) => Math.round(v).toLocaleString('pt-BR');
 const fmtRs = (v) => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtPct = (v) => Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
 const p2 = (x) => String(x).padStart(2, '0');
-const fmtData = (iso) => { const d = new Date(iso); return isNaN(d) ? '—' : p2(d.getDate()) + '/' + p2(d.getMonth() + 1) + ' ' + p2(d.getHours()) + ':' + p2(d.getMinutes()); };
+// horário de Salvador (sem horário de verão) também fora do navegador: a nuvem avalia as regras para o envio ao celular em UTC
+// (26/11/2026); no navegador da equipe (Bahia) dá o mesmo de antes
+const BAHIA_MS = 3 * 3600e3;
+const fmtData = (iso) => { const t = Date.parse(iso); if (isNaN(t)) return '—'; const d = new Date(t - BAHIA_MS); return p2(d.getUTCDate()) + '/' + p2(d.getUTCMonth() + 1) + ' ' + p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes()); };
 const fmtDiaIso = (s) => { const [a, m, d] = String(s || '').split('-'); return d ? d + '/' + m + '/' + a : '—'; };
-const hojeIso = () => { const d = new Date(); return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()); };
+const hojeIso = () => new Date(Date.now() - BAHIA_MS).toISOString().slice(0, 10);
 const somarDiasIso = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()); };
 const isoDeDia = (d) => new Date(d * 864e5).toISOString().slice(0, 10);
-const diaHoje = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 864e5);   // dias desde 1970 (como o arquivo de abastecimentos)
+const diaHoje = () => Math.floor((Date.now() - BAHIA_MS) / 864e5);   // dias desde 1970 (como o arquivo de abastecimentos), no dia de Salvador
 const interno = (l) => /INTERNO/i.test(l.tipoEstab || '') || /^(POSTO INT\b|BOMBA INTERNA)/i.test(l.fornecedor || '');
 const combustivelDe = (l) => (ehDiesel(l.combustivel) ? 'diesel' : /ARLA/i.test(l.combustivel || '') ? 'arla' : 'outro');
 export function montarTexto(modelo, v) { return String(modelo || '').replace(/\{(\w+)\}/g, (m, k) => (v[k] !== undefined ? v[k] : m)); }
@@ -277,19 +280,24 @@ async function obter(url) {
   if (!r.ok) throw new Error(String(r.status));
   return r.json();
 }
-// volume de cada tanque das bases ativas que o login vê (a mesma conta da tela Estoque)
-export async function carregarEstoques() {
-  const [d, b, m, a, c] = await Promise.all([carregarDados(), obter('/api/bomba/bases'), obter('/api/bomba/movimentacoes'), obter('/api/bomba/abastecimentos'),
-    fetch('/gestao/dados/base-copia.json', { credentials: 'same-origin', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null)]);
-  const linhas = c ? juntarLinhas(d.linhas, linhasDaCopia(c)) : d.linhas;
+// volume de cada tanque das bases ativas (a mesma conta da tela Estoque). Sem rede: também usada pela nuvem no envio ao celular.
+// dados = arquivo dos painéis decodificado; bases/movimentacoes/manuais como vêm das rotas /api/bomba/*; copia = base-copia.json
+export function calcularEstoques({ dados, bases, movimentacoes, manuais, copia }) {
+  const linhas = copia ? juntarLinhas(dados.linhas, linhasDaCopia(copia)) : dados.linhas;
   const res = [];
-  for (const base of b.bases.filter((x) => x.ativo)) {
+  for (const base of bases.filter((x) => x.ativo)) {
     for (const t of ['diesel', 'arla']) {
-      const e = calcularEstoque(base, t, { linhas, movimentacoes: m.movimentacoes, manuais: a.abastecimentos });
+      const e = calcularEstoque(base, t, { linhas, movimentacoes, manuais });
       if (e) res.push({ base_id: base.id, base: base.nome, tanque: t, volume: e.volume, capacidade: e.capacidade, pct: e.pct });
     }
   }
   return res;
+}
+// as bases que o login vê (as rotas já filtram por login)
+export async function carregarEstoques() {
+  const [d, b, m, a, c] = await Promise.all([carregarDados(), obter('/api/bomba/bases'), obter('/api/bomba/movimentacoes'), obter('/api/bomba/abastecimentos'),
+    fetch('/gestao/dados/base-copia.json', { credentials: 'same-origin', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null)]);
+  return calcularEstoques({ dados: d, bases: b.bases, movimentacoes: m.movimentacoes, manuais: a.abastecimentos, copia: c });
 }
 // carrega só o que as regras usam; o que o login não pode ver fica null (o tipo não dispara para ele)
 export async function carregarContexto(regras, pode, contexto) {

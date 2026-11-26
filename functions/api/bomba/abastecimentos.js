@@ -68,14 +68,19 @@ const alteracao = (env, u, it) => env.DB.prepare(
   .bind(u.id, u.nome, it.linha, it.placa, it.data, it.acao, JSON.stringify(it.celulas), JSON.stringify(it.antes || {}));
 const ler = (env, id) => env.DB.prepare(`SELECT ${CAMPOS} ${DE} WHERE a.id = ?`).bind(id).first();
 
+// lançados pelo site nos últimos 90 dias (as bases que o login vê; null = todas). Também usada pelo envio ao celular.
+export async function recentes(db, permitidas) {
+  const { results } = await db.prepare(
+    `SELECT ${CAMPOS} ${DE} WHERE a.criado_em >= strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-90 days') ORDER BY a.id DESC LIMIT 500`).all();
+  return results.filter((a) => veBase(permitidas, a.base_id));
+}
+
 export async function onRequestGet({ request, env }) {
   const u = await usuarioDaSessao(env.DB, request);
   if (!u) return json({ erro: 'Não conectado.' }, 401);
   if (!pode(u, 'bomba-abastecimento', 'bomba-estoque')) return json({ erro: 'Seu acesso não inclui as bombas internas.' }, 403);
-  const { results } = await env.DB.prepare(
-    `SELECT ${CAMPOS} ${DE} WHERE a.criado_em >= strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-90 days') ORDER BY a.id DESC LIMIT 500`).all();
   const permitidas = basesDoUsuario(u);   // só as bases liberadas para o login (Gerenciar acessos)
-  return json({ abastecimentos: results.filter((a) => veBase(permitidas, a.base_id)), pode: pode(u, 'bomba-abastecimento') });
+  return json({ abastecimentos: await recentes(env.DB, permitidas), pode: pode(u, 'bomba-abastecimento') });
 }
 
 export async function onRequestPost({ request, env, waitUntil }) {

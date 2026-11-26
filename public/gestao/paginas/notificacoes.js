@@ -75,6 +75,9 @@ export async function montar(ctx) {
             <p class="nota nt-recebem" id="nt-recebem" aria-live="polite"></p>
           </fieldset>
           <label class="campo-form largo"><span>Depois de fechar no X</span><select name="repetir" class="campo-sel">${REPETIR.map(([k, r]) => '<option value="' + k + '">' + esc(r) + '</option>').join('')}</select></label>
+          <label class="nt-opcao largo nt-celular"><input type="checkbox" name="celular"> <span>Enviar também para o celular
+            <small>Chega no celular de quem recebe este aviso e ativou as notificações no aparelho (pelo sino), mesmo com o portal fechado.
+            Repete conforme "Depois de fechar no X".</small></span></label>
           <label class="nt-opcao largo"><input type="checkbox" name="ativa"> Ativa</label>
         </div>
         <p class="erro-form oculto" id="nt-erro" role="alert"></p>
@@ -122,7 +125,7 @@ export async function montar(ctx) {
     el('nt-tabela').innerHTML = '<thead><tr><th><span>Notificação</span></th><th><span>Condição</span></th><th><span>Para quem</span></th><th><span>Depois de fechar</span></th>' +
       '<th><span>Agora</span></th><th><span>Ativa</span></th><th class="nt-col-acoes"><span class="sr">Ações</span></th></tr></thead><tbody>' +
       (lista.length ? lista.map((r) => '<tr class="' + (r.ativa ? '' : 'nt-inativa') + '">' +
-        '<td><strong>' + esc(r.nome) + '</strong><small class="cidade-linha">' + esc(TIPOS[r.tipo] ? TIPOS[r.tipo].rotulo : r.tipo) + ' · ' + esc(rotuloDe(NIVEIS, r.nivel)) + '</small></td>' +
+        '<td><strong>' + esc(r.nome) + '</strong><small class="cidade-linha">' + esc(TIPOS[r.tipo] ? TIPOS[r.tipo].rotulo : r.tipo) + ' · ' + esc(rotuloDe(NIVEIS, r.nivel)) + (r.celular ? ' · também no celular' : '') + '</small></td>' +
         '<td>' + esc(resumo(r)) + '</td>' +
         '<td><span title="' + esc(nomesDest(r)) + '">' + esc(paraQuem(r)) + '</span></td>' +
         '<td>' + esc(rotuloDe(REPETIR, r.repetir)) + '</td>' +
@@ -215,7 +218,7 @@ export async function montar(ctx) {
       mensagem: form.mensagem.value.trim(), nivel,
       destinatarios: dest && dest.value === 'usuarios' ? { modo: 'usuarios', ids: lerDestIds() }
         : dest && dest.value === 'telas' ? { modo: 'telas', telas: lerTelas() } : { modo: 'todos' },
-      repetir: form.repetir.value,
+      repetir: form.repetir.value, celular: form.celular.checked,
     };
   }
   // texto da prévia: o que a regra mostraria agora (se estiver disparando) ou o exemplo do tipo
@@ -276,6 +279,7 @@ export async function montar(ctx) {
     form.mensagem.value = r ? r.mensagem : t.mensagem;
     form.repetir.value = r ? r.repetir : 'diaria';
     form.ativa.checked = r ? r.ativa : true;
+    form.celular.checked = r ? !!r.celular : false;   // notificações no celular (26/11/2026)
     const dst = r ? r.destinatarios : { modo: 'todos' };
     form.querySelector('input[name="dest"][value="' + (['usuarios', 'telas'].includes(dst.modo) ? dst.modo : 'todos') + '"]').checked = true;
     desenharTelas(dst.modo === 'telas' ? dst.telas : (TELAS_PADRAO[tipo] || []));

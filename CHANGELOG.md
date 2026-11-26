@@ -4,6 +4,16 @@ Toda alteração pedida e feita no portal Gestão de Combustível, da mais nova 
 Cada alteração nova entra no topo, com a data, o que foi pedido e o que mudou. O detalhe técnico de cada item continua
 no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
+## 26/11/2026
+
+- **Notificações no celular** (pedido do usuário: começar pela equipe de gestão, depois os motoristas; escolher em cada notificação
+  se ela vai para o celular). Em Configurar notificações, cada aviso tem a opção **"Enviar também para o celular"**. Cada pessoa
+  ativa no próprio aparelho pelo **sino** ("No celular" → "Ativar neste aparelho", com "Enviar teste" e "Desativar"). A nuvem confere
+  as notificações marcadas a cada 10 minutos, com a mesma conta do sino, e manda para quem recebe aquele aviso; a notificação chega
+  mesmo com o portal fechado e, ao tocar, abre a tela do aviso. Repete conforme "Depois de fechar no X". Android (Chrome) funciona
+  direto; no iPhone (iOS 16.4 ou mais novo) é preciso adicionar o portal à Tela de Início e abrir por lá (o sino explica). Sem custo:
+  usa o serviço de notificação do próprio aparelho. Nenhuma notificação vem marcada: nada muda até o usuário marcar.
+
 ## 25/11/2026
 
 - **Fim da transição adiantado** (pedido do usuário: "vamos comparar até o dia 27/11, quero adiantar isso"): as comparações diárias

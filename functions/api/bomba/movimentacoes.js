@@ -10,7 +10,8 @@ import { TANQUES, texto, numero, quandoValido, basesDoUsuario, veBase, cadastroF
 //                                 {id, excluir: true}                                        (exclui: some da lista e do estoque)
 const CAMPOS = 'id, base_id, tanque, quando, litros, valor, nf, fornecedor, cnpj, emissao, obs, criado_em, usuario_nome';
 
-async function lista(db, permitidas) {
+// também usada pelo envio ao celular (functions/api/sync/push/contexto.js)
+export async function lista(db, permitidas) {
   const { results } = await db.prepare(`SELECT ${CAMPOS} FROM bomba_movimentacoes WHERE excluida = 0 ORDER BY quando DESC, id DESC`).all();
   return results.filter((m) => veBase(permitidas, m.base_id));
 }

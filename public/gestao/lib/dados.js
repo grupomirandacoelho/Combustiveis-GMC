@@ -70,7 +70,8 @@ export function juntarTempoReal(linhas, doTempoReal) {
   }
   return repetidas;
 }
-function decodificar(bruto, tr) {
+// sem rede: também usada pela nuvem (envio das notificações ao celular, 26/11/2026)
+export function decodificar(bruto, tr) {
   const linhas = linhasDe(bruto, bruto.veiculos, false);
   // o aviso de tempo real conta só as que entraram (porCartao fica como veio do vigia)
   const entraram = tr && tr.linhas ? tr.linhas - juntarTempoReal(linhas, linhasDe(tr, bruto.veiculos, true)) : 0;

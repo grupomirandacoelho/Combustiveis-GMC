@@ -26,7 +26,8 @@ import supabase_sync as sb
 PROJETO = sb.PROJETO
 ESTADO = os.path.join(sb.LOCAL, 'supabase-d1-estado.json')
 CONTA_CLOUDFLARE = 'b28f3cec780adbc994189a364453bf20'   # a mesma de scripts/sincronizar.mjs
-FORA = {'d1_migrations', 'sessoes', 'sessoes_motoristas', 'tentativas_login'}
+# push_inscricoes: chaves dos aparelhos para as notificações no celular (26/11/2026), como as sessões
+FORA = {'d1_migrations', 'sessoes', 'sessoes_motoristas', 'tentativas_login', 'push_inscricoes'}
 # pessoais: CPF temporário (não guardar em lugar nenhum); consolidador_lotes.linhas: os abastecimentos do lote, que depois
 # de aplicado já estão em base_transacoes (cópia; ajuste de 12/11/2026)
 COLUNAS_FORA = {('alteracoes_cadastros', 'pessoais'), ('consolidador_lotes', 'linhas')}

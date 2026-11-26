@@ -7,6 +7,7 @@ import { iniciarSelecao } from './lib/selecao.js';
 import { confirmar } from './lib/confirmar.js';
 import { iniciarNotificacoes, listaDoSino } from './lib/notificacao.js';
 import { arrastarParaFechar } from './lib/gesto.js';
+import { montarCelular } from './lib/celular.js';
 window.confirmar = confirmar;   // confirmação dentro do site (as páginas chamam confirmar() sem importar)
 
 const $ = (id) => document.getElementById(id);
@@ -131,7 +132,7 @@ function aplicarMenu() {
   const abrir = (sim) => {
     painel.classList.toggle('oculto', !sim);
     botao.setAttribute('aria-expanded', String(sim));
-    if (sim) desenhar();
+    if (sim) { desenhar(); montarCelular($('sino-celular')); }   // notificações neste aparelho (26/11/2026)
   };
   window.addEventListener('centro-notificacoes', (e) => { atual = e.detail; desenhar(); });
   botao.addEventListener('click', () => abrir(painel.classList.contains('oculto')));

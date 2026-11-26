@@ -698,9 +698,10 @@ class Carga:
         self.inserir('usuario_bases', ['usuario_id', 'base_id'],
                      [[x['id'], b] for x in d1['usuarios'] for b in (js(x['bomba_bases'], []) or []) if b in existentes])
         self.inserir('notificacoes', ['id', 'nome', 'tipo', 'ativa', 'condicao', 'mensagem', 'nivel', 'destinatarios', 'repetir', 'criado_por',
-                                      'criado_em', 'atualizado_em'],
+                                      'criado_em', 'atualizado_em', 'celular'],
                      [[x['id'], x['nome'], x['tipo'], bool(x['ativa']), js(x['condicao'], {}), x['mensagem'], x['nivel'],
-                       js(x['destinatarios'], {}), x['repetir'], x['criado_por'], x['criado_em'], x['atualizado_em']] for x in d1['notificacoes']])
+                       js(x['destinatarios'], {}), x['repetir'], x['criado_por'], x['criado_em'], x['atualizado_em'],
+                       bool(x.get('celular') or 0)] for x in d1['notificacoes']])
         self.inserir('alertas_cartoes', ['id', 'criado_em', 'placa', 'veiculo_id', 'emissoras', 'motorista', 'observacao', 'estado',
                                          'resolvido_em', 'resolvido_por', 'nota'],
                      [[x['id'], x['criado_em'], x['placa'], V(x['placa']), js(x['cartoes'], []) or [], x['motorista'], x['observacao'], x['estado'],

@@ -27,6 +27,14 @@ export const COPIAS = {
   'conciliacao.js': 'lib/nuvem/conciliacao.js',
   'cadastros-cartoes.js': 'lib/nuvem/cadastros-cartoes.js',
   'geo.js': 'lib/nuvem/geo.js',   // busca de coordenadas no OpenStreetMap (25/11/2026)
+  // notificações no celular (26/11/2026): o motor do sino do portal e o que ele usa, o planejamento e o envio (Web Push)
+  'push.js': 'lib/nuvem/push.js',
+  'webpush.js': 'lib/nuvem/webpush.js',
+  'notificacao.js': 'public/gestao/lib/notificacao.js',
+  'dados.js': 'public/gestao/lib/dados.js',
+  'bomba.js': 'public/gestao/lib/bomba.js',
+  'gesto.js': 'public/gestao/lib/gesto.js',
+  'tempo-real.js': 'public/gestao/lib/tempo-real.js',
 };
 // em _shared tudo fica na mesma pasta: os imports do portal passam a apontar para o lado
 export const ajustarImports = (texto) => texto.replace(/'\.\.\/\.\.\/public\/gestao\/lib\/([\w-]+\.js)'/g, "'./$1'");
@@ -59,6 +67,8 @@ async function main() {
       TICKET_HOST: cartoes.ticket.host, TICKET_BASIC: cartoes.ticket.basic, TICKET_CLIENTES: JSON.stringify(cartoes.ticket.clientes),
       // login da API de títulos da TruckPag (Conciliação de NFs, 23/11/2026)
       ...(cartoes.truckpag.titulosUsuario ? { TRUCKPAG_TITULOS_USUARIO: cartoes.truckpag.titulosUsuario, TRUCKPAG_TITULOS_SENHA: cartoes.truckpag.titulosSenha } : {}),
+      // notificações no celular (26/11/2026): chaves VAPID (as mesmas dos segredos do portal)
+      ...(fs.existsSync(path.join(LOCAL, 'vapid.json')) ? (() => { const v = lerJson(path.join(LOCAL, 'vapid.json')); return { VAPID_PUBLICA: v.publica, VAPID_PRIVADA: v.privada }; })() : {}),
     };
     const r = await fetch(`https://api.supabase.com/v1/projects/${ref}/secrets`, { method: 'POST', headers: H,
       body: JSON.stringify(Object.entries(segredos).map(([name, value]) => ({ name, value }))) });
