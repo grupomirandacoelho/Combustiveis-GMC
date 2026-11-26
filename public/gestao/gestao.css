@@ -1177,6 +1177,7 @@ body.apresentando .pagina{padding-left:40px;padding-right:40px;}
   .barra-acoes{order:4;}
   .barra .btn .txt{display:none;}
   .barra .btn{width:38px;padding:0;}
+  .barra .sino-celular .btn{width:auto;padding:0 15px;white-space:nowrap;}   /* botões do bloco No celular: com texto (26/11/2026) */
   .pagina{padding:4px 16px 40px;gap:16px;}
   .painel, .filtros, .meta-bloco, .apoio, .totem, .cartao{padding:18px;}
   .filtro{max-width:none;flex-basis:calc(50% - 8px);min-width:0;}

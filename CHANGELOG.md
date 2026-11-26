@@ -6,6 +6,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 26/11/2026
 
+- **Notificações no celular, ajustes** (pedido do usuário): o bloco "No celular" do sino só ativa pelo **aplicativo instalado**; no
+  navegador do celular ele só explica como instalar (Android: menu do Chrome → Instalar app; iPhone: Compartilhar → Adicionar à Tela
+  de Início) e no computador não aparece. Corrigido o botão "Enviar teste" sobreposto no celular (os botões do cabeçalho ficam só
+  com ícone no celular e o sino herdava isso).
 - **Notificações no celular** (pedido do usuário: começar pela equipe de gestão, depois os motoristas; escolher em cada notificação
   se ela vai para o celular). Em Configurar notificações, cada aviso tem a opção **"Enviar também para o celular"**. Cada pessoa
   ativa no próprio aparelho pelo **sino** ("No celular" → "Ativar neste aparelho", com "Enviar teste" e "Desativar"). A nuvem confere

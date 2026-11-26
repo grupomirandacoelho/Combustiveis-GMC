@@ -2,10 +2,13 @@
 // desativa as notificações NESTE aparelho (inscrição Web Push do navegador, guardada pelo portal em /api/push). Quem manda é a nuvem
 // (Edge Function notificacoes-push), só as notificações marcadas "Enviar também para o celular" em Configurar notificações.
 // iPhone: só funciona com o portal adicionado à Tela de Início (iOS 16.4 ou mais novo) e aberto por lá.
+// Só no aplicativo instalado (pedido do usuário, 26/11/2026): no navegador do celular o bloco só explica como instalar; no
+// computador não aparece.
 import { esc } from './dados.js';
 
 const iOS = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const instalado = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const instalado = () => matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || navigator.standalone === true;
+const movel = () => iOS() || /Android|Mobile/i.test(navigator.userAgent);
 export function suporte() {
   if ('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window) return 'ok';
   return iOS() && !instalado() ? 'ios-instalar' : 'nao';
@@ -72,18 +75,22 @@ async function testar() {
 // desenha o bloco dentro do sino
 export async function montarCelular(el) {
   if (!el) return;
+  if (!instalado()) {   // fora do aplicativo: no celular, como instalar; no computador, nada
+    if (!movel()) { el.hidden = true; return; }
+    el.hidden = false;
+    el.innerHTML = '<strong>No celular</strong><p>As notificações no celular são ativadas pelo aplicativo. ' + (iOS()
+      ? 'No Safari, toque em Compartilhar e em <b>Adicionar à Tela de Início</b>'
+      : 'No Chrome, toque no menu (três pontos) e em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>') +
+      ', abra o portal pelo ícone e ative aqui no sino.</p>';
+    return;
+  }
   const msg = (t, erro) => { const p = el.querySelector('.cel-msg'); if (p) { p.textContent = t || ''; p.classList.toggle('erro', !!erro); } };
   let e;
   try { e = await estado(); } catch { el.hidden = true; return; }
   if (e.suporte === 'ok' && !e.chave) { el.hidden = true; return; }   // ainda não configurado no servidor
   el.hidden = false;
   const titulo = '<strong>No celular</strong>';
-  if (e.suporte === 'ios-instalar') {
-    el.innerHTML = titulo + '<p>No iPhone, as notificações só chegam com o portal na Tela de Início: no Safari, toque em Compartilhar e em ' +
-      '<b>Adicionar à Tela de Início</b>, abra o portal pelo ícone e ative aqui.</p>';
-    return;
-  }
-  if (e.suporte === 'nao') { el.innerHTML = titulo + '<p>Este navegador não recebe notificações. No celular, use o Chrome (Android) ou o Safari (iPhone).</p>'; return; }
+  if (e.suporte === 'nao' || e.suporte === 'ios-instalar') { el.innerHTML = titulo + '<p>Este navegador não recebe notificações. No celular, use o Chrome (Android) ou o Safari (iPhone).</p>'; return; }
   if (e.permissao === 'denied') {
     el.innerHTML = titulo + '<p>As notificações estão bloqueadas para este site. Libere nas configurações do navegador ou do aparelho e abra o sino de novo.</p>';
     return;
