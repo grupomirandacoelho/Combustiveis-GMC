@@ -76,3 +76,14 @@ test('botões: borda suave (--contorno-botao) nos dois temas e sem borda nos bot
     assert.match(t.slice(i, t.indexOf('}', i)), /border:1px solid transparent/, sel);
   }
 });
+
+// 26/11/2026 (pedido do usuário): campos de texto e listas com a mesma borda suave dos botões em todo o portal;
+// os contornos de foco do teclado (outline) continuam fortes
+test('campos e listas: borda suave na gestão, na área do motorista e no login', () => {
+  const g = ler('public/gestao/gestao.css');
+  assert.doesNotMatch(g, /border:1px solid var\(--contorno\);/);
+  assert.match(g, /\.barra-busca input#busca-pagina\{[^}]*var\(--contorno-botao\)/);
+  assert.match(g, /outline:2px solid var\(--contorno\)/);   // foco continua visível
+  assert.match(ler('public/app.css'), /--contorno:rgba\(255,255,255,\.16\);/);
+  assert.doesNotMatch(ler('public/login.css'), /border: 1px solid rgba\(255,255,255,\.85\)/);
+});

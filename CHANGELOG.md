@@ -6,6 +6,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 26/11/2026
 
+- **Campos de texto e listas com borda suave** (pedido do usuário): os campos de digitar, as listas de escolher e as buscas de todo
+  o portal (gestão, área do motorista, troca de senha e tela de entrada) ficaram com a mesma borda clara dos botões. O contorno
+  que aparece ao navegar pelo teclado continua forte.
+
 - **Botões mais suaves, notificação com o logo e economia no ranking do PRIME** (pedido do usuário):
   - a borda dos botões de todo o portal ficou bem mais clara (novo token `--contorno-botao`, nos dois temas); os botões só com
     ícone (atualizar, engrenagem, lixeira, editar, abrir detalhe, "mais") ficaram sem borda e mostram um fundo ao passar o mouse.

@@ -163,7 +163,7 @@ a{color:inherit;}
 .rodape-pagina:empty{display:none;}
 .barra-busca{position:relative;flex:0 0 220px;}
 .barra-busca > svg{position:absolute;left:14px;top:50%;width:18px;height:18px;transform:translateY(-50%);pointer-events:none;color:var(--texto);}
-.barra-busca input#busca-pagina{width:100%;height:38px;min-height:38px;padding:0 12px 0 40px;border:1px solid var(--contorno);border-radius:var(--r);background:transparent;font-size:14px;}
+.barra-busca input#busca-pagina{width:100%;height:38px;min-height:38px;padding:0 12px 0 40px;border:1px solid var(--contorno-botao);border-radius:var(--r);background:transparent;font-size:14px;}
 .barra-busca input::placeholder{color:var(--texto);opacity:.85;}
 .barra-busca input:focus{outline:none;border-color:var(--primaria);box-shadow:0 0 0 1px var(--primaria);}
 .busca-lista{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:50;margin:0;padding:6px;list-style:none;max-height:min(60vh,420px);overflow-y:auto;
@@ -230,7 +230,7 @@ a{color:inherit;}
 .sino-rodape a{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border-radius:var(--r);color:var(--primaria-texto);font-size:14px;font-weight:500;text-decoration:none;}
 .sino-rodape a:hover{background:var(--cartao-2);}
 .sino-rodape svg{width:18px;height:18px;}
-.chip-tempo-real{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 13px;border-radius:var(--r);border:1px solid var(--contorno);font-size:12px;font-weight:500;white-space:nowrap;cursor:help;}
+.chip-tempo-real{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 13px;border-radius:var(--r);border:1px solid var(--contorno-botao);font-size:12px;font-weight:500;white-space:nowrap;cursor:help;}
 .ponto-vivo{width:8px;height:8px;border-radius:50%;background:var(--pilula-ok);animation:pulso-vivo 2s infinite;}
 @keyframes pulso-vivo{0%{box-shadow:0 0 0 0 rgba(61,191,74,.55);}70%{box-shadow:0 0 0 7px transparent;}100%{box-shadow:0 0 0 0 transparent;}}
 .btn-atualizar{position:relative;width:38px;padding:0 !important;border-color:transparent;}
@@ -457,7 +457,7 @@ table.cc-tabela td.cc-dif{min-width:240px;}
 .segmentado button[aria-pressed="true"]{background:var(--primaria);color:var(--sobre-primaria);font-weight:600;}
 .segmentado button:disabled{opacity:.45;cursor:not-allowed;}
 input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), select, textarea{
-  min-height:38px;padding:7px 12px;border:1px solid var(--contorno);border-radius:var(--r);background:transparent;color:var(--texto);font-size:14px;min-width:0;}
+  min-height:38px;padding:7px 12px;border:1px solid var(--contorno-botao);border-radius:var(--r);background:transparent;color:var(--texto);font-size:14px;min-width:0;}
 input:focus, select:focus, textarea:focus{outline:none;border-color:var(--primaria);box-shadow:0 0 0 1px var(--primaria);}
 input::placeholder, textarea::placeholder{color:var(--suave);}
 input[type=checkbox], input[type=radio], input[type=range]{accent-color:var(--primaria);}
@@ -1276,7 +1276,7 @@ table.ea-tabela td:nth-child(-n+2){z-index:1;}
 .lista-selecao{position:fixed;z-index:90;display:flex;flex-direction:column;min-width:220px;max-width:min(460px,calc(100vw - 16px));overflow:hidden;
   background:var(--cartao);border:1px solid var(--borda-forte);border-radius:var(--r);box-shadow:var(--sombra);color:var(--texto);font-size:14px;}
 .ls-busca{padding:8px;border-bottom:1px solid var(--borda);}
-.ls-busca input{width:100%;height:36px;padding:0 12px;border:1px solid var(--contorno);border-radius:var(--r);background:transparent;font-size:14px;}
+.ls-busca input{width:100%;height:36px;padding:0 12px;border:1px solid var(--contorno-botao);border-radius:var(--r);background:transparent;font-size:14px;}
 .ls-itens{list-style:none;margin:0;padding:6px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;flex:1 1 auto;}
 .ls-itens li[role="option"]{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:36px;padding:7px 10px;border-radius:var(--r);cursor:pointer;line-height:1.3;}
 .ls-itens li[role="option"] > span{min-width:0;overflow-wrap:anywhere;}

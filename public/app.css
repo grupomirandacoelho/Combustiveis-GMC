@@ -4,7 +4,7 @@
    Identidade visual (18/11/2026): laranja F6A42B (cor principal, igual à da logo), preto 4B4B4D, cinza 97989A. */
 :root{
   color-scheme:dark;
-  --pista:#161616; --topo:#121212; --branco:#262626; --superficie-2:#2E2E2E; --linha:#333333; --contorno:rgba(255,255,255,.85);
+  --pista:#161616; --topo:#121212; --branco:#262626; --superficie-2:#2E2E2E; --linha:#333333; --contorno:rgba(255,255,255,.16);
   --gmc-laranja:#F6A42B; --gmc-preto:#4B4B4D; --gmc-cinza:#97989A;
   --asfalto:#FFFFFF; --asfalto-suave:#D0D0D0; --suave:var(--gmc-cinza);
   --primaria:var(--gmc-laranja); --primaria-escura:#DC8E1C; --sobre-primaria:#161616;
