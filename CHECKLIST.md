@@ -46,7 +46,7 @@ e vai para o `CHANGELOG.md`. Regra de toda alteração: rodar `npm run verificar
 ### 1.3 Trocar as fontes do site e do vigia (próximas fases)
 - [ ] Site ler os dashboards do modelo (`gestao.abastecimentos` e cadastros) em vez do JSON gerado das planilhas.
 - [x] Cadastro de placas lido do banco e gravado nele na hora (a fila para a planilha continua), 17/11.
-- [ ] Motoristas, cartões e postos no banco; depois tirar a fila para a planilha.
+- [x] Motoristas, cartões e postos no banco (viradas de 25/11; a fila para a planilha sai com o vigia em 27/11).
 - [ ] Editar abastecimentos, Consolidador e lotes D-1 gravarem direto em `gestao.abastecimentos`.
 - [ ] APIs dos cartões (Ticket/TruckPag) gravarem direto em `gestao.abastecimentos`.
 - [ ] Negociações de postos e preços das bombas gravarem direto no modelo.
@@ -163,7 +163,7 @@ Ordem (cada passo conferido antes do próximo; o vigia continua ligado até o fi
         `/api/sync/banco/aplicar` (vigia, 1x/min); colunas `banco_aplicado_em`/`banco_mensagem`.
   - [x] 3.3 Virada (19/11, antecipada a pedido do usuário): `supabase_sync.py` não recopia mais `base_transacoes`
         (volta: `py scripts/supabase_sync.py sincronizar base_transacoes --voltar-planilha`).
-  - [ ] 3.2 Teste até 27/11/2026 (adiantado de 01/12 pelo usuário em 25/11): `scripts/comparar_base.py` diário (vigia, 7h) igual + nenhum `banco_mensagem` com "erro".
+  - [ ] 3.2 (26/11: iguais, 63.434 abastecimentos; cadastros iguais) Teste até 27/11/2026 (adiantado de 01/12 pelo usuário em 25/11): `scripts/comparar_base.py` diário (vigia, 7h) igual + nenhum `banco_mensagem` com "erro".
   - [x] 3.4 Varredura no agendador da nuvem (23/11: pg_cron `nuvem-varredura-filas`).
 - [~] 4. Rotinas dos cartões nas Edge Functions (plano e situação em `docs/MIGRACAO-PASSO4.md`; infraestrutura pronta em 19/11;
       estornos TruckPag e APIs dos cartões com Rateio das NFs LIGADOS em 23/11; recálculo do KM e varredura das filas também na nuvem; falta Conferência, conciliação e cadastros nos cartões): tempo real e D-1 (Ticket/TruckPag), estornos TruckPag, cadastro de motoristas e
@@ -183,8 +183,8 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 - [x] Preço bomba interna: banco é a origem desde 25/11 (virada depois do teste do usuário; Arla de hora em hora no pg_cron).
 - [x] Negociações e localização dos postos: banco é a origem desde 25/11 (virada depois do teste do usuário). Falta levar a busca de
       coordenadas do OpenStreetMap para a nuvem (hoje o vigia busca, grava na planilha e manda ao banco).
-- [ ] Placas e motoristas sem a planilha (já gravam no Supabase).
-- [ ] Cartões frota, postos dos motoristas e negociações, preço bomba interna, coordenadas dos postos.
+- [x] Placas e motoristas sem a planilha (virada 25/11; comparação diária igual).
+- [x] Cartões frota, postos dos motoristas e negociações, preço bomba interna, coordenadas dos postos (viradas 25/11; comparação diária igual).
 - [x] Real x Orçado: orçamento por upload da planilha na tela, um ano por vez sem substituir (decisões do usuário 25/11); banco é a
       origem desde 25/11 (o próximo envio é o de 2027).
 - [x] ANP e Petrobras pelo GitHub Actions, LIGADOS em 25/11 (ANP pela ponte `proxy-anp` em São Paulo; resultados idênticos aos do vigia).
@@ -206,7 +206,7 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 
 ## 16. Espaço do Supabase (25/11/2026; plano gratuito = 500 MB, em 25/11: 334 MB)
 - [x] Limpeza diária do histórico do pg_cron (mais de 7 dias).
-- [ ] Tirar a ANP do espelho (`supabase_sync.py`) e da carga (`gestao_carga.py`) e apagar `public.anp_precos` e `gestao.anp_precos` (89 MB; o site não usa).
+- [x] Tirar a ANP do espelho (`supabase_sync.py`) e da carga (`gestao_carga.py`) e apagar `public.anp_precos` e `gestao.anp_precos` (89 MB; o site não usa). Feito 25/11.
 - [ ] Apagar `backup.base_transacoes_20261119` (33 MB) depois de 01/12 (a conferência banco x planilha termina em 27/11; a cópia fica uns dias a mais por segurança).
 
 ## 17. Notificações no celular (26/11/2026)
