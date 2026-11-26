@@ -225,7 +225,7 @@ Detalhes em `docs/MIGRACAO-PASSO4.md`.
 base-copia, só quando a regra precisa), avalia com `public/gestao/lib/notificacao.js` (cópia em `_shared`) e manda por Web Push
 (`lib/nuvem/webpush.js`); o que já foi mandado fica em `nuvem_cache` `push:enviados` (`{"<usuario_id>|<chave>": ms}`). Aparelhos no
 D1 `push_inscricoes` (fora do espelho, como as sessões). Segredos VAPID_PUBLICA/VAPID_PRIVADA no portal e na nuvem
-(`%LOCALAPPDATA%\GestaoCombustivelapid.json`).
+(`%LOCALAPPDATA%\GestaoCombustivel\vapid.json`).
 
 ## Área do motorista e tempo real (desde 19/11/2026, 15.2 passo 1b)
 `gestao_gerar_dados_painel` também grava `public.dados_motoristas` (uma linha por motorista: `chave` = `gestao.chave(nome)`, `linhas`
