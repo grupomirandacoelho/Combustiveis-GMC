@@ -6,6 +6,9 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 26/11/2026
 
+- **"Não volta (aparece uma vez só)"** em "Depois de fechar no X" (pedido do usuário): o aviso aparece uma vez no canto da tela
+  (conta como visto já ao aparecer: não volta nem recarregando o portal) e chega uma vez só no celular, mesmo que a condição suma
+  e volte; continua listado no sino enquanto valer.
 - **Aviso personalizado** (pedido do usuário: uma opção em "Tipo de aviso" para ele montar avisos novos do jeito que quiser; o
   primeiro: mudanças nos postos, para os encarregados de cada unidade). Em Configurar notificações → Nova notificação → **Aviso
   personalizado (você monta)**, com duas fontes:

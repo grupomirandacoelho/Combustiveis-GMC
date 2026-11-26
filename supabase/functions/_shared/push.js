@@ -14,7 +14,7 @@ const diaBahia = (ms) => new Date(ms - BAHIA_MS).toISOString().slice(0, 10);
 
 export function deveEnviar(ultimo, repetir, agora) {
   if (!ultimo) return true;
-  if (repetir === 'sessao') return false;
+  if (repetir === 'sessao' || repetir === 'nunca') return false;   // nunca: manda uma vez só (26/11/2026)
   if (repetir === 'diaria' || !repetir) return diaBahia(ultimo) !== diaBahia(agora);
   const h = Number(String(repetir).split(':')[1]) || 24;
   return agora - ultimo >= h * 3600e3;
@@ -57,6 +57,14 @@ export function planejar({ regras, usuarios, inscricoes, comum = {}, estoques = 
         envios.push({ inscricao, usuario_id: u.id, chave: o.chave, mensagem, urgencia: o.regra.nivel === 'critico' ? 'high' : 'normal' });
       }
     }
+  }
+  // "aparece uma vez só": o que já foi mandado não é esquecido quando a ocorrência some (senão voltaria a ser mandado se ela
+  // voltasse); fica guardado por até 90 dias
+  const nunca = new Set(regras.filter((r) => r.repetir === 'nunca').map((r) => 'r' + r.id + ':'));
+  for (const [k, ms] of Object.entries(estado)) {
+    if (k in novo || !(agora - ms < 90 * 864e5)) continue;
+    const chave = k.slice(k.indexOf('|') + 1);
+    if ([...nunca].some((p) => chave.startsWith(p) || chave === p.slice(0, -1))) novo[k] = ms;
   }
   return { envios, estado: novo, ocorrencias };
 }

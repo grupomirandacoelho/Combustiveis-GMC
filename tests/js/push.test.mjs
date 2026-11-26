@@ -62,3 +62,17 @@ test('push: só carrega o que as regras usam', () => {
   assert.deepEqual(precisa([{ tipo: 'preco-alto', condicao: {} }]), { estoque: false, dados: true, cartoes: false });
   assert.equal(urlDoAviso({ regra: { tipo: 'preco-alto' }, acao: { href: '#/mapa-calor?de=x' } }), '/gestao/#/mapa-calor?de=x');
 });
+
+test('push: "aparece uma vez só" (nunca) manda uma vez e não manda de novo nem se a ocorrência sumir e voltar', () => {
+  const base = { regras: [estoque(3, { repetir: 'nunca' })], usuarios: [{ id: 7, recebe: [3], pode: { estoque: true }, bases: null }], inscricoes: [ap(1, 7)] };
+  const t = ms('2026-11-26T12:00:00Z');
+  const a = planejar({ ...base, estoques, agora: t });
+  assert.equal(a.envios.length, 1);
+  const b = planejar({ ...base, estoques, estado: a.estado, agora: t + 48 * H });   // dois dias depois, ainda valendo
+  assert.equal(b.envios.length, 0);
+  const sumiu = planejar({ ...base, estoques: [{ ...estoques[0], volume: 5000 }], estado: b.estado, agora: t + 49 * H });
+  assert.deepEqual(sumiu.estado, a.estado);   // guardado mesmo sem valer agora
+  const voltou = planejar({ ...base, estoques, estado: sumiu.estado, agora: t + 50 * H });
+  assert.equal(voltou.envios.length, 0);
+  assert.equal(deveEnviar(t, 'nunca', t + 999 * H), false);
+});

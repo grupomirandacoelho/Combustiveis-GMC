@@ -473,6 +473,7 @@ function lerFechado(uid, k, repetir) {
     if (repetir === 'sessao') return sessionStorage.getItem(chaveFechado(uid, k)) !== null;
     const em = Number(localStorage.getItem(chaveFechado(uid, k)));
     if (!em) return false;
+    if (repetir === 'nunca') return true;   // aparece uma vez só (26/11/2026)
     if (repetir === 'diaria') return new Date(em).toDateString() === new Date().toDateString();
     const h = Number(String(repetir).split(':')[1]) || 24;
     return Date.now() - em < h * 3600e3;
@@ -508,7 +509,7 @@ function publicarSino(uid, itens) {
 export function iniciarNotificacoes({ pode, usuario }) {
   if (!usuario) return;
   const uid = usuario.usuario || usuario.id || usuario.nome;   // login (o /api/me não traz o id)
-  const ativas = new Set();   // ocorrências que estavam disparando na última volta
+  const ativas = new Map();   // ocorrências que estavam disparando na última volta -> "repetir" da regra
   let rodando = false, ultima = 0;
   async function rodar(forcar) {
     if (rodando || document.hidden || (forcar !== true && ultima && Date.now() - ultima < 2 * 60 * 1000)) return;
@@ -521,16 +522,19 @@ export function iniciarNotificacoes({ pode, usuario }) {
       const minhasUnidades = (contexto && contexto.unidades) || [];
       const agora = avaliar(minhas, ctx).filter((x) => !(x.regra.condicao && x.regra.condicao.por_unidade) || daUnidade(x.unidade, minhasUnidades));
       const chaves = new Set(agora.map((x) => x.chave));
-      for (const k of [...ativas]) if (!chaves.has(k)) { esquecerFechado(uid, k); fecharNotificacao(k, false); ativas.delete(k); }
+      // a condição deixou de valer: esquece o "fechado" (se voltar, aparece de novo), menos no "aparece uma vez só"
+      for (const [k, rep] of [...ativas]) if (!chaves.has(k)) { if (rep !== 'nunca') esquecerFechado(uid, k); fecharNotificacao(k, false); ativas.delete(k); }
       const desde = horasDesde(uid, chaves);
       publicarSino(uid, agora.map((x) => ({ chave: x.chave, titulo: x.titulo, texto: x.texto, nivel: x.regra.nivel,
         acao: x.acao || TIPOS[x.regra.tipo].acao, desde: desde[x.chave] })));
       for (const x of agora) {
-        ativas.add(x.chave);
+        ativas.set(x.chave, x.regra.repetir);
         if (x.regra.nivel !== 'critico') continue;   // no canto da tela só o crítico; o resto fica no sino
         if (lerFechado(uid, x.chave, x.regra.repetir)) continue;
         mostrarNotificacao({ chave: x.chave, titulo: x.titulo, texto: x.texto, nivel: x.regra.nivel, acao: x.acao || TIPOS[x.regra.tipo].acao,
           aoFechar: () => marcarFechado(uid, x.chave, x.regra.repetir) });
+        // "aparece uma vez só": conta como visto já ao aparecer (não volta nem recarregando o portal; continua no sino)
+        if (x.regra.repetir === 'nunca') marcarFechado(uid, x.chave, 'nunca');
       }
     } catch { /* sem rede ou sem acesso: tenta de novo na próxima volta */ }
     finally { rodando = false; }

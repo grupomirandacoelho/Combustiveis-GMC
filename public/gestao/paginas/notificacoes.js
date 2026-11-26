@@ -8,7 +8,8 @@ import { recebe, TELAS_PADRAO } from '../lib/destino-notificacao.js';
 
 const NIVEIS = [['info', 'Informação'], ['alerta', 'Atenção'], ['critico', 'Crítico']];
 const REPETIR = [['sessao', 'Volta na próxima vez que abrir o portal'], ['diaria', 'Volta no dia seguinte'], ['horas:1', 'Volta depois de 1 hora'],
-  ['horas:4', 'Volta depois de 4 horas'], ['horas:8', 'Volta depois de 8 horas']];
+  ['horas:4', 'Volta depois de 4 horas'], ['horas:8', 'Volta depois de 8 horas'],
+  ['nunca', 'Não volta (aparece uma vez só)']];   // 26/11/2026: aparece uma vez no canto da tela (e no celular) e não volta mais
 const num = (s) => { const t = String(s ?? '').trim().replace(/\./g, '').replace(',', '.'); return t === '' ? null : Number(t); };
 const fmtNum = (v) => (v === null || v === undefined || v === '' ? '' : Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 }));
 const padrao = (c) => (typeof c.padrao === 'function' ? c.padrao() : c.padrao);

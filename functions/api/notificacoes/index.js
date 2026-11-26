@@ -142,7 +142,7 @@ function validar(d) {
   const dst = limparDestinatarios(d.destinatarios, TELAS_IDS);
   if (dst.erro) erros.push(dst.erro);
   const destinatarios = dst.valor || { modo: 'todos' };
-  const repetir = /^(sessao|diaria|horas:([1-9]|1\d|2[0-3]))$/.test(String(d.repetir || '')) ? d.repetir : 'diaria';
+  const repetir = /^(sessao|diaria|nunca|horas:([1-9]|1\d|2[0-3]))$/.test(String(d.repetir || '')) ? d.repetir : 'diaria';   // nunca: aparece uma vez só (26/11/2026)
   return { erros, valor: { nome, tipo, ativa: d.ativa === false ? 0 : 1, condicao, mensagem, nivel, destinatarios, repetir, celular: d.celular === true ? 1 : 0 } };
 }
 
