@@ -6,6 +6,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 26/11/2026
 
+- **Medidor da média sem sobreposição** (pedido do usuário): no medidor "Média km/L contra a meta" (Início, Média geral,
+  Evolução placas, Operação por motorista) a linha "% da meta de X km/L" ficava dentro do arco, por cima das pontas. Agora dentro
+  do arco fica só a média (número e km/L) e essa linha vai logo embaixo, antes do selo "acima/abaixo da meta".
+
 - **Campos de texto e listas com borda suave** (pedido do usuário): os campos de digitar, as listas de escolher e as buscas de todo
   o portal (gestão, área do motorista, troca de senha e tela de entrada) ficaram com a mesma borda clara dos botões. O contorno
   que aparece ao navegar pelo teclado continua forte.

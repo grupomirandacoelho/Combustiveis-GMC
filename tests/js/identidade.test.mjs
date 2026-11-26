@@ -87,3 +87,13 @@ test('campos e listas: borda suave na gestão, na área do motorista e no login'
   assert.match(ler('public/app.css'), /--contorno:rgba\(255,255,255,\.16\);/);
   assert.doesNotMatch(ler('public/login.css'), /border: 1px solid rgba\(255,255,255,\.85\)/);
 });
+
+// 26/11/2026: o "% da meta de X km/L" ficava dentro do arco do medidor e encostava nas pontas; agora fica embaixo do arco
+test('medidor da meta: dentro do arco só o número; a linha da meta embaixo', async () => {
+  const { htmlMedidor } = await import('../../public/gestao/lib/graficos.js');
+  const h = htmlMedidor(2.58, 2.81, null);
+  const arco = h.slice(h.indexOf('medidor-arco'), h.indexOf('medidor-sub'));
+  assert.doesNotMatch(arco, /da meta de/);
+  assert.match(h, /<p class="medidor-sub">[^<]*da meta de 2,81 km\/L<\/p>/);
+  assert.match(ler('public/gestao/gestao.css'), /\.medidor-sub\{/);
+});

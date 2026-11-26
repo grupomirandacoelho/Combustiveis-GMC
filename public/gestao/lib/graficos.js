@@ -200,8 +200,9 @@ export function htmlMedidor(media, meta, statusHtml) {
         '<line class="arco-meta" x1="' + m1x + '" y1="' + m1y + '" x2="' + m2x + '" y2="' + m2y + '"/>' +
         '<text class="eixo-txt" x="' + tx + '" y="' + ty + '" text-anchor="middle" dominant-baseline="middle" fill="var(--suave)" font-size="12">Meta</text>' +
       '</svg>' +
-      '<div class="medidor-centro"><span class="grande num">' + fmt.d2(media) + '</span><span class="uni">km/L</span>' +
-        '<small>' + fmt.pct(pct) + ' da meta de ' + fmt.d2(meta) + ' km/L</small></div>' +
+      '<div class="medidor-centro"><span class="grande num">' + fmt.d2(media) + '</span><span class="uni">km/L</span></div>' +
     '</div>' +
+    // abaixo do arco (26/11/2026): dentro dele a linha encostava nas pontas do arco
+    '<p class="medidor-sub">' + fmt.pct(pct) + ' da meta de ' + fmt.d2(meta) + ' km/L</p>' +
     '<p class="medidor-status">' + metaHtml(pct, fmt.pct(Math.abs(dif)) + (dif >= 0 ? ' acima da meta' : ' abaixo da meta')) + '</p>';
 }

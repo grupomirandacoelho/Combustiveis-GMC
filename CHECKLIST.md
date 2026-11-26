@@ -237,5 +237,6 @@ Decisões do usuário: começar pela equipe de gestão (depois os motoristas); e
 - [x] Bordas dos botões mais suaves e botões de ícone sem borda; badge da notificação com o símbolo do grupo; litros e valor
       economizado no ranking do PRIME (26/11/2026).
 - [x] Campos de texto, listas e buscas com a borda suave em todo o portal (26/11/2026).
+- [x] Medidor da média: linha "% da meta" embaixo do arco, sem sobrepor (26/11/2026).
 - [ ] Usuário: conferir no Android se a notificação mostra o símbolo do grupo na barra (abrir o app uma vez para atualizar).
 
