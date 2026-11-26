@@ -31,7 +31,7 @@ export async function montar(ctx) {
   pagina.innerHTML = '<div class="carregando"><div class="giro"></div>Carregando as bombas internas…</div>';
   let dados, bases, todasBases, movs, manuais, pode;
   try {
-    const [d, b, m, a] = await Promise.all([carregarDados(), obter('/api/bomba/bases'), obter('/api/bomba/movimentacoes'), obter('/api/bomba/abastecimentos')]);
+    const [d, b, m, a] = await Promise.all([carregarDados({ tempoReal: true }), obter('/api/bomba/bases'), obter('/api/bomba/movimentacoes'), obter('/api/bomba/abastecimentos')]);
     dados = d; todasBases = b.bases; bases = b.bases.filter((x) => x.ativo); movs = m.movimentacoes; manuais = a.abastecimentos; pode = a.pode;
   } catch (e) {
     if (e.message !== 'sessão') pagina.innerHTML = '<div class="vazio">' + esc(e.message) + ' Recarregue a página para tentar de novo.</div>';

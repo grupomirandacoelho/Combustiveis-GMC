@@ -21,7 +21,7 @@ export async function montar(ctx) {
   let dados, bases, podeEditar, podeCriar, movs, manuais;   // podeCriar: só quem vê todas as bases (Gerenciar acessos)
   let saidas, copiaEm = null;   // abastecimentos da Base + Base_copia (lida em copiaEm; null = não deu para ler, só a Base)
   async function carregar() {
-    const [d, b, m, a, c] = await Promise.all([carregarDados(), obter('/api/bomba/bases'), obter('/api/bomba/movimentacoes'), obter('/api/bomba/abastecimentos'),
+    const [d, b, m, a, c] = await Promise.all([carregarDados({ tempoReal: true }), obter('/api/bomba/bases'), obter('/api/bomba/movimentacoes'), obter('/api/bomba/abastecimentos'),
       obter('/gestao/dados/base-copia.json').catch((e) => { if (e.message === 'sessão') throw e; return null; })]);
     dados = d; bases = b.bases; podeEditar = b.podeEditar; podeCriar = b.podeCriar; movs = m.movimentacoes; manuais = a.abastecimentos;
     saidas = c ? juntarLinhas(d.linhas, linhasDaCopia(c)) : d.linhas;

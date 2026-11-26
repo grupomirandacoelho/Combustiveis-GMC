@@ -23,7 +23,7 @@ rotina('notificacoes-push', async ({ modo }) => {
   let dados = null, estoques = null;
   if (p.dados) {
     const [bruto, tr] = await Promise.all([arquivo('abastecimentos'), arquivo('tempo-real').catch(() => null)]);
-    dados = decodificar(bruto, tr);
+    dados = decodificar(bruto, tr, { tempoReal: true });   // avisos são de operação: com as transações de hoje (estoque, preço)
   }
   if (p.estoque && c.bomba && dados) {
     const copia = await arquivo('base-copia').catch(() => null);

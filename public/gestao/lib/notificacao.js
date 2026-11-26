@@ -295,7 +295,7 @@ export function calcularEstoques({ dados, bases, movimentacoes, manuais, copia }
 }
 // as bases que o login vê (as rotas já filtram por login)
 export async function carregarEstoques() {
-  const [d, b, m, a, c] = await Promise.all([carregarDados(), obter('/api/bomba/bases'), obter('/api/bomba/movimentacoes'), obter('/api/bomba/abastecimentos'),
+  const [d, b, m, a, c] = await Promise.all([carregarDados({ tempoReal: true }), obter('/api/bomba/bases'), obter('/api/bomba/movimentacoes'), obter('/api/bomba/abastecimentos'),
     fetch('/gestao/dados/base-copia.json', { credentials: 'same-origin', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null)]);
   return calcularEstoques({ dados: d, bases: b.bases, movimentacoes: m.movimentacoes, manuais: a.abastecimentos, copia: c });
 }
@@ -306,7 +306,7 @@ export async function carregarContexto(regras, pode, contexto) {
   const ctx = { contexto: contexto || {}, estoques: null, dados: null };
   await Promise.all([
     tipos.has('estoque-baixo') && pode('bomba-estoque') ? carregarEstoques().then((e) => { ctx.estoques = e; }).catch(() => {}) : null,
-    precisaDados ? carregarDados().then((d) => { ctx.dados = d; }).catch(() => {}) : null,
+    precisaDados ? carregarDados({ tempoReal: true }).then((d) => { ctx.dados = d; }).catch(() => {}) : null,
   ]);
   return ctx;
 }

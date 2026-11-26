@@ -6,6 +6,11 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 26/11/2026
 
+- **Estoque da bomba acima do portal da TruckPag** (correção; usuário: diesel de Jequié com 6.689,124 L na TruckPag): a publicação
+  tirava dos dashboards as transações das APIs de hoje, mas o Estoque usa os mesmos dados e deixou de descontar as saídas de hoje
+  (Jequié: 139,197 L às 06:00). Agora só os **dashboards** ficam na publicação; as telas de **operação** (Estoque, Lançar
+  abastecimento, Cartões frota, Consulta de KM, Postos dos motoristas, Rodada de preços e os avisos) voltam a usar as transações de
+  hoje. Jequié passou a 6.905,80 L; os 216,676 L que ainda faltavam para a TruckPag não vêm da publicação (ver a resposta ao usuário).
 - **Correções dos ajustes** (usuário): o ícone do menu "Estoque" voltou ao de antes; o que mudou foi o **desenho do tanque de diesel
   na tela Estoque**, que parecia uma pilha: agora é um vagão-tanque deitado (referência enviada), com o nível subindo dentro dele (o
   Arla continua no contêiner quadrado). O **Controle Ticket Log** foi para baixo do "Dia a dia" na Divisão por cartão.

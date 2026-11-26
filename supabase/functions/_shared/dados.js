@@ -19,8 +19,15 @@ export function carregarDesabilitadas() {
   return promessaDesab;
 }
 
-export function carregarDados() {
-  if (!promessa) {
+// Arquivo dos painéis + transações das APIs em tempo real, baixados uma vez e usados de dois jeitos (26/11/2026):
+//  - carregarDados(): os DASHBOARDS. Com os dados publicados (botão do Editar abastecimentos), só o que foi publicado (até D-1),
+//    sem o tempo real;
+//  - carregarDados({tempoReal: true}): as telas de OPERAÇÃO (Estoque, Lançar abastecimento, Cartões frota, Consulta de KM, Postos
+//    dos motoristas, Rodada de preços, avisos): sempre com as transações das APIs de hoje (o estoque da bomba precisa descontar
+//    as saídas de hoje; sem elas ficou acima do portal da TruckPag).
+let promessaBruto = null, promessaOp = null;
+function carregarBruto() {
+  if (!promessaBruto) {
     const base = fetch('/gestao/dados/abastecimentos.json', { credentials: 'same-origin' })
       .then(async (r) => {
         if (r.status === 401 || r.redirected) { location.href = '/?entrar=1'; throw new Error('sessão'); }
@@ -31,14 +38,28 @@ export function carregarDados() {
         etagBase = String(r.headers.get('ETag') || '').replace(/^W\//, '').replace(/"/g, '');
         return r.json();
       });
-    // transações das APIs dos cartões (Ticket Log e TruckPag) que ainda não estão na Base: entram na hora em todos os
-    // painéis (scripts/cartoes_api.mjs). Sem elas (ainda não enviadas, erro), os painéis ficam só com a Base.
+    // transações das APIs dos cartões (Ticket Log e TruckPag) que ainda não estão na Base (scripts/cartoes_api.mjs). Sem elas
+    // (ainda não enviadas, erro), fica só a Base.
     const tempoReal = fetch('/gestao/dados/tempo-real.json', { credentials: 'same-origin', cache: 'no-cache' })
       .then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    promessa = Promise.all([base, tempoReal, carregarDesabilitadas()])
-      .then(([bruto, tr]) => {
+    promessaBruto = Promise.all([base, tempoReal, carregarDesabilitadas()]).then(([bruto, tr]) => ({ bruto, tr }))
+      .catch((e) => { promessaBruto = null; throw e; });
+  }
+  return promessaBruto;
+}
+export function carregarDados(o = {}) {
+  if (o.tempoReal) {
+    if (!promessaOp) {
+      promessaOp = carregarBruto().then(({ bruto, tr }) => (bruto.publicadoAte ? decodificar(bruto, tr, { tempoReal: true }) : carregarDados()))
+        .catch((e) => { promessaOp = null; throw e; });
+    }
+    return promessaOp;
+  }
+  if (!promessa) {
+    promessa = carregarBruto()
+      .then(({ bruto, tr }) => {
         // mesma combinação do /api/dados/versao: a versão muda quando chega transação nova pela API (menos com os dados
-        // publicados: aí o tempo real não entra, ver decodificar)
+        // publicados: aí o tempo real não entra nos dashboards, ver decodificar)
         const trUsado = bruto.publicadoAte ? null : tr;
         versaoAtual = (etagBase || bruto.versao || bruto.geradoEm) + (trUsado && trUsado.versao ? '+' + trUsado.versao : '');
         return decodificar(bruto, tr);
@@ -49,7 +70,7 @@ export function carregarDados() {
 }
 
 // Descarta a cópia em memória e busca de novo (o navegador só baixa se a versão mudou).
-export function recarregarDados() { promessa = null; promessaDesab = null; return carregarDados(); }
+export function recarregarDados() { promessa = null; promessaOp = null; promessaBruto = null; promessaDesab = null; return carregarDados(); }
 
 // Versão que está na tela e versão que está no servidor.
 export const versaoCarregada = () => versaoAtual;
@@ -73,10 +94,10 @@ export function juntarTempoReal(linhas, doTempoReal) {
   return repetidas;
 }
 // sem rede: também usada pela nuvem (envio das notificações ao celular, 26/11/2026)
-export function decodificar(bruto, tr) {
+export function decodificar(bruto, tr, o = {}) {
   // dados publicados pelo Editar abastecimentos (26/11/2026, decisão do usuário: os dashboards só mudam ao publicar, até D-1):
-  // as transações das APIs que ainda não foram publicadas não entram
-  if (bruto.publicadoAte) tr = null;
+  // nos dashboards as transações das APIs que ainda não foram publicadas não entram; nas telas de operação (o.tempoReal) entram
+  if (bruto.publicadoAte && !o.tempoReal) tr = null;
   const linhas = linhasDe(bruto, bruto.veiculos, false);
   // o aviso de tempo real conta só as que entraram (porCartao fica como veio do vigia)
   const entraram = tr && tr.linhas ? tr.linhas - juntarTempoReal(linhas, linhasDe(tr, bruto.veiculos, true)) : 0;

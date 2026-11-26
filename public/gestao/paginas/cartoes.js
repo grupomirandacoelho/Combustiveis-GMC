@@ -105,7 +105,7 @@ export async function montar(ctx) {
   });
 
   // ---------- última transação de cada cartão (Base) ----------
-  carregarDados().then((d) => {
+  carregarDados({ tempoReal: true }).then((d) => {
     if (d.linhas.length && d.linhas[0].cartao === undefined) { semColunaCartao = true; ultimas = new Map(); desenhar(); return; }
     const m = new Map();
     for (const l of d.linhas) {

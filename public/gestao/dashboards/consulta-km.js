@@ -24,7 +24,7 @@ export async function montar(ctx) {
   const buscarCorrecoes = () => fetch('/api/km-correcoes', { credentials: 'same-origin', cache: 'no-store' })
     .then((r) => (r.ok ? r.json() : { correcoes: [] })).then((j) => j.correcoes || []).catch(() => []);
   try {
-    [dados, viradas, correcoes] = await Promise.all([carregarDados(),
+    [dados, viradas, correcoes] = await Promise.all([carregarDados({ tempoReal: true }),
       fetch('/api/km-viradas', { credentials: 'same-origin', cache: 'no-store' }).then((r) => (r.ok ? r.json() : { viradas: [] }))
         .then((j) => j.viradas || []).catch(() => []),
       buscarCorrecoes()]);
@@ -289,7 +289,7 @@ export async function montar(ctx) {
   });
 
   desenhar();
-  const aoAtualizarDados = () => Promise.all([carregarDados(), buscarCorrecoes()])
+  const aoAtualizarDados = () => Promise.all([carregarDados({ tempoReal: true }), buscarCorrecoes()])
     .then(([d, c]) => { correcoes = c; usarDados(d); preencherSeletores(); desenhar(); desenharHistorico(); });
   window.addEventListener('dados-atualizados', aoAtualizarDados);
   return { desmontar() { window.removeEventListener('dados-atualizados', aoAtualizarDados); } };

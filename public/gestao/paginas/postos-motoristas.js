@@ -167,7 +167,7 @@ export async function montar(ctx) {
   // cartão da Base -> plataforma da lista (TICKET -> TICKETLOG)
   const plataformaDoCartao = (c) => (c ? opcoes.plataformas.find((x) => chave(x) === chave(c) || chave(x).startsWith(chave(c))) || '' : '');
   if (!consulta) {
-    carregarDados().then((d) => {
+    carregarDados({ tempoReal: true }).then((d) => {
       negociados = new Map();
       const ult = new Map();   // posto|unidade -> negociação mais recente (pela data; empate: a gravada depois)
       for (const n of d.negPostos) {

@@ -24,7 +24,7 @@ export async function montar(ctx) {
   let dados, alteracoes = [], opcoes = null;
   async function carregar() {
     const [d, r] = await Promise.all([
-      carregarDados(),
+      carregarDados({ tempoReal: true }),
       fetch('/api/postos/alteracoes', { credentials: 'same-origin', cache: 'no-store' }),
     ]);
     if (r.status === 401) { location.href = '/?entrar=1'; throw new Error('sessão'); }
