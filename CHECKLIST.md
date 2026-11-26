@@ -215,8 +215,9 @@ Decisões do usuário: começar pela equipe de gestão (depois os motoristas); e
 - [x] Sino: "No celular" com Ativar / Enviar teste / Desativar neste aparelho; instrução do iPhone (Tela de Início); manifesto da gestão.
 - [x] Nuvem: Edge Function `notificacoes-push` a cada 10 min (ligada), mesmo motor do sino, Web Push sem biblioteca (VAPID + aes128gcm).
 - [x] Android: ativado e teste recebido (usuário, 26/11).
-- [ ] Usuário: ativar num iPhone (Tela de Início) e marcar as primeiras notificações para o celular.
-- [ ] Com uma regra de estoque baixo ou preço alto marcada: conferir o tempo da rodada em `nuvem_execucoes` (perto de 1 s de CPU
-      no teste local; limite das funções = 2 s). Se passar, guardar os estoques calculados em vez de refazer a cada rodada.
+- [x] iPhone: ativado pela Tela de Início e teste recebido (usuário, 26/11). Primeira notificação marcada: Estoque baixo (5 bases, 9.000 L, a cada 1 h).
+- [x] Com uma regra de estoque baixo ou preço alto marcada: conferir o tempo da rodada. 26/11 07:35: Estoque baixo (5 bases) rodou
+      sem erro em ~10 s no total (quase tudo download dos arquivos), 5 avisos x 2 aparelhos = 10 enviados. Se um dia passar do limite
+      de CPU (2 s), guardar os estoques calculados em vez de refazer a cada rodada.
 - [ ] Motoristas (depois): avisos da área do motorista (comunicado, resultado do PRIME).
 
