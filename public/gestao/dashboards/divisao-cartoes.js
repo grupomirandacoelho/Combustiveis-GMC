@@ -79,12 +79,6 @@ export async function montar(ctx) {
     <div class="chips" id="dc-chips" aria-live="polite"></div>
     <dl class="apoio apoio-pilha" id="dc-apoio"></dl>
     <section class="painel">
-      <div class="painel-cab"><h2>Controle Ticket Log</h2><div class="legenda"><span><i class="leg-barra" style="background:${corCartao('TICKET')}"></i>Litros no Ticket</span>
-        <span><i class="leg-meta"></i>Média 6 meses</span><span><i class="leg-tracejada"></i>50% da média</span></div></div>
-      <div class="grafico" id="dc-ticket"></div>
-      <p class="nota">Litros abastecidos com o cartão Ticket (Cartão Físico) em cada mês, a média dos 6 meses anteriores e a linha de 50% dessa média.</p>
-    </section>
-    <section class="painel">
       <div class="painel-cab"><h2>Mês a mês</h2><span class="conta" id="dc-conta-mes"></span></div>
       <div class="dc-legenda" id="dc-legenda" role="group" aria-label="Cartões (clique para filtrar)"></div>
       <div class="dc-grafico" id="dc-meses"></div>
@@ -93,6 +87,12 @@ export async function montar(ctx) {
     <section class="painel">
       <div class="painel-cab"><h2 id="dc-tit-dias">Dia a dia</h2><span class="conta" id="dc-conta-dia"></span></div>
       <div class="dc-grafico dc-grafico-dias" id="dc-dias"></div>
+    </section>
+    <section class="painel">
+      <div class="painel-cab"><h2>Controle Ticket Log</h2><div class="legenda"><span><i class="leg-barra" style="background:${corCartao('TICKET')}"></i>Litros no Ticket</span>
+        <span><i class="leg-meta"></i>Média 6 meses</span><span><i class="leg-tracejada"></i>50% da média</span></div></div>
+      <div class="grafico" id="dc-ticket"></div>
+      <p class="nota">Litros abastecidos com o cartão Ticket (Cartão Físico) em cada mês, a média dos 6 meses anteriores e a linha de 50% dessa média.</p>
     </section>
     <div class="grade-paineis">
       <section class="painel conter">

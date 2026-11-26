@@ -6,6 +6,9 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 26/11/2026
 
+- **Correções dos ajustes** (usuário): o ícone do menu "Estoque" voltou ao de antes; o que mudou foi o **desenho do tanque de diesel
+  na tela Estoque**, que parecia uma pilha: agora é um vagão-tanque deitado (referência enviada), com o nível subindo dentro dele (o
+  Arla continua no contêiner quadrado). O **Controle Ticket Log** foi para baixo do "Dia a dia" na Divisão por cartão.
 - **Ajustes pedidos pelo usuário (12 itens):**
   1. Informações do topo com o valor **embaixo** do rótulo em todas as telas que misturavam (Divisão por cartão, Mapa de calor, Postos
      dos motoristas, Cartões frota, Placas, Motoristas, e também Consulta de KM, Gerenciar acessos, Consolidador e Rodada de preços).

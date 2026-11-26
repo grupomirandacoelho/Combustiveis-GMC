@@ -1081,6 +1081,9 @@ table.ea-tabela .ea-acao{text-align:center;padding-left:2px;padding-right:2px;}
 .be-tq-contorno{fill:none;stroke:var(--borda-forte);stroke-width:2;}
 .be-tq.be-negativo .be-tq-contorno{stroke:var(--pilula-ruim);stroke-width:3;}
 .be-ibc{width:136px;aspect-ratio:120/136;}
+.be-vagao{width:180px;max-width:100%;aspect-ratio:160/112;}   /* diesel: vagão-tanque deitado (26/11/2026) */
+/* o vagão é mais baixo que o contêiner do Arla: a área do desenho tem a mesma altura nos dois, para os nomes ficarem alinhados */
+.be-tanque-col:has(> .be-vagao){padding-top:28px;}
 .be-ibc-grade{opacity:.85;stroke-width:2.5;}
 .be-ibc-placa{fill:var(--cartao);stroke:var(--borda-forte);stroke-width:1.5;opacity:.92;}
 .be-tq-pct{font-size:20px;font-weight:700;fill:var(--texto);paint-order:stroke;stroke:var(--cartao);stroke-width:4px;stroke-linejoin:round;font-variant-numeric:tabular-nums;}

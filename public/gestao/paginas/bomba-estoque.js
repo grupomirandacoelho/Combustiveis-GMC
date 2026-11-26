@@ -100,24 +100,27 @@ export async function montar(ctx) {
     </svg>`;
   }
 
+  // Diesel: vagão-tanque deitado (26/11/2026, referência do usuário; o cilindro em pé parecia uma pilha): tanque com escada e
+  // tampa, sobre a plataforma com as rodas; o líquido sobe dentro do tanque e a % fica no meio
   function tanqueSvg(e, pct, nivel, id) {
     if (e.tanque === 'arla') return ibcSvg(e, pct, nivel, id);
     const alt = Math.max(0, Math.min(100, pct * 100));
-    const TOPO = 14, FUNDO = 146;                        // de onde a ponta da elipse de cima vai até a de baixo
+    const TOPO = 18, FUNDO = 82;                         // parte de dentro do tanque
     const y = FUNDO - (FUNDO - TOPO) * alt / 100;        // altura do líquido
-    const corpo = 'M12,26 A38,12 0 0 1 88,26 L88,134 A38,12 0 0 1 12,134 Z';
-    return `<svg class="be-tq ${nivel}" viewBox="0 0 100 156" role="img" aria-label="${esc(NOME_TANQUE[e.tanque])}: ${num(pct * 100)}% (${num(e.volume, 3)} de ${num(e.capacidade, 0)} litros)">
-      <defs><clipPath id="${id}"><path d="${corpo}"/></clipPath></defs>
-      <rect class="be-tq-tampa" x="40" y="4" width="20" height="10" rx="2"/>
-      <path class="be-tq-corpo" d="${corpo}"/>
+    return `<svg class="be-tq be-vagao ${nivel}" viewBox="0 0 160 112" role="img" aria-label="${esc(NOME_TANQUE[e.tanque])}: ${num(pct * 100)}% (${num(e.volume, 3)} de ${num(e.capacidade, 0)} litros)">
+      <defs><clipPath id="${id}"><rect x="8" y="${TOPO}" width="144" height="${FUNDO - TOPO}" rx="32"/></clipPath></defs>
+      <rect class="be-tq-tampa" x="104" y="9" width="26" height="9" rx="2"/>
+      <rect class="be-tq-corpo" x="8" y="${TOPO}" width="144" height="${FUNDO - TOPO}" rx="32"/>
       <g clip-path="url(#${id})">
-        <rect class="be-tq-liquido" x="0" y="${y.toFixed(1)}" width="100" height="${(160 - y).toFixed(1)}"/>
-        ${alt > 0 && alt < 100 ? `<ellipse class="be-tq-superficie" cx="50" cy="${y.toFixed(1)}" rx="38" ry="12"/>` : ''}
+        <rect class="be-tq-liquido" x="0" y="${y.toFixed(1)}" width="160" height="${(100 - y).toFixed(1)}"/>
+        ${alt > 0 && alt < 100 ? `<rect class="be-tq-superficie" x="0" y="${(y - 1).toFixed(1)}" width="160" height="2"/>` : ''}
       </g>
-      <path class="be-tq-aro" d="M12,26 A38,12 0 0 0 88,26"/>
-      <path class="be-tq-aro be-tq-faixa" d="M12,62 A38,12 0 0 0 88,62 M12,98 A38,12 0 0 0 88,98"/>
-      <path class="be-tq-contorno" d="${corpo}"/>
-      <text class="be-tq-pct" x="50" y="84" text-anchor="middle">${num(pct * 100)}%</text>
+      <path class="be-tq-aro" d="M30,12 V88 M44,12 V88 M30,32 H44 M30,50 H44 M30,68 H44"/>
+      <rect class="be-tq-contorno" x="8" y="${TOPO}" width="144" height="${FUNDO - TOPO}" rx="32"/>
+      <rect class="be-tq-tampa" x="2" y="88" width="156" height="7" rx="2"/>
+      <circle class="be-tq-tampa" cx="26" cy="103" r="7"/><circle class="be-tq-tampa" cx="46" cy="103" r="7"/>
+      <circle class="be-tq-tampa" cx="114" cy="103" r="7"/><circle class="be-tq-tampa" cx="134" cy="103" r="7"/>
+      <text class="be-tq-pct" x="96" y="57" text-anchor="middle">${num(pct * 100)}%</text>
     </svg>`;
   }
 
