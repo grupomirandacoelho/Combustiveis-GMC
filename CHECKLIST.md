@@ -214,7 +214,8 @@ Decisões do usuário: começar pela equipe de gestão (depois os motoristas); e
 - [x] Opção "Enviar também para o celular" em Configurar notificações (D1 `notificacoes.celular`, espelho no Supabase).
 - [x] Sino: "No celular" com Ativar / Enviar teste / Desativar neste aparelho; instrução do iPhone (Tela de Início); manifesto da gestão.
 - [x] Nuvem: Edge Function `notificacoes-push` a cada 10 min (ligada), mesmo motor do sino, Web Push sem biblioteca (VAPID + aes128gcm).
-- [ ] Usuário: ativar num Android e num iPhone, usar "Enviar teste" e marcar as primeiras notificações para o celular.
+- [x] Android: ativado e teste recebido (usuário, 26/11).
+- [ ] Usuário: ativar num iPhone (Tela de Início) e marcar as primeiras notificações para o celular.
 - [ ] Com uma regra de estoque baixo ou preço alto marcada: conferir o tempo da rodada em `nuvem_execucoes` (perto de 1 s de CPU
       no teste local; limite das funções = 2 s). Se passar, guardar os estoques calculados em vez de refazer a cada rodada.
 - [ ] Motoristas (depois): avisos da área do motorista (comunicado, resultado do PRIME).

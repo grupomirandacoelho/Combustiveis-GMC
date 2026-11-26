@@ -13,6 +13,7 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
   mesmo com o portal fechado e, ao tocar, abre a tela do aviso. Repete conforme "Depois de fechar no X". Android (Chrome) funciona
   direto; no iPhone (iOS 16.4 ou mais novo) é preciso adicionar o portal à Tela de Início e abrir por lá (o sino explica). Sem custo:
   usa o serviço de notificação do próprio aparelho. Nenhuma notificação vem marcada: nada muda até o usuário marcar.
+  Conferido pelo usuário: ativado num Android e o teste chegou.
 
 ## 25/11/2026
 
