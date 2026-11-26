@@ -6,6 +6,17 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 26/11/2026
 
+- **Aviso personalizado** (pedido do usuário: uma opção em "Tipo de aviso" para ele montar avisos novos do jeito que quiser; o
+  primeiro: mudanças nos postos, para os encarregados de cada unidade). Em Configurar notificações → Nova notificação → **Aviso
+  personalizado (você monta)**, com duas fontes:
+  - **Mudanças nos postos dos motoristas:** escolher quais ações avisam (adicionado, editado, com preço novo na Rodada de preços,
+    autorizado, bloqueado), as unidades, os cartões e por quantas horas o aviso vale; a mensagem usa posto, unidade, cidade,
+    cartão, valor, situação, aviso ao motorista, quem mudou e quando.
+  - **Números dos abastecimentos:** medida (litros, valor, preço por litro, km, média km/L, % da meta, quantidade), separada por
+    abastecimento, placa, motorista, unidade, posto ou tudo junto, comparada com um valor (maior, menor, igual), num período (hoje,
+    ontem, 7/15/30 dias, mês atual), com filtros de combustível, cartão, posto externo ou bomba interna e centros de custo.
+  - **Separar por unidade:** cada pessoa recebe só as ocorrências das unidades dela. Em Gerenciar acessos, cada login ganhou o campo
+    **Unidades** (nenhuma marcada = todas). Vale no sino e no celular.
 - **Tela de login nova** (pedido do usuário: implementar o protótipo `prototipos/login-v2` e tirar os postos autorizados da tela
   inicial): a página inicial agora é só o login, com a foto do caminhão no computador e o formulário no topo no celular. Um login
   para todos: o motorista entra com o usuário de 6 números e vai para a área dele (postos autorizados e média); a gestão vai para

@@ -11,6 +11,7 @@
 import { carregarDados, esc, ehDiesel } from './dados.js';
 import { NOME_TANQUE, calcularEstoque, linhasDaCopia, juntarLinhas } from './bomba.js';
 import { arrastarParaFechar } from './gesto.js';
+import { NOME_UNIDADE, unidadeDe as codigoUnidade, daUnidade } from './unidades.js';
 
 const MAX_NA_TELA = 3;
 const ICONE = { info: 'i-info', alerta: 'i-alerta', critico: 'i-alerta' };
@@ -105,6 +106,88 @@ const cartaoNome = { todos: 'qualquer cartão', ticket: 'Ticket', truckpag: 'Tru
 export const basesDaRegra = (c) => (Array.isArray(c && c.base_ids) ? c.base_ids
   : c && c.base_id !== null && c.base_id !== undefined && c.base_id !== '' ? [Number(c.base_id)] : []);
 const unidadeDe = (ctx, placa) => (ctx.dados && ctx.dados.veiculos && ctx.dados.veiculos[placa] ? ctx.dados.veiculos[placa].unidade : null);
+
+// ---------- aviso personalizado (26/11/2026) ----------
+// ações dos Postos dos motoristas: [valor, rótulo da escolha, palavra na mensagem]. "Preço da rodada" = edição feita pela Rodada de preços.
+export const ACOES_POSTO = [['adicionar', 'Adicionado', 'adicionado'], ['editar', 'Editado (valor, cartão, aviso…)', 'editado'],
+  ['rodada', 'Com preço novo na Rodada de preços', 'atualizado na rodada de preços'], ['autorizar', 'Autorizado', 'autorizado'], ['bloquear', 'Bloqueado', 'bloqueado']];
+const acaoDaMudanca = (a) => (a.acao === 'editar' && a.dados && a.dados.rodada ? 'rodada' : a.acao);
+const NOME_PLATAFORMA = { TICKETLOG: 'Ticket', TRUCKPAG: 'TruckPag', VELOE: 'Veloe', 'IDENTIFICAÇÃO': 'Identificação', IDENTIFICACAO: 'Identificação' };
+export const MEDIDAS = [
+  { id: 'litros', rotulo: 'Litros', fmt: (v) => fmtL(v) + ' L' },
+  { id: 'despesa', rotulo: 'Valor gasto', fmt: (v) => fmtRs(v) },
+  { id: 'preco', rotulo: 'Preço por litro', fmt: (v) => fmtRs(v) + '/L' },
+  { id: 'km', rotulo: 'Km rodado', fmt: (v) => fmtL(v) + ' km' },
+  { id: 'media', rotulo: 'Média km/L', fmt: (v) => Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
+  { id: 'pct_meta', rotulo: '% da meta', fmt: (v) => fmtPct(v) },
+  { id: 'qtd', rotulo: 'Quantidade de abastecimentos', fmt: (v) => fmtL(v) },
+];
+const PERIODOS = [['hoje', 'Hoje'], ['ontem', 'Ontem'], ['7', 'Últimos 7 dias'], ['15', 'Últimos 15 dias'], ['30', 'Últimos 30 dias'], ['mes', 'Mês atual']];
+const fmtNumero = (v) => (v === null || v === undefined ? '—' : Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 }));
+const COMPARA = { '>': (a, b) => a > b + 1e-9, '>=': (a, b) => a >= b - 1e-9, '<': (a, b) => a < b - 1e-9, '<=': (a, b) => a <= b + 1e-9, '=': (a, b) => Math.abs(a - b) < 1e-6 };
+const TEXTO_OP = { '>': 'maior que', '>=': 'maior ou igual a', '<': 'menor que', '<=': 'menor ou igual a', '=': 'igual a' };
+
+function avaliarPostos(r, c, ctx) {
+  const lista = ctx.contexto && ctx.contexto.alteracoesPostos;
+  if (!lista) return null;
+  const acoes = c.acoes && c.acoes.length ? c.acoes : null, unids = c.unidades_postos && c.unidades_postos.length ? c.unidades_postos : null;
+  const cartoes = c.cartoes && c.cartoes.length ? c.cartoes.map((x) => String(x).toUpperCase()) : null;
+  const desde = Date.now() - (Number(c.horas) || 24) * 3600e3, out = [];
+  for (const a of lista) {
+    const d = a.dados || {}, acao = acaoDaMudanca(a);
+    if (Date.parse(a.criado_em) < desde) continue;
+    if (acoes && !acoes.includes(acao)) continue;
+    if (unids && !unids.includes(codigoUnidade(d.unidade))) continue;
+    if (cartoes && !cartoes.includes(String(d.plataforma || '').toUpperCase())) continue;
+    const u = codigoUnidade(d.unidade);
+    out.push({ chave: 'r' + r.id + ':p' + a.id, unidade: u, onde: (d.posto || 'posto') + ' · ' + (NOME_UNIDADE[u] || d.unidade || ''),
+      texto: montarTexto(r.mensagem, {
+        acao: (ACOES_POSTO.find((x) => x[0] === acao) || [acao, acao, acao])[2], posto: d.posto || '—', unidade: NOME_UNIDADE[u] || d.unidade || '—',
+        cidade: d.cidade || '—', cartao: NOME_PLATAFORMA[String(d.plataforma || '').toUpperCase()] || d.plataforma || '—',
+        valor: d.valor ? 'R$ ' + Number(d.valor).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) : '—',
+        situacao: String(d.status || '—').toLowerCase(), aviso_motorista: d.aviso || '—', quem: a.usuario_nome || '—', quando: fmtData(a.criado_em) }) });
+  }
+  return out;
+}
+
+const MAX_OCORRENCIAS = 50;
+function avaliarAbastecimentos(r, c, ctx) {
+  if (!ctx.dados) return null;
+  const hoje = diaHoje(), p = c.periodo || 'ontem';
+  const noPeriodo = p === 'hoje' ? (d) => d === hoje : p === 'ontem' ? (d) => d === hoje - 1
+    : p === 'mes' ? (d) => new Date(d * 864e5).toISOString().slice(0, 7) === new Date(hoje * 864e5).toISOString().slice(0, 7)
+    : (d) => d >= hoje - Number(p) + 1 && d <= hoje;
+  const ccs = c.ccs && c.ccs.length ? c.ccs : null;
+  const ls = ctx.dados.linhas.filter((l) => noPeriodo(l.dia) && l.litros > 0 &&
+    (c.combustivel === 'todos' ? true : combustivelDe(l) === (c.combustivel || 'diesel')) &&
+    (!c.cartao || c.cartao === 'todos' || l.cartao === c.cartao) &&
+    (!c.estab || c.estab === 'todos' || (c.estab === 'interno') === interno(l)) && (!ccs || ccs.includes(l.cc)));
+  const chaveG = { abastecimento: (l) => l.placa + ' ' + fmtDiaIso(isoDeDia(l.dia)).slice(0, 5) + ' ' + p2(Math.floor((l.seg || 0) / 3600)) + ':' + p2(Math.floor((l.seg || 0) % 3600 / 60)),
+    placa: (l) => l.placa, motorista: (l) => l.motorista, cc: (l) => l.cc, posto: (l) => l.fornecedor || '(sem posto)', total: () => 'Total' }[c.agrupar || 'placa'];
+  const grupos = new Map();
+  for (const l of ls) {
+    const k = chaveG(l);
+    let g = grupos.get(k);
+    if (!g) grupos.set(k, (g = { litros: 0, despesa: 0, km: 0, qtd: 0, litrosComMeta: 0, litrosMeta: 0, ccs: new Map() }));
+    g.litros += l.litros; g.despesa += l.despesa || 0; g.km += l.km || 0; g.qtd++;
+    if (l.meta) { g.litrosComMeta += l.litros; g.litrosMeta += l.litrosMeta; }
+    g.ccs.set(l.cc, (g.ccs.get(l.cc) || 0) + 1);
+  }
+  const med = MEDIDAS.find((m) => m.id === c.medida) || MEDIDAS[0], comparar = COMPARA[c.operador] || COMPARA['>'];
+  const limite = Number(c.valor) || 0, out = [];
+  for (const [k, g] of grupos) {
+    const v = { litros: g.litros, despesa: g.despesa, km: g.km, qtd: g.qtd, preco: g.litros ? g.despesa / g.litros : null, media: g.litros ? g.km / g.litros : null,
+      pct_meta: g.litrosComMeta && g.litrosMeta ? (g.litrosMeta / g.litrosComMeta) * 100 : null }[med.id];
+    if (v === null || v === undefined || !isFinite(v) || !comparar(v, limite)) continue;
+    const cc = [...g.ccs.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    out.push({ v, chave: 'r' + r.id + ':' + p + (p === 'hoje' || p === 'ontem' ? hoje : '') + ':' + k, unidade: c.agrupar === 'cc' ? k : cc, onde: k,
+      texto: montarTexto(r.mensagem, { grupo: k, medida: med.rotulo, valor: med.fmt(v), limite: TEXTO_OP[c.operador || '>'] + ' ' + (med.id === 'pct_meta' ? fmtPct(limite) : fmtNumero(limite)),
+        periodo: ((PERIODOS.find((x) => x[0] === p) || [])[1] || p).toLowerCase(), qtd: String(g.qtd), unidade: cc || '—' }) });
+  }
+  // os mais fora do limite primeiro; no máximo MAX_OCORRENCIAS por regra (uma regra larga não vira centenas de avisos)
+  out.sort((a, b) => (String(c.operador).startsWith('<') ? a.v - b.v : b.v - a.v));
+  return out.slice(0, MAX_OCORRENCIAS).map(({ v, ...o }) => o);
+}
 
 // campos: {id, rotulo, tipo: 'select'|'multi'|'numero'|'data', opcoes: [[valor, rótulo]] | 'bases' | 'unidades', padrao, largo}
 // avaliar(regra, ctx) -> [{chave, texto}]   ctx = {estoques, dados, contexto: {base, alertasCartao}}
@@ -272,6 +355,67 @@ export const TIPOS = {
       return out;
     },
   },
+  // Aviso personalizado (26/11/2026, pedido do usuário: "uma opção em tipo de aviso para eu criar um tipo de aviso novo e que dê pra
+  // eu configurar da forma que eu quiser"; o primeiro: mudanças nos postos, para os encarregados de cada unidade). Duas fontes:
+  //  - postos: cada mudança feita nos Postos dos motoristas (adicionado, editado, autorizado, bloqueado, preço da rodada) vira um aviso;
+  //  - abastecimentos: uma medida (litros, valor, preço, km, média, % da meta, quantidade) por abastecimento, placa, motorista,
+  //    unidade, posto ou tudo junto, comparada com um valor, num período.
+  // "Separar por unidade": cada pessoa recebe só as ocorrências das unidades dela (Gerenciar acessos > Unidades; sem unidade = todas).
+  personalizado: {
+    rotulo: 'Aviso personalizado (você monta)', nome: 'Aviso personalizado', precisa: null, acesso: null, quem: 'Todos os usuários',
+    acao: null, usa: ['contexto'],
+    campos: [
+      { id: 'fonte', rotulo: 'O que acompanhar', tipo: 'select', largo: true, refaz: true, padrao: 'postos',
+        opcoes: [['postos', 'Mudanças nos postos dos motoristas'], ['abastecimentos', 'Números dos abastecimentos']] },
+      // mudanças nos postos
+      { id: 'acoes', rotulo: 'Avisar quando o posto for', tipo: 'multi', largo: true, se: (c) => c.fonte !== 'abastecimentos', dica: 'nenhuma marcada = todas',
+        opcoes: ACOES_POSTO.map((a) => [a[0], a[1]]), padrao: ['adicionar', 'editar', 'autorizar', 'bloquear'] },
+      { id: 'unidades_postos', rotulo: 'Unidades', tipo: 'multi', largo: true, se: (c) => c.fonte !== 'abastecimentos', dica: 'nenhuma marcada = todas',
+        opcoes: Object.entries(NOME_UNIDADE), padrao: [] },
+      { id: 'cartoes', rotulo: 'Cartões', tipo: 'multi', largo: true, se: (c) => c.fonte !== 'abastecimentos', dica: 'nenhum marcado = todos',
+        opcoes: [['TICKETLOG', 'Ticket'], ['TRUCKPAG', 'TruckPag'], ['VELOE', 'Veloe'], ['IDENTIFICAÇÃO', 'Identificação']], padrao: [] },
+      { id: 'horas', rotulo: 'O aviso vale por (horas depois da mudança)', tipo: 'numero', padrao: 24, se: (c) => c.fonte !== 'abastecimentos' },
+      // números dos abastecimentos
+      { id: 'medida', rotulo: 'Medida', tipo: 'select', padrao: 'litros', se: (c) => c.fonte === 'abastecimentos', opcoes: MEDIDAS.map((m) => [m.id, m.rotulo]) },
+      { id: 'agrupar', rotulo: 'Separar por', tipo: 'select', padrao: 'placa', se: (c) => c.fonte === 'abastecimentos',
+        opcoes: [['abastecimento', 'Cada abastecimento'], ['placa', 'Placa'], ['motorista', 'Motorista'], ['cc', 'Unidade (centro de custo)'], ['posto', 'Posto'], ['total', 'Tudo junto']] },
+      { id: 'operador', rotulo: 'Avisar quando for', tipo: 'select', padrao: '>', se: (c) => c.fonte === 'abastecimentos',
+        opcoes: [['>', 'maior que'], ['>=', 'maior ou igual a'], ['<', 'menor que'], ['<=', 'menor ou igual a'], ['=', 'igual a']] },
+      { id: 'valor', rotulo: 'Valor (na unidade da medida; % da meta em %)', tipo: 'numero', padrao: 0, se: (c) => c.fonte === 'abastecimentos' },
+      { id: 'periodo', rotulo: 'Período', tipo: 'select', padrao: 'ontem', se: (c) => c.fonte === 'abastecimentos', opcoes: PERIODOS },
+      { id: 'combustivel', rotulo: 'Combustível', tipo: 'select', padrao: 'diesel', se: (c) => c.fonte === 'abastecimentos',
+        opcoes: [['diesel', 'Diesel'], ['arla', 'Arla 32'], ['todos', 'Todos']] },
+      { id: 'cartao', rotulo: 'Cartão', tipo: 'select', padrao: 'todos', se: (c) => c.fonte === 'abastecimentos',
+        opcoes: [['todos', 'Todos'], ['TICKET', 'Ticket'], ['TRUCKPAG', 'TruckPag'], ['VELOE', 'Veloe'], ['VIBRA', 'Vibra']] },
+      { id: 'estab', rotulo: 'Onde abasteceu', tipo: 'select', padrao: 'todos', se: (c) => c.fonte === 'abastecimentos',
+        opcoes: [['todos', 'Em qualquer lugar'], ['externo', 'Postos externos'], ['interno', 'Bomba interna']] },
+      { id: 'ccs', rotulo: 'Centros de custo', tipo: 'multi', opcoes: 'unidades', padrao: [], largo: true, se: (c) => c.fonte === 'abastecimentos', dica: 'nenhum marcado = todos' },
+      // para os dois
+      { id: 'por_unidade', rotulo: 'Separar por unidade: cada pessoa recebe só as unidades dela (Gerenciar acessos > Unidades; quem não tem unidade recebe todas)',
+        tipo: 'sim', padrao: false, largo: true },
+    ],
+    variaveis: (c) => (c && c.fonte === 'abastecimentos' ? ['grupo', 'medida', 'valor', 'limite', 'periodo', 'qtd', 'unidade']
+      : ['acao', 'posto', 'unidade', 'cidade', 'cartao', 'valor', 'situacao', 'aviso_motorista', 'quem', 'quando']),
+    mensagem: (c) => (c && c.fonte === 'abastecimentos' ? '{grupo}: {medida} de {valor} ({limite}) em {periodo}.'
+      : 'Posto {posto} ({cidade}) foi {acao} na unidade {unidade} por {quem} em {quando}. Cartão {cartao}, valor {valor}.'),
+    exemplo: (c) => (c && c.fonte === 'abastecimentos'
+      ? { grupo: 'ABC1D23', medida: 'Média km/L', valor: '2,10', limite: 'menor que 2,50', periodo: 'ontem', qtd: '3', unidade: 'RAJA LOG JEQUIE' }
+      : { acao: 'bloqueado', posto: 'POSTO EXEMPLO', unidade: 'Teixeira', cidade: 'TEIXEIRA DE FREITAS - BA', cartao: 'TruckPag', valor: 'R$ 6,290',
+        situacao: 'posto bloqueado', aviso_motorista: '—', quem: 'Fulano', quando: '26/11 10:30' }),
+    acaoDe: (c) => (c && c.fonte === 'abastecimentos' ? { rotulo: 'Ver a operação por motorista', href: '#/operacao-motorista' }
+      : { rotulo: 'Ver os postos', href: '#/postos-motoristas' }),
+    resumo: (c) => (c.fonte === 'abastecimentos'
+      ? (MEDIDAS.find((m) => m.id === c.medida) || {}).rotulo + ' por ' + ({ abastecimento: 'abastecimento', placa: 'placa', motorista: 'motorista', cc: 'unidade', posto: 'posto', total: 'tudo junto' }[c.agrupar] || c.agrupar) +
+        ' ' + c.operador + ' ' + fmtNumero(c.valor) + ' · ' + ((PERIODOS.find((p) => p[0] === c.periodo) || [])[1] || c.periodo) + (c.por_unidade ? ' · separado por unidade' : '')
+      : 'Postos ' + ((c.acoes && c.acoes.length ? c.acoes.map((a) => (ACOES_POSTO.find((x) => x[0] === a) || [a, a, a])[2]) : ['com qualquer mudança']).join(', ')) +
+        ' · ' + (c.unidades_postos && c.unidades_postos.length ? c.unidades_postos.map((u) => NOME_UNIDADE[u] || u).join(', ') : 'todas as unidades') +
+        ' · ' + c.horas + ' h' + (c.por_unidade ? ' · separado por unidade' : '')),
+    avaliar(r, ctx) {
+      const c = r.condicao || {};
+      const out = c.fonte === 'abastecimentos' ? avaliarAbastecimentos(r, c, ctx) : avaliarPostos(r, c, ctx);
+      return out && out.map((o) => ({ acao: TIPOS.personalizado.acaoDe(c), ...o }));
+    },
+  },
 };
 
 // ---------------- dados que os tipos usam ----------------
@@ -302,7 +446,8 @@ export async function carregarEstoques() {
 // carrega só o que as regras usam; o que o login não pode ver fica null (o tipo não dispara para ele)
 export async function carregarContexto(regras, pode, contexto) {
   const tipos = new Set(regras.map((r) => r.tipo));
-  const precisaDados = [...tipos].some((t) => TIPOS[t] && TIPOS[t].usa.includes('dados')) || regras.some((r) => r.tipo === 'falta-cartao' && r.condicao.cc);
+  const precisaDados = [...tipos].some((t) => TIPOS[t] && TIPOS[t].usa.includes('dados')) || regras.some((r) => r.tipo === 'falta-cartao' && r.condicao.cc) ||
+    regras.some((r) => r.tipo === 'personalizado' && r.condicao && r.condicao.fonte === 'abastecimentos');
   const ctx = { contexto: contexto || {}, estoques: null, dados: null };
   await Promise.all([
     tipos.has('estoque-baixo') && pode('bomba-estoque') ? carregarEstoques().then((e) => { ctx.estoques = e; }).catch(() => {}) : null,
@@ -372,7 +517,9 @@ export function iniciarNotificacoes({ pode, usuario }) {
       const { regras, contexto } = await obter('/api/notificacoes?minhas=1');
       const minhas = regras.filter((r) => TIPOS[r.tipo] && (!TIPOS[r.tipo].precisa || TIPOS[r.tipo].precisa === 'dados' || pode(TIPOS[r.tipo].precisa)));
       const ctx = minhas.length ? await carregarContexto(minhas, pode, contexto) : {};
-      const agora = avaliar(minhas, ctx);
+      // aviso personalizado "separado por unidade": só as ocorrências das unidades do login (contexto.unidades; vazio = todas)
+      const minhasUnidades = (contexto && contexto.unidades) || [];
+      const agora = avaliar(minhas, ctx).filter((x) => !(x.regra.condicao && x.regra.condicao.por_unidade) || daUnidade(x.unidade, minhasUnidades));
       const chaves = new Set(agora.map((x) => x.chave));
       for (const k of [...ativas]) if (!chaves.has(k)) { esquecerFechado(uid, k); fecharNotificacao(k, false); ativas.delete(k); }
       const desde = horasDesde(uid, chaves);

@@ -32,9 +32,9 @@ export async function onRequestPost({ request, env }) {
   if (existe) return json({ erro: 'Já existe um login "' + dados.usuario + '". Escolha outro.' }, 409);
   const senha = senhaProvisoria();
   const { id } = await env.DB.prepare(
-    'INSERT INTO usuarios (usuario, nome, senha_hash, papel, permissoes, funcao_id, bomba_bases, trocar_senha) VALUES (?, ?, ?, ?, ?, ?, ?, 1) RETURNING id')
+    'INSERT INTO usuarios (usuario, nome, senha_hash, papel, permissoes, funcao_id, bomba_bases, unidades, trocar_senha) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1) RETURNING id')
     .bind(dados.usuario, dados.nome, await gerarHashSenha(senha), dados.papel, JSON.stringify(dados.permissoes), dados.funcao_id,
-      Array.isArray(dados.bomba_bases) ? JSON.stringify(dados.bomba_bases) : null).first();
+      Array.isArray(dados.bomba_bases) ? JSON.stringify(dados.bomba_bases) : null, Array.isArray(dados.unidades) ? JSON.stringify(dados.unidades) : null).first();
   const r = await env.DB.prepare(`SELECT ${CAMPOS_USUARIO} ${DE_USUARIOS} WHERE u.id = ?`).bind(id).first();
   return json({ ok: true, usuario: publico(r), senha }, 201);
 }

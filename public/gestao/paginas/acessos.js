@@ -6,6 +6,7 @@
 // O servidor confere tudo de novo (lib/permissoes.js, lib/usuarios.js, functions/api/usuarios e /api/funcoes).
 import { esc, fmt } from '../lib/dados.js';
 import { htmlApoio } from '../lib/filtros.js';
+import { UNIDADES, NOME_UNIDADE } from '../lib/unidades.js';
 
 const quando = (iso) => {
   if (!iso) return null;
@@ -139,6 +140,12 @@ export async function montar(ctx) {
           <label class="opcao-radio"><input type="radio" name="bases" value="algumas"><span><strong>Só as bases marcadas</strong>Nas telas da Bomba interna a pessoa não vê o estoque, as compras nem os abastecimentos das outras bases, e não cria base nova.</span></label>
           <div class="ac-bases-lista" id="ac-bases-lista"></div>
         </fieldset>
+        <!-- unidades do login (26/11/2026): nos avisos marcados "Separar por unidade", a pessoa recebe só as destas unidades -->
+        <fieldset class="tipo-acesso" id="ac-unidades-campo">
+          <legend>Unidades da pessoa <small>(para os avisos separados por unidade, como os dos encarregados)</small></legend>
+          <div class="ac-bases-lista" id="ac-unidades-lista">${UNIDADES.map((u) => '<label class="opcao-linha"><input type="checkbox" data-unidade value="' + u + '"> <span>' + esc(NOME_UNIDADE[u]) + '</span></label>').join('')}</div>
+          <p class="nota">Nenhuma marcada = recebe os avisos de todas as unidades.</p>
+        </fieldset>
         <label class="opcao-linha" id="ac-ativo-campo"><input type="checkbox" name="ativo"> <span>Login ativo (desmarque para bloquear a entrada sem excluir)</span></label>
         <div class="dialogo-acoes">
           <button type="button" class="btn" data-fechar>Cancelar</button>
@@ -210,6 +217,8 @@ export async function montar(ctx) {
   const paginas = (perms) => perms.filter((p) => rotulos.has(p) && !rotulos.get(p).nivelDe).length;
   // bases da bomba interna liberadas (só aparece quando o login não vê todas)
   const nomeBase = (id) => (bombaBases.find((b) => b.id === id) || {}).nome || 'base ' + id;
+  const resumoUnidades = (u) => (!u.unidades || !u.unidades.length ? '' : '<span class="perm-grupo"><b>Unidades:</b> ' +
+    esc(u.unidades.map((x) => NOME_UNIDADE[x] || x).join(', ')) + '</span>');
   const resumoBases = (u) => (!u.bomba_bases ? '' : '<span class="perm-grupo"><b>Bases da bomba interna:</b> ' +
     esc(u.bomba_bases.length ? u.bomba_bases.map(nomeBase).join(', ') : 'nenhuma') + '</span>');
   const tipoDe = (u) => (u.papel === 'admin' ? 'Administrador' : u.funcao_id ? 'Função: ' + (u.funcao_nome || '?') : 'Personalizado');
@@ -260,7 +269,7 @@ export async function montar(ctx) {
           '<td class="trunc"><strong>' + esc(u.nome) + '</strong>' + (eu ? ' <span class="selo-pendente">você</span>' : '') +
             '<small class="cidade-linha">' + esc(u.usuario) + '</small></td>' +
           '<td>' + tipo + '</td>' +
-          '<td class="trunc perm-lista">' + (u.papel === 'admin' ? '<span class="sem-dado">Tudo no portal</span>' : resumoLista(u.permissoes) + resumoBases(u)) + '</td>' +
+          '<td class="trunc perm-lista">' + (u.papel === 'admin' ? '<span class="sem-dado">Tudo no portal</span>' : resumoLista(u.permissoes) + resumoBases(u)) + resumoUnidades(u) + '</td>' +
           '<td>' + (u.ultimo_acesso ? esc(quando(u.ultimo_acesso)) : '<span class="sem-dado">Nunca entrou</span>') + '</td>' +
           '<td>' + sit + '</td>' +
           '<td class="acoes-linha">' +
@@ -360,6 +369,7 @@ export async function montar(ctx) {
     // o próprio login não pode deixar de ser administrador
     form.querySelectorAll('input[name="tipo"]').forEach((r) => { r.disabled = !!u && u.id === euId && r.value !== 'admin'; });
     preencherBases(u ? u.bomba_bases : null);
+    $('ac-unidades-lista').querySelectorAll('input[data-unidade]').forEach((c) => { c.checked = !!(u && u.unidades && u.unidades.includes(c.value)); });
     atualizarTipo();
     dlg.showModal();
     form.nome.focus();
@@ -420,6 +430,7 @@ export async function montar(ctx) {
     // bases da bomba interna: null = todas; administrador sempre todas
     corpo.bomba_bases = tipo === 'admin' || basesAtual() === 'todas' ? null
       : [...$('ac-bases-lista').querySelectorAll('input[data-base]:checked')].map((c) => Number(c.value));
+    corpo.unidades = [...$('ac-unidades-lista').querySelectorAll('input[data-unidade]:checked')].map((c) => c.value);   // [] = todas
     if (Array.isArray(corpo.bomba_bases) && !corpo.bomba_bases.length && bombaBases.length) {
       erro.textContent = 'Marque pelo menos uma base da bomba interna, ou escolha "Todas as bases".'; erro.classList.remove('oculto');
       return;

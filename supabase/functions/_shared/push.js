@@ -7,6 +7,7 @@
 // da regra (diaria = de novo no dia seguinte; horas:N = de novo depois de N horas; sessao = não repete). Quando a ocorrência deixa
 // de valer, é esquecida (se voltar, manda de novo). estado = {'<usuario_id>|<chave>': ms do último envio}.
 import { TIPOS, avaliar } from './notificacao.js';
+import { daUnidade } from './unidades.js';
 
 const BAHIA_MS = 3 * 3600e3;
 const diaBahia = (ms) => new Date(ms - BAHIA_MS).toISOString().slice(0, 10);
@@ -40,11 +41,13 @@ export function planejar({ regras, usuarios, inscricoes, comum = {}, estoques = 
     const minhas = regras.filter((r) => (u.recebe || []).includes(r.id));
     if (!minhas.length) continue;
     const ctx = {
-      contexto: { base: comum.base || null, ...(u.pode && u.pode.cartoes && comum.alertasCartao ? { alertasCartao: comum.alertasCartao } : {}) },
+      contexto: { base: comum.base || null, ...(u.pode && u.pode.cartoes && comum.alertasCartao ? { alertasCartao: comum.alertasCartao } : {}),
+        ...(comum.alteracoesPostos ? { alteracoesPostos: comum.alteracoesPostos } : {}) },
       estoques: u.pode && u.pode.estoque && estoques ? estoques.filter((e) => !u.bases || u.bases.includes(e.base_id)) : null,
       dados: u.pode && u.pode.dados ? dados : null,
     };
-    for (const o of avaliar(minhas, ctx)) {
+    // aviso personalizado "separado por unidade": só as ocorrências das unidades da pessoa (sem unidades = todas)
+    for (const o of avaliar(minhas, ctx).filter((x) => !(x.regra.condicao && x.regra.condicao.por_unidade) || daUnidade(x.unidade, u.unidades))) {
       ocorrencias++;
       const k = u.id + '|' + o.chave, ultimo = estado[k] || 0;
       if (!deveEnviar(ultimo, o.regra.repetir, agora)) { novo[k] = ultimo; continue; }
@@ -63,7 +66,8 @@ export function precisa(regras) {
   const tipos = new Set(regras.map((r) => r.tipo));
   return {
     estoque: tipos.has('estoque-baixo'),
-    dados: tipos.has('estoque-baixo') || tipos.has('preco-alto') || regras.some((r) => r.tipo === 'falta-cartao' && r.condicao && r.condicao.cc),
+    dados: tipos.has('estoque-baixo') || tipos.has('preco-alto') || regras.some((r) => r.tipo === 'falta-cartao' && r.condicao && r.condicao.cc) ||
+      regras.some((r) => r.tipo === 'personalizado' && r.condicao && r.condicao.fonte === 'abastecimentos'),
     cartoes: tipos.has('falta-cartao'),
   };
 }

@@ -35,6 +35,7 @@ export const COPIAS = {
   'bomba.js': 'public/gestao/lib/bomba.js',
   'gesto.js': 'public/gestao/lib/gesto.js',
   'tempo-real.js': 'public/gestao/lib/tempo-real.js',
+  'unidades.js': 'public/gestao/lib/unidades.js',   // aviso personalizado separado por unidade (26/11/2026)
 };
 // em _shared tudo fica na mesma pasta: os imports do portal passam a apontar para o lado
 export const ajustarImports = (texto) => texto.replace(/'\.\.\/\.\.\/public\/gestao\/lib\/([\w-]+\.js)'/g, "'./$1'");

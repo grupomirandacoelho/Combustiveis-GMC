@@ -2,7 +2,8 @@ import { usuarioDaSessao, json } from '../../../lib/auth.js';
 import { pode, permissoesDe, USAM_DADOS, CATALOGO } from '../../../lib/permissoes.js';
 // quem recebe cada regra: o mesmo código da tela Configurar notificações (18/11/2026)
 import { recebe, limparDestinatarios } from '../../../public/gestao/lib/destino-notificacao.js';
-import { DE_USUARIOS, CAMPOS_USUARIO } from '../../../lib/usuarios.js';
+import { DE_USUARIOS, CAMPOS_USUARIO, unidadesDe } from '../../../lib/usuarios.js';
+import { UNIDADES } from '../../../public/gestao/lib/unidades.js';
 
 // Operacional > Notificações: regras dos avisos no canto da tela. A conta é feita no navegador (public/gestao/lib/notificacao.js,
 // catálogo TIPOS); aqui ficam as regras, a validação dos campos de cada tipo e os dados do servidor que alguns tipos usam.
@@ -56,11 +57,45 @@ const TIPOS = {
     minimo: n(c.minimo, 1, 999, 'O mínimo de pedidos abertos precisa ser de 1 a 999.'), horas: n(c.horas, 0, 720, 'As horas precisam ficar entre 0 e 720.') }),
   'base-desatualizada': (c) => ({ planilha: umDe(c.planilha, ['base', 'copia', 'ambas'], 'base'),
     horas: n(c.horas, 1, 720, 'As horas sem atualizar precisam ficar entre 1 e 720.') }),
+  // aviso personalizado (26/11/2026): o usuário monta (lib/notificacao.js TIPOS.personalizado)
+  personalizado: (c) => {
+    const lista = (v, validos, max) => (Array.isArray(v) ? [...new Set(v.map(String).filter((x) => !validos || validos.includes(x)))].slice(0, max || 50) : []);
+    const por_unidade = c.por_unidade === true;
+    if (c.fonte !== 'abastecimentos') {
+      return { fonte: 'postos', por_unidade, acoes: lista(c.acoes, ['adicionar', 'editar', 'rodada', 'autorizar', 'bloquear']),
+        unidades_postos: lista(c.unidades_postos, UNIDADES), cartoes: lista(c.cartoes, ['TICKETLOG', 'TRUCKPAG', 'VELOE', 'IDENTIFICAÇÃO']),
+        horas: n(c.horas, 1, 720, 'As horas do aviso precisam ficar entre 1 e 720.') };
+    }
+    const valor = Number(c.valor);
+    if (!Number.isFinite(valor)) return { erro: 'Informe o valor da condição.' };
+    return { fonte: 'abastecimentos', por_unidade,
+      medida: umDe(c.medida, ['litros', 'despesa', 'preco', 'km', 'media', 'pct_meta', 'qtd'], 'litros'),
+      agrupar: umDe(c.agrupar, ['abastecimento', 'placa', 'motorista', 'cc', 'posto', 'total'], 'placa'),
+      operador: umDe(c.operador, ['>', '>=', '<', '<=', '='], '>'), valor,
+      periodo: umDe(String(c.periodo), ['hoje', 'ontem', '7', '15', '30', 'mes'], 'ontem'),
+      combustivel: umDe(c.combustivel, ['diesel', 'arla', 'todos'], 'diesel'),
+      cartao: umDe(c.cartao, ['todos', 'TICKET', 'TRUCKPAG', 'VELOE', 'VIBRA'], 'todos'),
+      estab: umDe(c.estab, ['todos', 'externo', 'interno'], 'todos'),
+      ccs: lista(c.ccs, null, 60).map((x) => x.slice(0, 80)) };
+  },
 };
+// mudanças nos Postos dos motoristas das últimas 30 dias (índice idx_alteracoes_postos_criado): para o aviso personalizado de postos
+export async function alteracoesPostosRecentes(db, horas = 720) {
+  const desde = new Date(Date.now() - Math.min(horas, 720) * 3600e3).toISOString().slice(0, 19) + 'Z';
+  const { results } = await db.prepare('SELECT id, criado_em, acao, usuario_nome, dados FROM alteracoes_postos WHERE criado_em >= ? ORDER BY id DESC LIMIT 300')
+    .bind(desde).all();
+  return results.map((a) => ({ ...a, dados: ler(a.dados, {}) }));
+}
+const horasPostos = (regras) => Math.max(0, ...regras.filter((r) => r.tipo === 'personalizado' && (!r.condicao || r.condicao.fonte !== 'abastecimentos'))
+  .map((r) => Number(r.condicao && r.condicao.horas) || 24));
 
-async function contexto(env, u, regras) {
+async function contexto(env, u, regras, todasPostos = false) {
   const [versao, copia] = await Promise.all([env.DADOS.get('versao', 'json').catch(() => null), env.DADOS.get('base-copia-versao', 'json').catch(() => null)]);
-  const ctx = { base: { baseSalvaEm: versao && versao.baseSalvaEm || null, geradoEm: versao && versao.geradoEm || null, copiaEm: copia && copia.enviadoEm || null } };
+  const ctx = { base: { baseSalvaEm: versao && versao.baseSalvaEm || null, geradoEm: versao && versao.geradoEm || null, copiaEm: copia && copia.enviadoEm || null },
+    unidades: unidadesDe(u) };
+  // aviso personalizado de postos: as mudanças do período que as regras olham (no editor, das últimas 72 h para a coluna "Agora")
+  const h = todasPostos ? 72 : horasPostos(regras);
+  if (h) ctx.alteracoesPostos = await alteracoesPostosRecentes(env.DB, h).catch(() => []);
   if (regras.some((r) => r.tipo === 'falta-cartao') && pode(u, 'cartoes-frota')) {
     const a = await env.DB.prepare("SELECT id, criado_em, placa, cartoes, motorista FROM alertas_cartoes WHERE estado = 'aberto' ORDER BY id DESC LIMIT 300").all().catch(() => ({ results: [] }));
     ctx.alertasCartao = a.results.map((x) => ({ ...x, cartoes: ler(x.cartoes, []) }));
@@ -81,7 +116,7 @@ export async function onRequestGet({ request, env }) {
   if (!pode(u, 'notificacoes')) return json({ erro: 'Seu acesso não inclui as Notificações.' }, 403);
   const us = await env.DB.prepare(`SELECT ${CAMPOS_USUARIO} ${DE_USUARIOS} WHERE u.ativo = 1 AND u.excluido = 0 ORDER BY u.nome COLLATE NOCASE`).all();
   // o que cada login enxerga (sem acesso à tela de origem, o aviso daquele tipo não aparece para ele)
-  return json({ regras: todas, contexto: await contexto(env, u, [{ tipo: 'falta-cartao' }]), telas: TELAS, usamDados: USAM_DADOS,
+  return json({ regras: todas, contexto: await contexto(env, u, [{ tipo: 'falta-cartao' }], true), telas: TELAS, usamDados: USAM_DADOS,
     usuarios: us.results.map((x) => ({ id: x.id, nome: x.nome, permissoes: permissoesDe(x),
       acessos: { estoque: pode(x, 'bomba-estoque'), cartoes: pode(x, 'cartoes-frota'), dados: pode(x, ...USAM_DADOS) } })) });
 }

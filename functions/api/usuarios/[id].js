@@ -43,8 +43,10 @@ export async function onRequestPut({ request, env, params }) {
   if (funcao && !(await buscarFuncao(env.DB, funcao))) return json({ erro: 'Essa função não existe mais. Recarregue a página.' }, 400);
   // bases da bomba interna: sem o campo no pedido, mantém as atuais
   const bases = dados.bomba_bases === undefined ? a.bomba_bases : dados.bomba_bases === null ? null : JSON.stringify(dados.bomba_bases);
-  const ops = [env.DB.prepare('UPDATE usuarios SET nome = ?, papel = ?, permissoes = ?, funcao_id = ?, ativo = ?, bomba_bases = ? WHERE id = ?')
-    .bind(nome, papel, permissoes, funcao, ativo, bases, a.id)];
+  // unidades (avisos separados por unidade): sem o campo no pedido, mantém as atuais
+  const unidades = dados.unidades === undefined ? a.unidades : dados.unidades === null ? null : JSON.stringify(dados.unidades);
+  const ops = [env.DB.prepare('UPDATE usuarios SET nome = ?, papel = ?, permissoes = ?, funcao_id = ?, ativo = ?, bomba_bases = ?, unidades = ? WHERE id = ?')
+    .bind(nome, papel, permissoes, funcao, ativo, bases, unidades, a.id)];
   if (!ativo) ops.push(env.DB.prepare('DELETE FROM sessoes WHERE usuario_id = ?').bind(a.id));
   await env.DB.batch(ops);
   const r = await env.DB.prepare(`SELECT ${CAMPOS_USUARIO} ${DE_USUARIOS} WHERE u.id = ?`).bind(a.id).first();

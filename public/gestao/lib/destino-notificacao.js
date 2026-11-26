@@ -16,13 +16,16 @@ export const TELAS_PADRAO = {
   'falta-cartao': ['cartoes-frota'],
   comunicado: [],
   'base-desatualizada': [],
+  personalizado: [],   // aviso personalizado (26/11/2026): todos, ou as telas/usuários escolhidos
 };
 // o que o login precisa para o navegador conseguir verificar o tipo ('dados' = alguma tela que lê os abastecimentos)
 export const DADOS_TIPO = { 'estoque-baixo': ['bomba-estoque'], 'preco-alto': 'dados', 'falta-cartao': ['cartoes-frota'] };
 
 const algum = (perms, lista) => lista.some((p) => perms.includes(p));
 // perms = permissões do login; usamDados = telas que leem os abastecimentos (lib/permissoes.js USAM_DADOS)
-export function consegueVerificar(perms, tipo, usamDados) {
+// aviso personalizado: depende da fonte (mudanças nos postos = qualquer login; números dos abastecimentos = quem vê os dados)
+export function consegueVerificar(perms, tipo, usamDados, condicao) {
+  if (tipo === 'personalizado') return !(condicao && condicao.fonte === 'abastecimentos') || algum(perms, usamDados);
   const d = DADOS_TIPO[tipo];
   if (!d) return true;
   return algum(perms, d === 'dados' ? usamDados : d);
@@ -33,7 +36,7 @@ export function telasDaRegra(r) {
 }
 export function recebe(perms, uid, r, usamDados) {
   const d = r.destinatarios || {};
-  if (!consegueVerificar(perms, r.tipo, usamDados)) return false;
+  if (!consegueVerificar(perms, r.tipo, usamDados, r.condicao)) return false;
   if (d.modo === 'usuarios') return (d.ids || []).includes(uid);
   const telas = telasDaRegra(r);
   return !telas.length || algum(perms, telas);

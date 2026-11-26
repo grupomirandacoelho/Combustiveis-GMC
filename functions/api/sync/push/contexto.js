@@ -3,7 +3,8 @@ import { pode, permissoesDe, USAM_DADOS } from '../../../../lib/permissoes.js';
 import { CAMPOS_USUARIO, DE_USUARIOS } from '../../../../lib/usuarios.js';
 import { basesDoUsuario, lerBases } from '../../../../lib/bomba.js';
 import { recebe } from '../../../../public/gestao/lib/destino-notificacao.js';
-import { regra } from '../../notificacoes/index.js';
+import { regra, alteracoesPostosRecentes } from '../../notificacoes/index.js';
+import { unidadesDe } from '../../../../lib/usuarios.js';
 import { lista as movimentacoesBomba } from '../../bomba/movimentacoes.js';
 import { recentes as abastecimentosBomba } from '../../bomba/abastecimentos.js';
 
@@ -26,7 +27,8 @@ export async function onRequestGet({ request, env }) {
   const usuarios = us.map((x) => {
     const perms = permissoesDe(x), bases = basesDoUsuario(x);
     return { id: x.id, recebe: regras.filter((r) => recebe(perms, x.id, r, USAM_DADOS)).map((r) => r.id),
-      pode: { estoque: pode(x, 'bomba-estoque'), cartoes: pode(x, 'cartoes-frota'), dados: pode(x, ...USAM_DADOS) }, bases: bases ? [...bases] : null };
+      pode: { estoque: pode(x, 'bomba-estoque'), cartoes: pode(x, 'cartoes-frota'), dados: pode(x, ...USAM_DADOS) }, bases: bases ? [...bases] : null,
+      unidades: unidadesDe(x) };   // aviso personalizado separado por unidade (26/11/2026)
   }).filter((u) => u.recebe.length);
   const tipos = new Set(regras.filter((r) => usuarios.some((u) => u.recebe.includes(r.id))).map((r) => r.tipo));
   const [versao, copia] = await Promise.all([env.DADOS.get('versao', 'json').catch(() => null), env.DADOS.get('base-copia-versao', 'json').catch(() => null)]);
@@ -35,6 +37,10 @@ export async function onRequestGet({ request, env }) {
     const a = await env.DB.prepare("SELECT id, criado_em, placa, cartoes, motorista FROM alertas_cartoes WHERE estado = 'aberto' ORDER BY id DESC LIMIT 300").all();
     comum.alertasCartao = a.results.map((x) => { let c = []; try { c = JSON.parse(x.cartoes || '[]'); } catch { /* sem cartões */ } return { ...x, cartoes: c }; });
   }
+  // aviso personalizado de mudanças nos postos: as mudanças do maior período que as regras olham
+  const horas = Math.max(0, ...regras.filter((r) => r.tipo === 'personalizado' && (!r.condicao || r.condicao.fonte !== 'abastecimentos') && usuarios.some((u) => u.recebe.includes(r.id)))
+    .map((r) => Number(r.condicao && r.condicao.horas) || 24));
+  if (horas) comum.alteracoesPostos = await alteracoesPostosRecentes(env.DB, horas);
   const out = { regras, usuarios, inscricoes: inscricoes.filter((i) => usuarios.some((u) => u.id === i.usuario_id)), comum };
   if (tipos.has('estoque-baixo')) {
     const [bases, movimentacoes, manuais] = await Promise.all([lerBases(env.DB, false, null), movimentacoesBomba(env.DB, null), abastecimentosBomba(env.DB, null)]);

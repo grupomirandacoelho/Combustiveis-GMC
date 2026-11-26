@@ -12,6 +12,14 @@ const REPETIR = [['sessao', 'Volta na próxima vez que abrir o portal'], ['diari
 const num = (s) => { const t = String(s ?? '').trim().replace(/\./g, '').replace(',', '.'); return t === '' ? null : Number(t); };
 const fmtNum = (v) => (v === null || v === undefined || v === '' ? '' : Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 2 }));
 const padrao = (c) => (typeof c.padrao === 'function' ? c.padrao() : c.padrao);
+// partes do tipo que podem depender da condição (aviso personalizado, 26/11/2026: variáveis, mensagem e exemplo mudam com a fonte)
+const daCond = (v, cond) => (typeof v === 'function' ? v(cond || {}) : v);
+const variaveisDe = (t, cond) => daCond(t.variaveis, cond) || [];
+const mensagemDe = (t, cond) => daCond(t.mensagem, cond) || '';
+const exemploDe = (t, cond) => daCond(t.exemplo, cond) || {};
+const acaoDe = (t, cond) => (t.acaoDe ? t.acaoDe(cond || {}) : t.acao);
+// condição com os padrões dos campos que não vieram (para decidir quais campos aparecem)
+const comPadroes = (t, cond) => { const c = { ...(cond || {}) }; for (const x of t.campos) if (c[x.id] === undefined) c[x.id] = padrao(x); return c; };
 
 async function chamar(metodo, corpo) {
   const r = await fetch('/api/notificacoes', { method: metodo, credentials: 'same-origin', cache: 'no-store',
@@ -160,31 +168,41 @@ export async function montar(ctx) {
     return ops.map(([k, r]) => '<option value="' + esc(String(k)) + '"' + (String(k) === v ? ' selected' : '') + '>' + esc(r) + '</option>').join('');
   }
   function desenharCamposTipo(cond) {
-    const t = TIPOS[tipoAtual];
-    el('nt-campos-tipo').innerHTML = '<div class="nt-grade-tipo">' + t.campos.map((c) => {
+    const t = TIPOS[tipoAtual], atual = comPadroes(t, cond);
+    el('nt-campos-tipo').innerHTML = '<div class="nt-grade-tipo">' + t.campos.filter((c) => !c.se || c.se(atual)).map((c) => {
       const v = c.id === 'base_ids' && cond ? basesDaRegra(cond) : cond && cond[c.id] !== undefined ? cond[c.id] : padrao(c);
       const nome = 'c_' + c.id;
+      if (c.tipo === 'sim') {   // caixa de marcar simples (aviso personalizado: separar por unidade)
+        return '<label class="nt-opcao largo"><input type="checkbox" name="' + nome + '"' + (v ? ' checked' : '') + '> <span>' + esc(c.rotulo) + '</span></label>';
+      }
       if (c.tipo === 'multi') {   // caixas de marcar (bases): as marcadas que não estão mais na lista continuam aparecendo
-        const ops = c.opcoes === 'bases' ? bases.map((b) => [b.id, b.nome]) : c.opcoes;
+        const ops = c.opcoes === 'bases' ? bases.map((b) => [b.id, b.nome]) : c.opcoes === 'unidades' ? unidades.map((u) => [u, u]) : [...c.opcoes];
         const sel = (v || []).map(String);
         for (const x of sel) if (!ops.some(([k]) => String(k) === x)) ops.push([x, 'base ' + x + ' (inativa ou sem acesso)']);
         return '<fieldset class="campo-form largo nt-multi"><legend>' + esc(c.rotulo) + (c.dica ? ' <small>(' + esc(c.dica) + ')</small>' : '') + '</legend>' +
           '<div class="nt-multi-opcoes">' + (ops.length ? ops.map(([k, r]) => '<label class="nt-opcao"><input type="checkbox" name="' + nome + '" value="' + esc(String(k)) + '"' +
-            (sel.includes(String(k)) ? ' checked' : '') + '> ' + esc(r) + '</label>').join('') : '<p class="nota">Nenhuma base ativa.</p>') + '</div></fieldset>';
+            (sel.includes(String(k)) ? ' checked' : '') + '> ' + esc(r) + '</label>').join('') : '<p class="nota">' + (c.opcoes === 'unidades' ? 'Carregando os centros de custo…' : 'Nenhuma base ativa.') + '</p>') + '</div></fieldset>';
       }
       const campo =c.tipo === 'select' ? '<select name="' + nome + '" class="campo-sel">' + opcoesDe(c, v) + '</select>'
         : c.tipo === 'data' ? '<input type="date" name="' + nome + '" value="' + esc(v || '') + '">'
         : '<input name="' + nome + '" inputmode="decimal" autocomplete="off" value="' + esc(fmtNum(v)) + '">';
       return '<label class="campo-form' + (c.largo ? ' largo' : '') + '"><span>' + esc(c.rotulo) + '</span>' + campo + '</label>';
     }).join('') + '</div>';
-    el('nt-variaveis').innerHTML = t.variaveis.length ? t.variaveis.map((v) => '<button type="button" class="pr-chip nt-campo" data-campo="' + v + '">{' + v + '}</button>').join('') : '';
-    el('nt-variaveis').classList.toggle('oculto', !t.variaveis.length);
+    const vars = variaveisDe(t, atual);
+    el('nt-variaveis').innerHTML = vars.length ? vars.map((v) => '<button type="button" class="pr-chip nt-campo" data-campo="' + v + '">{' + v + '}</button>').join('') : '';
+    el('nt-variaveis').classList.toggle('oculto', !vars.length);
     el('nt-quem-todos').textContent = t.quem;
     desenharUsuarios(lerDestIds());
   }
+  let ultimaCond = {};   // condição da última vez que os campos foram desenhados (para saber se a mensagem ainda é a padrão)
   function lerCondicao() {
     const t = TIPOS[tipoAtual], c = {};
     for (const campo of t.campos) {
+      if (campo.se && !campo.se(c)) continue;   // campo que não vale para a fonte escolhida (aviso personalizado)
+      if (campo.tipo === 'sim') { const x = form.elements['c_' + campo.id]; c[campo.id] = !!(x && x.checked); continue; }
+      // campo que ainda não está na tela (a fonte acabou de mudar): fica com o padrão quando os campos forem redesenhados
+      if (campo.tipo !== 'multi' && !form.elements['c_' + campo.id]) continue;
+      if (campo.tipo === 'multi' && campo.se && !form.querySelector('input[name="c_' + campo.id + '"]') && campo.opcoes !== 'unidades') continue;
       if (campo.tipo === 'multi') {
         const vs = [...form.querySelectorAll('input[name="c_' + campo.id + '"]:checked')].map((x) => x.value);
         c[campo.id] = campo.opcoes === 'bases' ? vs.map(Number) : vs;
@@ -232,8 +250,8 @@ export async function montar(ctx) {
   const AVISO_EXEMPLO = 'Exemplo com dados fictícios: agora esta regra não está disparando.';
   function amostra(r) {
     const x = avaliarPrevia(r);
-    if (x) return { real: true, titulo: r.nome || 'Aviso', texto: x.texto, acao: x.acao || TIPOS[r.tipo].acao };
-    return { real: false, titulo: 'Exemplo · ' + (r.nome || 'Aviso'), texto: montarTexto(r.mensagem, TIPOS[r.tipo].exemplo) + ' (' + AVISO_EXEMPLO + ')', acao: TIPOS[r.tipo].acao };
+    if (x) return { real: true, titulo: r.nome || 'Aviso', texto: x.texto, acao: x.acao || acaoDe(TIPOS[r.tipo], r.condicao) };
+    return { real: false, titulo: 'Exemplo · ' + (r.nome || 'Aviso'), texto: montarTexto(r.mensagem, exemploDe(TIPOS[r.tipo], r.condicao)) + ' (' + AVISO_EXEMPLO + ')', acao: acaoDe(TIPOS[r.tipo], r.condicao) };
   }
   function testar(chave, r) {
     const a = amostra(r);
@@ -244,7 +262,7 @@ export async function montar(ctx) {
     const r = lerForm(), a = amostra(r);
     el('nt-previa-rot').textContent = a.real ? 'Como fica (com os dados de agora)' : 'Como fica (exemplo: a regra não está disparando agora)';
     el('nt-previa').innerHTML = '<div class="notif notif-' + r.nivel + ' notif-estatica">' +
-      htmlNotificacao({ titulo: r.nome || 'Aviso', texto: a.real ? a.texto : montarTexto(r.mensagem, TIPOS[r.tipo].exemplo), nivel: r.nivel, acao: a.acao }, true) + '</div>';
+      htmlNotificacao({ titulo: r.nome || 'Aviso', texto: a.real ? a.texto : montarTexto(r.mensagem, exemploDe(TIPOS[r.tipo], r.condicao)), nivel: r.nivel, acao: a.acao }, true) + '</div>';
   }
   function marcarNivel(n) {
     nivel = n;
@@ -262,8 +280,9 @@ export async function montar(ctx) {
     const t = TIPOS[novo];
     // nome e mensagem acompanham o tipo enquanto ainda forem os padrões do tipo anterior
     if (!manterNome && (!form.nome.value.trim() || form.nome.value === anterior.nome)) form.nome.value = t.nome;
-    if (!form.mensagem.value.trim() || form.mensagem.value === anterior.mensagem) form.mensagem.value = t.mensagem;
+    if (!form.mensagem.value.trim() || form.mensagem.value === mensagemDe(anterior, ultimaCond)) form.mensagem.value = mensagemDe(t, comPadroes(t, null));
     desenharCamposTipo(null);
+    ultimaCond = lerCondicao();
     const dest = form.querySelector('input[name="dest"]:checked');
     if (!dest || dest.value !== 'telas') desenharTelas(TELAS_PADRAO[novo] || []);   // padrão do tipo novo
     previa();
@@ -276,7 +295,7 @@ export async function montar(ctx) {
     form.tipo.value = tipo;
     form.tipo.disabled = !!editando;   // trocar o tipo de uma regra pronta = criar outra
     form.nome.value = r ? r.nome : t.nome;
-    form.mensagem.value = r ? r.mensagem : t.mensagem;
+    form.mensagem.value = r ? r.mensagem : mensagemDe(t, comPadroes(t, null));
     form.repetir.value = r ? r.repetir : 'diaria';
     form.ativa.checked = r ? r.ativa : true;
     form.celular.checked = r ? !!r.celular : false;   // notificações no celular (26/11/2026)
@@ -285,6 +304,7 @@ export async function montar(ctx) {
     desenharTelas(dst.modo === 'telas' ? dst.telas : (TELAS_PADRAO[tipo] || []));
     el('nt-telas').classList.toggle('oculto', dst.modo !== 'telas');
     desenharCamposTipo(r ? r.condicao : null);
+    ultimaCond = lerCondicao();
     desenharUsuarios(dst.ids || []);
     el('nt-usuarios').classList.toggle('oculto', dst.modo !== 'usuarios');
     el('nt-erro').classList.add('oculto');
@@ -295,6 +315,15 @@ export async function montar(ctx) {
   form.addEventListener('input', previa);
   form.addEventListener('change', (e) => {
     if (e.target.name === 'tipo') { trocarTipo(e.target.value, false); return; }
+    const refaz = TIPOS[tipoAtual].campos.find((c) => c.refaz && e.target.name === 'c_' + c.id);
+    if (refaz) {
+      const t = TIPOS[tipoAtual], depois = lerCondicao();
+      if (!form.mensagem.value.trim() || form.mensagem.value === mensagemDe(t, ultimaCond)) form.mensagem.value = mensagemDe(t, comPadroes(t, depois));
+      desenharCamposTipo(depois);
+      ultimaCond = lerCondicao();
+      previa();
+      return;
+    }
     if (e.target.name === 'dest') {
       el('nt-usuarios').classList.toggle('oculto', e.target.value !== 'usuarios');
       el('nt-telas').classList.toggle('oculto', e.target.value !== 'telas');

@@ -232,4 +232,6 @@ Decisões do usuário: começar pela equipe de gestão (depois os motoristas); e
 - [ ] Usuário: testar o login de um motorista no celular (app instalado abre no login e depois na área com os postos).
 - [ ] Mapa de calor: erro "Cannot read properties of null (reading 'clientHeight')" em enquadrar ao sair da tela (ResizeObserver
       sem desligar; visto no console em 26/11).
+- [x] Aviso personalizado (postos e abastecimentos) e unidades do login para separar por unidade (26/11/2026).
+- [ ] Usuário: cadastrar os encarregados (Gerenciar acessos > Unidades) e criar o aviso de mudanças nos postos com "Separar por unidade".
 
