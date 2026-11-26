@@ -204,6 +204,11 @@ cada um só refaz quando a assinatura (md5) muda. Tabela nova lida por um gerado
 `tests/py/test_painel_gatilhos.py`). O portal lê por `gestao_dados_painel_versao()` e `gestao_dados_painel()`.
 
 
+**Publicação (desde 26/11/2026):** os painéis só mudam ao publicar (botão do Editar abastecimentos, rota
+`/api/abastecimentos/publicar`). `public.painel_publicacao` (ate, pedido_em/por, publicado_em/por); `gestao_painel_publicar(usuario)`
+pede até ontem (dia da Bahia) e o `gestao_dados_painel_rodar` (pg_cron 2 min) gera o `dados_painel` só com as linhas até `ate`
+(o arquivo leva `publicadoAte`; com ele o portal não soma o tempo real das APIs). base-copia e consolidação continuam na hora.
+
 ## Filas do portal aplicadas no banco (desde 19/11/2026, 15.2 passo 3)
 As filas do D1 (`consolidador_lotes` = inserir, `alteracoes_base_copia` = corrigir/excluir) são aplicadas em `public.base_transacoes`
 por `gestao_aplicar_lote(p_linhas jsonb)` (pula duplicado por placa + data ao segundo + hodômetro + combustível com todo diesel junto;

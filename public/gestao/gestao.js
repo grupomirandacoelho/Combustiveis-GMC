@@ -8,6 +8,7 @@ import { confirmar } from './lib/confirmar.js';
 import { iniciarNotificacoes, listaDoSino } from './lib/notificacao.js';
 import { arrastarParaFechar } from './lib/gesto.js';
 import { montarCelular } from './lib/celular.js';
+import { iniciarToqueLongo } from './lib/toque-longo.js';
 window.confirmar = confirmar;   // confirmação dentro do site (as páginas chamam confirmar() sem importar)
 
 const $ = (id) => document.getElementById(id);
@@ -84,7 +85,7 @@ function aplicarMenu() {
 // ---------- menu da conta (iniciais ao lado da busca) ----------
 (function menuConta() {
   const botao = $('btn-conta'), painel = $('conta-painel');
-  const itens = () => [...painel.querySelectorAll('[role="menuitem"]')].filter((i) => !i.hidden);
+  const itens = () => [...painel.querySelectorAll('[role="menuitem"], [role="menuitemcheckbox"]')].filter((i) => !i.hidden);
   const abrir = (sim) => {
     painel.classList.toggle('oculto', !sim);
     botao.setAttribute('aria-expanded', String(sim));
@@ -337,6 +338,7 @@ function rotuloTema() { $('btn-tema').setAttribute('aria-checked', String(temaEf
   });
 })();
 rotuloTema();
+iniciarToqueLongo($('pagina'));   // celular: segurar o dedo = Ctrl+clique (somar à seleção), 26/11/2026
 $('btn-tema').addEventListener('click', () => {
   const novo = temaEfetivo() === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', novo);

@@ -370,6 +370,11 @@ export async function montar(ctx) {
           </div>
         </div>
       </section>`).join('')}
+      <section class="painel ro-painel" aria-labelledby="ro-t-rskm">
+        <div class="painel-cab"><h2 id="ro-t-rskm">R$/KM <small class="ro-unidade">combustível (diesel) ÷ km rodado</small></h2><div class="legenda" id="ro-leg-rskm"></div></div>
+        <p class="ro-subtitulo" id="ro-st-rskm"></p>
+        <div class="grafico" id="ro-g-rskm"></div>
+      </section>
       <section class="painel painel-tabela">
         <div class="painel-cab"><h2>Detalhe por filial</h2><span class="conta" id="ro-tab-periodo"></span></div>
         <div class="tabela-rolagem"><table class="dados ro-tabela" id="ro-tabela"></table></div>
@@ -604,7 +609,41 @@ export async function montar(ctx) {
     el('ro-comparar').addEventListener('change', (e) => { est.comparar = e.target.checked; atualizar(); });
     el('ro-dica').addEventListener('click', (e) => { if (e.target.closest('#ro-limpar-meses')) { est.meses = null; atualizar(); } });
 
-    function desenharGraficos() { CATS.forEach(desenharTendencia); }
+    // R$/KM mês a mês (26/11/2026, pedido do usuário): custo do combustível (diesel) ÷ km rodado, real × orçado (o mesmo
+    // "Custo por km (diesel)" dos cartões do topo); com "Comparar", o real do ano e do ano anterior e o orçado do ano
+    function desenharRsKm() {
+      const box = el('ro-g-rskm'), un = unidadesSel();
+      const razao = (ms, tipo) => { const a = soma(un, ms, 'combustivel', tipo), b = soma(un, ms, 'km', tipo); return tem(a) && b ? a / b : null; };
+      const fEixo = (v) => fmt.d2(v);
+      if (est.comparar) {
+        el('ro-st-rskm').textContent = 'Comparativo anual: real ' + (anoAtual - 1) + ' × ' + anoAtual;
+        el('ro-leg-rskm').innerHTML = '<span><i class="leg-barra"></i>Real ' + anoAtual + '</span><span><i class="leg-contexto"></i>Real ' + (anoAtual - 1) + '</span>' +
+          '<span><i class="leg-tracejada"></i>Orçado ' + anoAtual + '</span>';
+        const pts = MESES_CURTOS.map((r, i) => ({ rotulo: r, rotuloLongo: MESES_LONGOS[i],
+          atual: razao([anoAtual * 12 + i], 'real'), anterior: razao([(anoAtual - 1) * 12 + i], 'real'), orcAtual: razao([anoAtual * 12 + i], 'plan') }));
+        graficoPeriodo(box, pts, {
+          barras: { campo: 'atual', rot: 'Real ' + anoAtual, cor: 'var(--serie-1)' },
+          linhas: [{ campo: 'anterior', rot: 'Real ' + (anoAtual - 1), cor: 'var(--eixo)' }, { campo: 'orcAtual', rot: 'Orçado ' + anoAtual, cor: 'var(--tinta-2)', tracejada: true }],
+          fmtV: brlKm, fmtRotulo: (v) => (tem(v) ? fmt.d2(v) : ''), fmtEixo: fEixo, rotulo: 'R$ por km: real de ' + anoAtual + ' em colunas e ' + (anoAtual - 1) + ' em linha, por mês',
+        });
+        return;
+      }
+      el('ro-st-rskm').textContent = 'Evolução mensal: real × orçado · clique num mês para filtrar (Ctrl+clique soma)';
+      el('ro-leg-rskm').innerHTML = '<span><i class="leg-barra"></i>Real</span><span><i class="leg-meta"></i>Orçado</span>';
+      const ms = universo();
+      const pts = ms.map((m) => ({ mes: m, rotulo: fmtMes(m), rotuloLongo: fmtMes(m, true) + (m === M.mesParcial ? ' (mês parcial)' : ''),
+        real: razao([m], 'real'), plan: razao([m], 'plan') }));
+      graficoPeriodo(box, pts, {
+        barras: { campo: 'real', rot: 'Real', cor: 'var(--serie-1)' },
+        linhas: [{ campo: 'plan', rot: 'Orçado', cor: 'var(--tinta-2)' }],
+        fmtV: brlKm, fmtRotulo: (v) => (tem(v) ? fmt.d2(v) : ''), fmtEixo: fEixo,
+        ultimoParcial: pts.length > 1 && pts[pts.length - 1].mes === M.mesParcial,
+        destacar: est.meses ? (p) => est.meses.has(p.mes) : null,
+        aoClicar: (p, e) => selecionarMes(p.mes, !!(e && (e.ctrlKey || e.metaKey))),
+        rotulo: 'R$ por km: real em colunas e orçado em linha, por mês',
+      });
+    }
+    function desenharGraficos() { CATS.forEach(desenharTendencia); desenharRsKm(); }
     const atualizar = agendador(() => {
       filtros.atualizarUI();
       desenharTopo();

@@ -21,8 +21,10 @@ export async function onRequestGet({ request, env }) {
   if (await fonteBanco(env).catch(() => false)) {
     const b = await versaoDoBanco(env).catch(() => null);
     if (b) {
-      return json({ versao: versaoDoEtag(b.etag) + mais, geradoEm: b.v.geradoEm || null, linhas: b.v.linhas ?? null, origem: 'banco',
-        status: null, ...resto });
+      // publicado (26/11/2026): o tempo real das APIs não entra nos painéis, então não conta para o aviso de dados novos
+      const pub = b.v.publicadoAte || null;
+      return json({ versao: versaoDoEtag(b.etag) + (pub ? '' : mais), geradoEm: b.v.geradoEm || null, linhas: b.v.linhas ?? null, origem: 'banco',
+        publicadoAte: pub, status: null, ...resto, ...(pub ? { tempoReal: null } : {}) });
     }
   }
   const versao = info && info.versao ? info.versao + mais : null;

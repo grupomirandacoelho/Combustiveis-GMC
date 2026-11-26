@@ -168,20 +168,20 @@ export async function montar(ctx) {
   // ---------- gasto por centro de custo ----------
   function desenharCC() {
     const lista = agrupar(filtradas, (l) => l.cc).sort((a, b) => b.despesa - a.despesa);
-    const total = lista.reduce((s, a) => s + a.despesa, 0);
     const selecionados = filtros.sel.cc;
     el('dp-conta-cc').textContent = fmt.int(lista.length) + (lista.length === 1 ? ' centro de custo' : ' centros de custo');
     el('dp-cc').innerHTML =
-      '<thead><tr><th><span>Centro de custo</span></th><th class="n"><span>Despesa</span></th><th class="n col-opc1"><span>Litros</span></th>' +
-      '<th class="n col-opc2"><span>R$/km</span></th><th class="n"><span>Participação</span></th></tr></thead><tbody>' +
+      // colunas pedidas pelo usuário em 26/11/2026: centro de custo, despesa, volume, km rodado, preço médio e média
+      '<thead><tr><th><span>Centro de custo</span></th><th class="n"><span>Despesa</span></th><th class="n col-opc1"><span>Volume (L)</span></th>' +
+      '<th class="n col-opc2"><span>Km rodado</span></th><th class="n col-opc2"><span>Preço médio</span></th><th class="n"><span>Média (km/L)</span></th></tr></thead><tbody>' +
       (lista.length ? lista.map((a) =>
         '<tr class="' + (selecionados.has(a.nome) ? 'selecionado' : '') + '" data-cc="' + esc(a.nome) + '">' +
         '<td class="trunc"><button type="button" class="link-botao nome-clicavel" data-cc="' + esc(a.nome) + '" aria-pressed="' + selecionados.has(a.nome) + '">' + esc(a.nome) + '</button></td>' +
         '<td class="n">' + esc(fmt.moeda(a.despesa)) + '</td>' +
-        '<td class="n col-opc1">' + esc(fmt.int(a.litros)) + '</td><td class="n col-opc2">' + esc(a.km ? fmt.d2(a.despesa / a.km) : '—') + '</td>' +
-        '<td class="n"><span class="participacao"><span class="participacao-barra" aria-hidden="true"><i style="transform:scaleX(' + (total ? a.despesa / total : 0) + ')"></i></span>' +
-        esc(fmt.pct(total ? a.despesa / total : 0)) + '</span></td></tr>').join('')
-        : '<tr><td colspan="5"><div class="vazio">Nenhum centro de custo neste recorte.</div></td></tr>') + '</tbody>';
+        '<td class="n col-opc1">' + esc(fmt.int(a.litros)) + '</td><td class="n col-opc2">' + esc(fmt.int(a.km)) + '</td>' +
+        '<td class="n col-opc2">' + esc(a.litros ? fmt.moeda(a.despesa / a.litros) : '—') + '</td>' +
+        '<td class="n">' + esc(a.litros && a.km ? fmt.d2(a.km / a.litros) : '—') + '</td></tr>').join('')
+        : '<tr><td colspan="6"><div class="vazio">Nenhum centro de custo neste recorte.</div></td></tr>') + '</tbody>';
   }
 
   // a linha inteira responde ao clique; o botão do nome dá o foco e o Enter pelo teclado

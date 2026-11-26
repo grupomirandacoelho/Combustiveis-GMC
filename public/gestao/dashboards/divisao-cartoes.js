@@ -4,9 +4,13 @@
 //  - cartão = FORMA DE PAGAMENTO ("Cartao Fisico" = Ticket), como no resto do portal;
 //  - Mês a mês e Dia a dia: % dos litros de cada cartão (100% empilhado); clicar num cartão filtra o cartão, e os
 //    gráficos continuam com todos os cartões, o escolhido em destaque; clicar num mês escolhe o mês do Dia a dia;
-//  - a matriz não tem a Média 6 meses nem o 50% Ticket (eram do gráfico de cima, que não foi adotado).
+//  - a matriz não tem a Média 6 meses nem o 50% Ticket;
+//  - Controle Ticket Log (26/11/2026, pedido do usuário; era o gráfico de cima do Power BI): litros no cartão Ticket por mês,
+//    a média dos 6 meses anteriores e 50% dessa média (o volume mínimo a acompanhar). Segue os filtros, menos o Período (a
+//    média precisa dos meses de antes) e o Cartão (é sempre o Ticket).
 import { carregarDados, fmt, esc, fmtMes, mesDoDia, inicioDoMes, dataParaDia } from '../lib/dados.js';
 import { criarFiltros, htmlApoio, agendador } from '../lib/filtros.js';
+import { graficoPeriodo } from '../lib/graficos.js';
 import { nomeCartao, corCartao, corTextoCartao } from '../lib/cartoes.js';
 
 const EXTERNOS = new Set(['POSTO DE COMBUSTIVEL', 'CAIS VIBRA']);
@@ -73,7 +77,13 @@ export async function montar(ctx) {
   pagina.innerHTML = `
     <section class="filtros" id="dc-filtros" aria-label="Filtros"></section>
     <div class="chips" id="dc-chips" aria-live="polite"></div>
-    <dl class="apoio apoio-topo" id="dc-apoio"></dl>
+    <dl class="apoio apoio-pilha" id="dc-apoio"></dl>
+    <section class="painel">
+      <div class="painel-cab"><h2>Controle Ticket Log</h2><div class="legenda"><span><i class="leg-barra" style="background:${corCartao('TICKET')}"></i>Litros no Ticket</span>
+        <span><i class="leg-meta"></i>Média 6 meses</span><span><i class="leg-tracejada"></i>50% da média</span></div></div>
+      <div class="grafico" id="dc-ticket"></div>
+      <p class="nota">Litros abastecidos com o cartão Ticket (Cartão Físico) em cada mês, a média dos 6 meses anteriores e a linha de 50% dessa média.</p>
+    </section>
     <section class="painel">
       <div class="painel-cab"><h2>Mês a mês</h2><span class="conta" id="dc-conta-mes"></span></div>
       <div class="dc-legenda" id="dc-legenda" role="group" aria-label="Cartões (clique para filtrar)"></div>
@@ -167,6 +177,39 @@ export async function montar(ctx) {
       const j = Math.max(0, Math.min(bs.length - 1, i + (e.key === 'ArrowRight' ? 1 : -1)));
       bs[j].focus();
     };
+  }
+
+  // ---------- controle Ticket Log ----------
+  // média 6 meses = média dos litros no Ticket nos 6 meses anteriores (mês sem Ticket conta 0; no começo da Base, os que houver)
+  function desenharTicket() {
+    const porMes = new Map();
+    let primeiro = Infinity;
+    for (const l of base) {
+      if (chaveCartao(l) !== 'TICKET' || !filtros.passa(l, ['periodo', 'cartao'])) continue;
+      const m = mesDoDia(l.dia);
+      porMes.set(m, (porMes.get(m) || 0) + l.litros);
+      if (m < primeiro) primeiro = m;
+    }
+    const ms = [...new Set(semCartao.map((l) => mesDoDia(l.dia)))].sort((a, b) => a - b);
+    const box = el('dc-ticket');
+    if (!ms.length || !porMes.size) { box.innerHTML = '<div class="vazio">Nenhum abastecimento no Ticket neste recorte.</div>'; return; }
+    const meses = [];
+    for (let m = Math.max(ms[0], ms[ms.length - 1] - MAX_MESES + 1); m <= ms[ms.length - 1]; m++) meses.push(m);
+    const atual = mesDoDia(dataParaDia(new Date()));
+    const pts = meses.map((m) => {
+      const ant = [];
+      for (let k = m - 6; k < m; k++) if (k >= primeiro) ant.push(porMes.get(k) || 0);
+      const media = ant.length ? ant.reduce((s, v) => s + v, 0) / ant.length : null;
+      return { mes: m, rotulo: fmtMes(m), rotuloLongo: fmtMes(m, true) + (m === atual ? ' (mês parcial)' : ''), litros: porMes.get(m) || 0, media, metade: media === null ? null : media / 2 };
+    });
+    graficoPeriodo(box, pts, {
+      barras: { campo: 'litros', rot: 'Litros no Ticket', cor: corCartao('TICKET') },
+      linhas: [{ campo: 'media', rot: 'Média 6 meses', cor: 'var(--tinta-2)' }, { campo: 'metade', rot: '50% da média', cor: 'var(--tinta-2)', tracejada: true }],
+      fmtV: (v) => (v === null || v === undefined ? '—' : L(v)), fmtRotulo: (v) => (v ? fmt.curto(v) : ''), fmtEixo: (v) => fmt.curto(v),
+      ultimoParcial: pts.length > 1 && pts[pts.length - 1].mes === atual,
+      extras: (q) => (q.media ? [['Contra a média', fmt.pct(q.litros / q.media)], ['Contra os 50%', fmt.pct(q.litros / q.metade)]] : []),
+      rotulo: 'Litros no cartão Ticket por mês em colunas, média dos 6 meses anteriores e 50% da média em linhas',
+    });
   }
 
   function desenharMeses() {
@@ -343,6 +386,7 @@ export async function montar(ctx) {
     paginaForn = 0;
     filtros.atualizarUI();
     desenharTopo();
+    desenharTicket();
     desenharMeses();
     desenharDias();
     desenharMatriz();
@@ -353,5 +397,9 @@ export async function montar(ctx) {
 
   const aoAtualizarDados = () => carregarDados().then((d) => { usarDados(d); atualizar(); });
   window.addEventListener('dados-atualizados', aoAtualizarDados);
-  return { desmontar() { window.removeEventListener('dados-atualizados', aoAtualizarDados); ro.disconnect(); filtros.destruir(); } };
+  // o gráfico do Ticket acompanha a largura da tela
+  let tRedim = null;
+  const aoRedimensionar = () => { clearTimeout(tRedim); tRedim = setTimeout(desenharTicket, 150); };
+  window.addEventListener('resize', aoRedimensionar);
+  return { desmontar() { window.removeEventListener('dados-atualizados', aoAtualizarDados); window.removeEventListener('resize', aoRedimensionar); ro.disconnect(); filtros.destruir(); } };
 }

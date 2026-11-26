@@ -75,7 +75,7 @@ export async function montar(ctx, tipo) {
   pagina.innerHTML = `
     <section class="filtros" id="cd-filtros" aria-label="Filtros"></section>
     <div class="chips" id="cd-chips" aria-live="polite"></div>
-    <dl class="apoio apoio-topo" id="cd-resumo"></dl>
+    <dl class="apoio apoio-pilha" id="cd-resumo"></dl>
     <div class="aviso-pendencias oculto" id="cd-pendencias" role="status"></div>
     <section class="painel painel-tabela">
       <div class="painel-cab">
@@ -193,9 +193,11 @@ export async function montar(ctx, tipo) {
       tipo === 'placas' ? ['Sem meta', fmt.int(todas.filter((r) => !r.meta).length)] : ['Já entraram na área', fmt.int(todas.filter((r) => r._ultimo).length) + ' de ' + fmt.int(todas.length)],
       ...(ehMot ? [['Entraram nos últimos 30 dias', fmt.int(todas.filter((r) => r._ultimo && Date.now() - Date.parse(r._ultimo) < 30 * 864e5).length)]] : []),
       tipo === 'placas' ? ['Desabilitadas / vendidas', fmt.int(todas.filter((r) => r.situacao === 'DESABILITADA').length) + ' / ' + fmt.int(todas.filter((r) => r.situacao === 'VENDIDO').length)] : ['Sem senha Ticket', fmt.int(todas.filter((r) => !r.senhaTicket).length)],
-      [info.fonte === 'banco' ? 'Lista do banco de dados, atualizada em' : 'Lista lida da planilha em', at ? at.toLocaleDateString('pt-BR') + ' ' + at.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'],
+      // data no número e a hora embaixo (no padrão com o valor embaixo do rótulo, data e hora juntas vazavam; 26/11/2026)
+      [info.fonte === 'banco' ? 'Lista do banco de dados, atualizada em' : 'Lista lida da planilha em', at ? at.toLocaleDateString('pt-BR') : '—',
+        at ? 'às ' + at.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''],
     ];
-    $('cd-resumo').innerHTML = resumo.map(([d, v]) => '<div><dt>' + esc(d) + '</dt><dd><span class="num">' + esc(v) + '</span></dd></div>').join('');
+    $('cd-resumo').innerHTML = resumo.map(([d, v, det]) => '<div><dt>' + esc(d) + '</dt><dd><span class="num">' + esc(v) + '</span>' + (det ? '<small class="rt-quem">' + esc(det) + '</small>' : '') + '</dd></div>').join('');
 
     const noExcel = pend.filter((a) => a.estado === 'aguardando').length;
     const gravadas = info.alteracoes.filter(semListaNova).length;

@@ -103,7 +103,7 @@ export async function montar(ctx) {
   const estado = { busca: '', unidade: '', categoria: '', ordem: { campo: 'placa', dir: 1 }, limite: POR_PAGINA, aberta: null };
 
   pagina.innerHTML = `
-    <dl class="apoio apoio-topo" id="km-resumo"></dl>
+    <dl class="apoio apoio-pilha" id="km-resumo"></dl>
     <section class="painel painel-tabela">
       <div class="painel-cab"><h2>Quilometragem por placa</h2><span class="conta" id="km-conta"></span></div>
 

@@ -91,7 +91,7 @@ export async function montar(ctx) {
   ctx.definirSub('Administradores acessam tudo e gerenciam os acessos. Os demais logins usam uma função (perfil de acesso) ou um acesso personalizado.');
 
   pagina.innerHTML = `
-    <dl class="apoio apoio-topo" id="ac-resumo"></dl>
+    <dl class="apoio apoio-pilha" id="ac-resumo"></dl>
     <div class="aviso-pendencias oculto" id="ac-aviso" role="status"></div>
     <section class="painel painel-tabela">
       <div class="painel-cab">

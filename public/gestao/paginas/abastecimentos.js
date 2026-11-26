@@ -20,6 +20,7 @@ import { seloCartao as selo, nomeCartao } from '../lib/cartoes.js';
 import { normFuel, normKey, chaveCadeia } from '../lib/consolidador.js';
 import { carregarExcelJS, linhaPlanilha, montarPlanilha, confere } from '../lib/exportar-base.js';
 import { salvar } from '../lib/baixar.js';
+import { confirmar } from '../lib/confirmar.js';
 
 const POR_PAGINA = 60;   // linhas desenhadas por vez; a tabela tem rolagem própria e carrega o próximo lote ao chegar no fim
 const CAMPO = { E: 'serial', F: 'placa', L: 'mot', O: 'litros', P: 'vl', Q: 'hodo', R: 'km', S: 'kml', T: 'valor', AB: 'inf1', AD: 'inf3' };
@@ -314,12 +315,15 @@ export async function montar(ctx) {
 
     <section class="painel painel-tabela">
       <div class="painel-cab"><h2>Abastecimentos</h2><span class="conta" id="ea-conta"></span></div>
+      <p class="nota ea-publicacao" id="ea-publicacao" aria-live="polite"></p>
 
       <div class="tabela-ferramentas">
         <label class="ea-alternar"><input type="checkbox" id="ea-suspeitos"> Só os KM para conferir <span class="ea-qtd" id="ea-qtd-suspeitos"></span></label>
         <label class="ea-alternar"><input type="checkbox" id="ea-alterados"> Só os alterados</label>
         <button type="button" class="btn ea-exportar" id="ea-exportar" title="Planilha igual à Base_copia, só com os abastecimentos dos filtros">
           <svg aria-hidden="true"><use href="#i-baixar"/></svg><span class="txt">Exportar</span></button>
+        ${editar ? `<button type="button" class="btn btn-principal ea-publicar" id="ea-publicar" title="Leva para os dashboards os abastecimentos até ontem, já validados">
+          <svg aria-hidden="true"><use href="#i-atualizar"/></svg><span class="txt">Publicar nos dashboards</span></button>` : ''}
         ${editar ? `<div class="ea-barra oculto" id="ea-barra" role="region" aria-label="Alterações não salvas">
           <span id="ea-barra-txt"></span>
           <button type="button" class="btn" id="ea-descartar">Descartar</button>
@@ -376,6 +380,50 @@ export async function montar(ctx) {
       b.disabled = false; txt.textContent = 'Exportar';
     }
   });
+  // ---------- Publicar nos dashboards (26/11/2026, decisão do usuário "Só ao publicar") ----------
+  // Os dashboards ficam na última publicação; publicar leva tudo até ontem (D-1). O banco gera o arquivo em até ~2 min
+  // (/api/abastecimentos/publicar; agendamento gestao_dados_painel_rodar).
+  const dataBR = (iso) => (iso ? String(iso).slice(0, 10).split('-').reverse().join('/') : '—');
+  const quandoBR = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
+  let tPublicacao = null;
+  async function mostrarPublicacao(avisarAoTerminar) {
+    clearTimeout(tPublicacao);
+    const p = el('ea-publicacao');
+    let info;
+    try {
+      const r = await fetch('/api/abastecimentos/publicar', { credentials: 'same-origin', cache: 'no-store' });
+      info = await r.json();
+      if (!r.ok) throw new Error(info.erro);
+    } catch { p.textContent = ''; return; }
+    if (!p.isConnected) return;
+    if (info.pendente) {
+      p.innerHTML = '<span class="aviso-linha">Publicando nos dashboards os abastecimentos até ' + esc(dataBR(info.ate)) + '… leva até 2 minutos.</span>';
+      tPublicacao = setTimeout(() => mostrarPublicacao(true), 15000);
+      return;
+    }
+    p.textContent = info.ate ? 'Dashboards publicados até ' + dataBR(info.ate) + (info.publicadoEm ? ' (' + quandoBR(info.publicadoEm) + (info.publicadoPor ? ', ' + info.publicadoPor : '') + ').' : '.') +
+      ' Os abastecimentos depois disso aparecem aqui, mas só entram nos dashboards na próxima publicação.' : '';
+    if (avisarAoTerminar) ctx.aviso('Publicado: os dashboards já têm os abastecimentos até ' + dataBR(info.ate) + '. Quem estiver com um painel aberto vê o botão "Atualizar".');
+  }
+  mostrarPublicacao(false);
+  if (editar) {
+    el('ea-publicar').addEventListener('click', async () => {
+      if (naoSalvos()) { ctx.aviso('Salve (ou descarte) as alterações antes de publicar, para elas entrarem nos dashboards.'); return; }
+      const ontem = new Date(Date.now() - 27 * 3600e3).toISOString().slice(0, 10);   // ontem no horário da Bahia (UTC-3)
+      if (!(await confirmar('Publicar nos dashboards todos os abastecimentos até ' + dataBR(ontem) + '? Os de hoje ficam para a próxima publicação.',
+        { titulo: 'Publicar nos dashboards', ok: 'Publicar' }))) return;
+      const b = el('ea-publicar'), txt = b.querySelector('.txt');
+      b.disabled = true; txt.textContent = 'Publicando…';
+      try {
+        const r = await fetch('/api/abastecimentos/publicar', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.erro || 'Não foi possível publicar (' + r.status + ').');
+        mostrarPublicacao(false);
+      } catch (e) { ctx.aviso(e.message); }
+      finally { b.disabled = false; txt.textContent = 'Publicar nos dashboards'; }
+    });
+  }
+
   const estado = { limite: POR_PAGINA, suspeitos: false, alterados: false, ordem: { campo: 'data', dir: -1 } };
   // colunas da tabela: [id, título, largura mínima em px, numérica, valor para ordenar]. A tabela estica nas telas largas e
   // rola para o lado nas estreitas, sem cortar o conteúdo (Data e Placa ficam presas à esquerda); o cartão aparece embaixo da placa

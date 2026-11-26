@@ -44,9 +44,11 @@ export function criarFiltros(o) {
   const temPeriodo = dimensoes.some((d) => d.periodo);
   let painelAberto = null;
 
+  // ignorar: id de uma dimensão (ou lista de ids) que não conta
   function passa(l, ignorar) {
+    const pular = Array.isArray(ignorar) ? ignorar : [ignorar];
     for (const d of dimensoes) {
-      if (d.id === ignorar) continue;
+      if (pular.includes(d.id)) continue;
       if (d.periodo) {
         if (periodo.de !== null && l.dia < periodo.de) return false;
         if (periodo.ate !== null && l.dia > periodo.ate) return false;

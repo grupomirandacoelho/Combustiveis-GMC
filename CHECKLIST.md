@@ -221,3 +221,11 @@ Decisões do usuário: começar pela equipe de gestão (depois os motoristas); e
       de CPU (2 s), guardar os estoques calculados em vez de refazer a cada rodada.
 - [ ] Motoristas (depois): avisos da área do motorista (comunicado, resultado do PRIME).
 
+## 18. Ajustes de 26/11/2026
+- [x] Faixas do topo no padrão "valor embaixo" (`.apoio-pilha` no lugar de `.apoio-topo` em 9 telas).
+- [x] Baixar da NFS, ícone do Estoque, posto em duas unidades, motorista no dia a dia, colunas de Despesas, Controle Ticket Log,
+      Evolução placas sem CC, R$/KM no Real x Orçado, toque longo = Ctrl+clique, modo escuro no menu da conta.
+- [x] Publicar nos dashboards (snapshot até D-1; `painel_publicacao`, migração `20261126110000`). Primeira publicação 26/11 (até 25/11).
+- [ ] Usuário: conferir o Controle Ticket Log com o Power BI (as medidas Média 6 meses e 50% foram deduzidas, o usuário confirmou a leitura).
+- [ ] Usuário: testar o toque longo no app (Operação por motorista, Programa PRIME, Real x Orçado, Mapa de calor).
+

@@ -102,7 +102,7 @@ export async function montar(ctx) {
 
   ctx.definirSub('Atualiza o valor negociado de cada posto pelo preço da última transação. Nada é gravado até você enviar.');
   pagina.innerHTML = `
-    <dl class="apoio apoio-topo" id="rp-resumo"></dl>
+    <dl class="apoio apoio-pilha" id="rp-resumo"></dl>
     <div class="aviso-pendencias oculto" id="rp-aviso" role="status"></div>
     <section class="painel painel-tabela">
       <div class="painel-cab">

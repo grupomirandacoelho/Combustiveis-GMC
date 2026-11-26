@@ -111,6 +111,20 @@ export async function montar(ctx) {
   // clicar num mês filtra o painel inteiro por ele (e o gráfico passa a mostrar os dias do mês); clicar num dia
   // filtra aquele dia. "Voltar" devolve o período que estava antes do clique.
   const anteriores = [];
+  // quem estava no carro no dia (26/11/2026, pedido do usuário: o mesmo carro pode ter mais de um motorista). Com mais de um,
+  // cada nome leva a média dele no dia; ordem: quem mais rodou
+  function motoristasDoDia(ls) {
+    const m = new Map();
+    for (const l of ls) {
+      const a = m.get(l.motorista) || { km: 0, litros: 0 };
+      a.km += l.km || 0; a.litros += l.litros || 0;
+      m.set(l.motorista, a);
+    }
+    const lista = [...m.entries()].sort((a, b) => b[1].km - a[1].km);
+    const nomes = lista.map(([nome, a]) => nome + (lista.length > 1 && a.litros ? ' (' + fmt.d2(a.km / a.litros) + ' km/L)' : ''));
+    // sem placa filtrada o dia tem dezenas de motoristas: os 3 que mais rodaram e quantos mais
+    return nomes.length <= 4 ? nomes : [...nomes.slice(0, 3), 'e mais ' + (nomes.length - 3) + ' (filtre uma placa para ver quem estava em cada carro)'];
+  }
   function desenharGrafico() {
     let min = Infinity, max = -Infinity;
     for (const l of filtradas) { if (l.dia < min) min = l.dia; if (l.dia > max) max = l.dia; }
@@ -132,6 +146,7 @@ export async function montar(ctx) {
         chave: k, porDia,
         rotulo: porDia ? fmtDia(k).slice(0, 5) : fmtMes(k), rotuloLongo: porDia ? fmtDia(k) : fmtMes(k, true),
         media: t.media, meta: t.meta, km: t.km, pct: t.pct,
+        motoristas: porDia ? motoristasDoDia(ls) : null,
       };
     });
     const p = filtros.periodo;
@@ -142,7 +157,8 @@ export async function montar(ctx) {
       ultimoParcial: pts.length > 1 && emAndamento(porDia ? 'dia' : 'mes', pts[pts.length - 1].chave),
       linhas: [{ campo: 'meta', rot: 'Meta', cor: 'var(--tinta-2)' }],
       fmtV: (v) => (v === null || v === undefined ? '—' : fmt.d2(v)), fmtEixo: fmt.d1,
-      extras: (q) => [['% da meta', fmt.pct(q.pct)], ['Km rodado', fmt.int(q.km)]],
+      extras: (q) => [['% da meta', fmt.pct(q.pct)], ['Km rodado', fmt.int(q.km)],
+        ...(q.motoristas && q.motoristas.length ? [[q.motoristas.length === 1 ? 'Motorista' : 'Motoristas', q.motoristas.join(' · ').replace(' · e mais', ' e mais')]] : [])],
       rotulo: 'Média real em colunas e meta em linha, ' + (porDia ? 'por dia' : 'por mês'),
       // um dia filtrado: a coluna dele fica em destaque e as outras apagadas
       destacar: porDia && p.de !== null && p.de === p.ate ? (q) => q.chave === p.de : null,

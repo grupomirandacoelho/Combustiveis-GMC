@@ -142,7 +142,7 @@ a{color:inherit;}
 .dica-menu{position:fixed;z-index:60;pointer-events:none;background:var(--cartao);color:var(--texto);border:1px solid var(--borda-forte);font-size:13px;font-weight:500;padding:5px 9px;border-radius:var(--r);white-space:nowrap;}
 .app.recolhido .lateral{width:var(--lateral-recolhida);}
 .app.recolhido .lateral-corpo{padding:var(--e-4) var(--e-2);}
-.app.recolhido .lateral-marca, .app.recolhido .menu .rotulo, .app.recolhido .menu-grupo, .app.recolhido .usuario-nome, .app.recolhido .interruptor{display:none;}
+.app.recolhido .lateral-marca, .app.recolhido .menu .rotulo, .app.recolhido .menu-grupo, .app.recolhido .lateral .usuario-nome, .app.recolhido .lateral .interruptor{display:none;}
 .app.recolhido .lateral-topo{flex-direction:column;padding:0;}
 .app.recolhido .btn-recolher svg{transform:rotate(180deg);}
 .app.recolhido .usuario{justify-content:center;padding:var(--e-2) 0;background:none;}
@@ -1128,6 +1128,9 @@ table.dados tr.rt-sel td{background:var(--cartao-2);}
 .fc-sem-nota td{background:rgba(246,194,94,.06);}
 .fc-baixar-btn{display:inline-grid;place-items:center;width:32px;padding:0;margin:0;}
 .fc-baixar-btn svg{width:16px;height:16px;}
+/* o Baixar do topo da NFS (com texto) tem o tamanho dos outros botões do topo (26/11/2026; antes vazava do quadrado de 32 px) */
+.fc-topo{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:var(--e-4);}
+.fc-topo .fc-baixar-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:auto;height:38px;padding:0 15px;font-size:14px;}
 .fc-linha{cursor:pointer;}
 .fc-notas-rolagem{max-height:min(60vh,520px);overflow:auto;}
 @media (max-width:640px){
@@ -1744,3 +1747,6 @@ table.dados.prr-tabela td:first-child{min-width:150px;}
 .nt-telas-grupo .nt-opcao{font-size:13px;}
 .nt-recebem{margin:8px 0 0;}
 @media (max-width:600px){ .nt-telas{margin-left:0;grid-template-columns:minmax(0,1fr);} }
+/* toque longo = Ctrl+clique (lib/toque-longo.js, 26/11/2026): no toque, segurar o dedo não seleciona texto nem abre o menu do aparelho
+   nas tabelas, gráficos e mapas da página */
+@media (hover:none){ .pagina :is(table.dados tbody, .grafico, .leaflet-container, .ro-barras){-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;} }

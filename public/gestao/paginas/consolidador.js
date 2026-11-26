@@ -86,7 +86,7 @@ export async function montar(ctx) {
     </section>
     <div id="cs-resultado" class="oculto">
       <section class="painel"><div class="painel-cab"><h2>2. Resultado</h2><span class="conta" id="cs-total"></span></div>
-        <dl class="apoio apoio-topo" id="cs-tiles"></dl></section>
+        <dl class="apoio apoio-pilha" id="cs-tiles"></dl></section>
       <section class="painel"><div class="painel-cab"><h2>3. Transações ignoradas por duplicidade</h2><span class="conta" id="cs-dup-conta"></span></div>
         <p class="nota">Bateram com algo que já existe na Base (mesma placa + hodômetro + combustível) e <strong>não entram</strong>. Se a data na Base for muito anterior,
           pode ser só coincidência de hodômetro: confira no arquivo de origem.</p>

@@ -58,7 +58,7 @@ export async function montar(ctx) {
   const tipoDe = (p) => (p.Tipo === 'POLO' || p.Tipo === 'MINIMO' ? p.Tipo : '');
 
   pagina.innerHTML = `
-    <dl class="apoio apoio-topo" id="pm-resumo"></dl>
+    <dl class="apoio apoio-pilha" id="pm-resumo"></dl>
     <div class="aviso-pendencias oculto" id="pm-pendencias" role="status"></div>
     <section class="painel painel-tabela pm-lista">
       <div class="painel-cab">
@@ -220,7 +220,7 @@ export async function montar(ctx) {
     const porUso = [...p.unidades.entries()].sort((a, b) => b[1] - a[1]);
     if (!soUnidade) {
       form.posto.value = p.posto;
-      if (porUso.length) form.unidade.value = codigoUnidade(porUso[0][0]);
+      if (porUso.length && !unidadeEscolhida) form.unidade.value = codigoUnidade(porUso[0][0]);
       if (p.cidade) form.cidade.value = p.cidade;
       const plat = plataformaDoCartao(p.cartao);
       if (plat) form.plataforma.value = plat;
@@ -250,10 +250,16 @@ export async function montar(ctx) {
       if (p) preencherDaBase(p, e && e.target === form.unidade); else caixa.classList.add('oculto');
       return;
     }
-    // a negociação da unidade escolhida; se não houver, a mais recente (e a unidade dela)
-    const n = lista.find((x) => chave(x.unidade) === chave(form.unidade.value)) || [...lista].sort((a, b) => b.dia - a.dia)[0];
+    // a negociação da unidade escolhida; se não houver, a mais recente. A unidade só segue a negociação se a pessoa ainda não
+    // escolheu uma: liberar o mesmo posto em outra unidade (ex.: negociado em Serra, liberar também em Teixeira) mantém a
+    // unidade escolhida (26/11/2026; antes ela voltava sozinha para a unidade da negociação e não dava para liberar)
+    const escolheu = unidadeEscolhida || (e && e.target === form.unidade);
+    const daUnidade = lista.find((x) => chave(x.unidade) === chave(form.unidade.value));
+    const n = daUnidade || [...lista].sort((a, b) => b.dia - a.dia)[0];
     form.posto.value = n.posto;
-    if (opcoes.unidades.some((u) => chave(u) === chave(n.unidade))) form.unidade.value = codigoUnidade(n.unidade);
+    if (!escolheu && opcoes.unidades.some((u) => chave(u) === chave(n.unidade))) form.unidade.value = codigoUnidade(n.unidade);
+    const outraUnidade = escolheu && !daUnidade ? '<br><strong>Liberando em ' + esc(form.unidade.options[form.unidade.selectedIndex]?.text || form.unidade.value) +
+      ':</strong> os campos vieram da negociação de ' + esc(n.unidade) + '; confira o valor e o cartão desta unidade.' : '';
     if (n.cidade) form.cidade.value = n.cidade;
     const plat = opcoes.plataformas.find((x) => chave(x) === chave(n.plataforma));
     if (plat) form.plataforma.value = plat;
@@ -272,13 +278,15 @@ export async function montar(ctx) {
       (lista.length > 1 ? ' Também negociado em: ' + esc(lista.filter((x) => x !== n).map((x) => x.unidade).join(', ')) + ' (troque a unidade para usar a negociação dela).' : '') +
       (naLista ? '<br><span class="aviso-linha">Este posto já está na lista de ' + esc(naLista.Unidade) + ' como ' + esc(naLista.Status.toLowerCase()) +
         ': use "Editar" ou "Autorizar" na tabela em vez de adicionar de novo.</span>' : '') +
-      ' Confira os campos antes de salvar.';
+      outraUnidade + ' Confira os campos antes de salvar.';
     caixa.classList.remove('oculto');
   }
   // no "Adicionar" o nome puxa a negociação/abastecimentos; no "Editar" trocar o nome (ou a unidade) é corrigir o cadastro
   form.posto.addEventListener('change', (e) => { if (acaoAtual === 'editar') avisoTroca(); else preencherDoPosto(e); });
   form.posto.addEventListener('input', (e) => { if (acaoAtual === 'editar') avisoTroca(); else if (conhecido(form.posto.value)) preencherDoPosto(e); });
   form.unidade.addEventListener('change', (e) => {
+    // o código da tela troca a unidade sem disparar evento: todo 'change' aqui é da pessoa (lista do portal ou do aparelho)
+    unidadeEscolhida = true;   // escolhida pela pessoa: o preenchimento automático não troca mais
     if (acaoAtual === 'adicionar' && conhecido(form.posto.value)) preencherDoPosto(e);
     if (acaoAtual === 'editar') avisoTroca();
   });
@@ -476,9 +484,10 @@ export async function montar(ctx) {
   };
   // na edição: a unidade e o nome com que o posto está na lista (trocar = corrigir o cadastro: unidade errada, ou o nome
   // que no portal do cartão é outro, descoberto quando sai a primeira transação)
-  let unidadeOriginal = null, postoOriginal = null;
+  let unidadeOriginal = null, postoOriginal = null, unidadeEscolhida = false;
   function abrir(acao, p) {
     acaoAtual = acao;
+    unidadeEscolhida = false;
     unidadeOriginal = p ? codigoUnidade(p.Unidade) : null;
     postoOriginal = p ? p.Posto : null;
     form.reset();

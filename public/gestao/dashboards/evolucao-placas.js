@@ -1,5 +1,6 @@
 // Dashboard "Evolução placas" — a matriz da aba "Evolução Motoristas%" do Power BI, com placas no lugar dos motoristas:
-//  - linhas: centro de custo › placa; colunas: meses; valor: % = Média real ÷ Meta média
+//  - linhas: placas (sem o centro de custo desde 26/11/2026, pedido do usuário: a placa pode passar por mais de uma unidade no
+//    mesmo período e aparecia nas duas); colunas: meses; valor: % = Média real ÷ Meta média
 //  - só diesel; veículos com categoria na aba Metas, exceto PICAPE e VENDA; sem os abastecimentos dos 3 motoristas
 //    que a matriz do Power BI exclui
 //  - verde quando a economia de litros é positiva (dentro da meta), vermelho quando é negativa
@@ -15,7 +16,6 @@ const ROTA = '#/evolucao-placas';
 // mesmos filtros da página do Power BI
 const DIMENSOES = [
   { id: 'periodo', rotulo: 'Período', periodo: true },
-  { id: 'cc', rotulo: 'Centro de custo', valor: (l) => l.cc },
   { id: 'motorista', rotulo: 'Motorista', valor: (l) => l.motorista },
   { id: 'placa', rotulo: 'Placa', valor: (l) => l.placa },
   { id: 'estabelecimento', rotulo: 'Estabelecimento', valor: (l) => l.tipoEstab },
@@ -55,7 +55,6 @@ export async function montar(ctx) {
   // sem filtro no endereço, abre no ano atual (a matriz com todos os meses desde 2023 fica larga demais)
   if (!location.hash.includes('?')) history.replaceState(null, '', ROTA + '?periodo=ano');
 
-  const fechados = new Set();          // centros de custo recolhidos
   let ordem = 'placa';                 // 'placa' (A-Z) ou 'pct' (melhor % primeiro)
   let filtradas = base;
 
@@ -115,48 +114,30 @@ export async function montar(ctx) {
 
   function desenharMatriz() {
     const meses = [...new Set(filtradas.map((l) => mesDoDia(l.dia)))].sort((a, b) => a - b);
-    const grupos = new Map();   // cc -> {total, porMes, placas: Map(placa -> {total, porMes, modelo})}
+    const porPlaca = new Map();   // placa -> {total, porMes, modelo}
     const geral = { total: novo(), porMes: new Map() };
     for (const l of filtradas) {
       const m = mesDoDia(l.dia);
-      let g = grupos.get(l.cc);
-      if (!g) grupos.set(l.cc, (g = { total: novo(), porMes: new Map(), placas: new Map() }));
-      let p = g.placas.get(l.placa);
-      if (!p) g.placas.set(l.placa, (p = { total: novo(), porMes: new Map(), modelo: l.modelo }));
-      acumular(g, m, l); acumular(p, m, l); acumular(geral, m, l);
+      let p = porPlaca.get(l.placa);
+      if (!p) porPlaca.set(l.placa, (p = { total: novo(), porMes: new Map(), modelo: l.modelo }));
+      acumular(p, m, l); acumular(geral, m, l);
     }
     const cmpNome = (a, b) => a.localeCompare(b, 'pt-BR', { numeric: true });
     const cmpPct = (a, b) => (pct(b.total) ?? -1) - (pct(a.total) ?? -1);
-    const ccs = [...grupos.entries()].sort((a, b) => cmpNome(a[0], b[0]));
+    const placas = [...porPlaca.entries()].sort(ordem === 'pct' ? (a, b) => cmpPct(a[1], b[1]) || cmpNome(a[0], b[0]) : (a, b) => cmpNome(a[0], b[0]));
     const sel = filtros.sel.placa;
     el('ep-matriz').innerHTML = !meses.length
       ? '<tbody><tr><td><div class="vazio">Nenhum abastecimento neste recorte. Tire um filtro para ver a matriz.</div></td></tr></tbody>'
-      : '<thead><tr><th class="col-fixa"><span>Centro de custo / placa</span></th>' +
+      : '<thead><tr><th class="col-fixa"><span>Placa</span></th>' +
           meses.map((m) => '<th class="n"' + (emAndamento('mes', m) ? ' title="Mês em andamento: % da meta dos dias até agora"' : '') + '><span>' + esc(fmtMes(m)) + (emAndamento('mes', m) ? ' <small>(parcial)</small>' : '') + '</span></th>').join('') + '<th class="n col-total"><span>Total</span></th></tr></thead><tbody>' +
-        ccs.map(([cc, g]) => {
-          const aberto = !fechados.has(cc);
-          const placas = [...g.placas.entries()].sort(ordem === 'pct' ? (a, b) => cmpPct(a[1], b[1]) || cmpNome(a[0], b[0]) : (a, b) => cmpNome(a[0], b[0]));
-          return '<tr class="linha-grupo"><th class="col-fixa" scope="row"><button type="button" class="link-botao grupo-botao" data-cc="' + esc(cc) + '" aria-expanded="' + aberto + '">' +
-              '<svg aria-hidden="true" class="seta-grupo"><use href="#i-seta"/></svg><span>' + esc(cc) + ' <small>' + g.placas.size + (g.placas.size === 1 ? ' placa' : ' placas') + '</small></span></button></th>' +
-              meses.map((m) => celula(g.porMes.get(m))).join('') + celula(g.total, 'col-total') + '</tr>' +
-            (aberto ? placas.map(([placa, p]) =>
-              '<tr class="' + (sel.has(placa) ? 'selecionado' : '') + '"><th class="col-fixa" scope="row"><button type="button" class="link-botao nome-clicavel" data-placa="' + esc(placa) + '" aria-pressed="' + sel.has(placa) + '">' +
-                esc(placa) + '</button><small class="cidade-linha">' + esc(p.modelo) + '</small></th>' +
-                meses.map((m) => celula(p.porMes.get(m))).join('') + celula(p.total, 'col-total') + '</tr>').join('') : '');
-        }).join('') +
+        placas.map(([placa, p]) =>
+          '<tr class="' + (sel.has(placa) ? 'selecionado' : '') + '"><th class="col-fixa" scope="row"><button type="button" class="link-botao nome-clicavel" data-placa="' + esc(placa) + '" aria-pressed="' + sel.has(placa) + '">' +
+            esc(placa) + '</button><small class="cidade-linha">' + esc(p.modelo) + '</small></th>' +
+            meses.map((m) => celula(p.porMes.get(m))).join('') + celula(p.total, 'col-total') + '</tr>').join('') +
         '<tr class="linha-total"><th class="col-fixa" scope="row">Total</th>' + meses.map((m) => celula(geral.porMes.get(m))).join('') +
           celula(geral.total, 'col-total') + '</tr></tbody>';
   }
   el('ep-matriz').addEventListener('click', (e) => {
-    const g = e.target.closest('[data-cc]');
-    if (g) {
-      const cc = g.dataset.cc;
-      if (fechados.has(cc)) fechados.delete(cc); else fechados.add(cc);
-      desenharMatriz();
-      const b = [...el('ep-matriz').querySelectorAll('[data-cc]')].find((x) => x.dataset.cc === cc);
-      if (b) b.focus();
-      return;
-    }
     const p = e.target.closest('[data-placa]');
     if (p) filtros.alternar('placa', p.dataset.placa);
   });

@@ -50,7 +50,7 @@ export async function montar(ctx) {
 
   pagina.innerHTML = `
     <section class="painel cf-alertas oculto" id="cf-alertas" aria-labelledby="cf-alertas-titulo"></section>
-    <dl class="apoio apoio-topo" id="cf-resumo"></dl>
+    <dl class="apoio apoio-pilha" id="cf-resumo"></dl>
     <div class="aviso-pendencias oculto" id="cf-pendencias" role="status"></div>
     <section class="painel painel-tabela">
       <div class="painel-cab">

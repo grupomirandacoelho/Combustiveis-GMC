@@ -6,6 +6,25 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 26/11/2026
 
+- **Ajustes pedidos pelo usuário (12 itens):**
+  1. Informações do topo com o valor **embaixo** do rótulo em todas as telas que misturavam (Divisão por cartão, Mapa de calor, Postos
+     dos motoristas, Cartões frota, Placas, Motoristas, e também Consulta de KM, Gerenciar acessos, Consolidador e Rodada de preços).
+  2. Conciliação de NFs: o botão **Baixar** da NFS aberta não vaza mais do quadrado (tamanho dos outros botões).
+  3. Ícone do **Estoque** da bomba interna trocado por um vagão-tanque (o cilindro parecia uma pilha), pela referência enviada.
+  4. Postos dos motoristas: liberar o **mesmo posto em outra unidade** (ex.: Serra e Teixeira) funciona; antes a tela voltava a unidade
+     para a da negociação sozinha. Agora a unidade escolhida fica e a tela avisa de qual unidade vieram os campos.
+  5. Média geral: o gráfico "Média real e meta, dia a dia" mostra **quem estava no carro** naquele dia (com mais de um, a média de cada um);
+     com uma placa filtrada aparecem todos os nomes.
+  6. **Publicar nos dashboards** (Editar abastecimentos; decisão do usuário "Só ao publicar"): os dashboards ficam na última publicação;
+     o botão leva todos os abastecimentos até ontem (D-1), já validados; os de hoje e as transações que chegam pelas APIs só entram na
+     próxima publicação. Antes de publicar, as correções que ainda estão indo para o banco entram primeiro. O banco gera em até 2 min e
+     quem estiver com um painel aberto vê o botão "Atualizar". Primeira publicação feita na implantação (até 25/11).
+  7. Despesas, "Gasto por centro de custo": colunas Centro de custo, Despesa, Volume, Km rodado, Preço médio e Média.
+  8. Divisão por cartão: gráfico **Controle Ticket Log** (litros no Ticket por mês, média dos 6 meses anteriores e 50% dessa média).
+  9. Evolução placas: sem o filtro e o agrupamento por centro de custo (a placa aparecia em duas unidades); só as placas.
+  10. Real x Orçado: gráfico **R$/KM** (combustível ÷ km, real × orçado) abaixo dos gráficos de evolução.
+  11. Celular: **segurar o dedo** numa linha, coluna de gráfico ou bolha do mapa faz o mesmo que o Ctrl+clique (somar à seleção).
+  12. **Modo escuro** saiu do rodapé do menu e foi para o menu da conta, junto de Trocar senha e Gerenciar acessos.
 - **Notificações no celular, ajustes** (pedido do usuário): o bloco "No celular" do sino só ativa pelo **aplicativo instalado**; no
   navegador do celular ele só explica como instalar (Android: menu do Chrome → Instalar app; iPhone: Compartilhar → Adicionar à Tela
   de Início) e no computador não aparece. Corrigido o botão "Enviar teste" sobreposto no celular (os botões do cabeçalho ficam só

@@ -37,8 +37,10 @@ export function carregarDados() {
       .then((r) => (r.ok ? r.json() : null)).catch(() => null);
     promessa = Promise.all([base, tempoReal, carregarDesabilitadas()])
       .then(([bruto, tr]) => {
-        // mesma combinação do /api/dados/versao: a versão muda quando chega transação nova pela API
-        versaoAtual = (etagBase || bruto.versao || bruto.geradoEm) + (tr && tr.versao ? '+' + tr.versao : '');
+        // mesma combinação do /api/dados/versao: a versão muda quando chega transação nova pela API (menos com os dados
+        // publicados: aí o tempo real não entra, ver decodificar)
+        const trUsado = bruto.publicadoAte ? null : tr;
+        versaoAtual = (etagBase || bruto.versao || bruto.geradoEm) + (trUsado && trUsado.versao ? '+' + trUsado.versao : '');
         return decodificar(bruto, tr);
       })
       .catch((e) => { promessa = null; throw e; });
@@ -72,6 +74,9 @@ export function juntarTempoReal(linhas, doTempoReal) {
 }
 // sem rede: também usada pela nuvem (envio das notificações ao celular, 26/11/2026)
 export function decodificar(bruto, tr) {
+  // dados publicados pelo Editar abastecimentos (26/11/2026, decisão do usuário: os dashboards só mudam ao publicar, até D-1):
+  // as transações das APIs que ainda não foram publicadas não entram
+  if (bruto.publicadoAte) tr = null;
   const linhas = linhasDe(bruto, bruto.veiculos, false);
   // o aviso de tempo real conta só as que entraram (porCartao fica como veio do vigia)
   const entraram = tr && tr.linhas ? tr.linhas - juntarTempoReal(linhas, linhasDe(tr, bruto.veiculos, true)) : 0;

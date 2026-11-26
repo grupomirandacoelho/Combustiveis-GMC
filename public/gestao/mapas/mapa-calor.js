@@ -155,7 +155,7 @@ export async function montar(ctx) {
   pagina.innerHTML = `
     <section class="filtros" id="mc-filtros" aria-label="Filtros"></section>
     <div class="chips" id="mc-chips" aria-live="polite"></div>
-    <dl class="apoio apoio-topo" id="mc-apoio"></dl>
+    <dl class="apoio apoio-pilha" id="mc-apoio"></dl>
     <div class="mapa-grade mc-grade">
       <section class="mapa-bloco" aria-label="Mapa dos postos">
         <div class="mapa" id="mc-mapa"></div>
