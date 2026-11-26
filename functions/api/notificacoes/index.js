@@ -110,7 +110,7 @@ export async function onRequestGet({ request, env }) {
   const todas = results.map(regra);
   if (new URL(request.url).searchParams.get('minhas')) {
     const perms = permissoesDe(u);
-    const minhas = todas.filter((r) => r.ativa && recebe(perms, u.id, r, USAM_DADOS));
+    const minhas = todas.filter((r) => r.ativa && recebe(perms, u.id, r, USAM_DADOS, u.papel === 'admin' ? null : u.funcao_id));
     return json({ regras: minhas, contexto: minhas.length ? await contexto(env, u, minhas) : {} });
   }
   if (!pode(u, 'notificacoes')) return json({ erro: 'Seu acesso não inclui as Notificações.' }, 403);
@@ -118,7 +118,10 @@ export async function onRequestGet({ request, env }) {
   // o que cada login enxerga (sem acesso à tela de origem, o aviso daquele tipo não aparece para ele)
   return json({ regras: todas, contexto: await contexto(env, u, [{ tipo: 'falta-cartao' }], true), telas: TELAS, usamDados: USAM_DADOS,
     usuarios: us.results.map((x) => ({ id: x.id, nome: x.nome, permissoes: permissoesDe(x),
-      acessos: { estoque: pode(x, 'bomba-estoque'), cartoes: pode(x, 'cartoes-frota'), dados: pode(x, ...USAM_DADOS) } })) });
+      // função (perfil de acesso) para o "Para quem: por função" (26/11/2026); administrador não tem função
+      funcao_id: x.papel === 'admin' ? null : x.funcao_id || null, funcao_nome: x.papel === 'admin' ? 'Administrador' : x.funcao_nome || 'Acesso personalizado',
+      acessos: { estoque: pode(x, 'bomba-estoque'), cartoes: pode(x, 'cartoes-frota'), dados: pode(x, ...USAM_DADOS) } })),
+    funcoes: (await env.DB.prepare('SELECT id, nome FROM funcoes ORDER BY nome COLLATE NOCASE').all()).results });
 }
 
 function validar(d) {

@@ -79,3 +79,13 @@ test('unidades do login: só códigos da lista; vazio = todas', () => {
   assert.ok(validarCampos({ unidades: ['MARTE'] }, false).erros.length);
   assert.deepEqual(unidadesDe({ unidades: '["SERRA","X"]' }), ['SERRA']);
 });
+
+test('para quem por função: recebe quem tem uma das funções; administrador e acesso personalizado (sem função) não', async () => {
+  const { limparDestinatarios } = await import('../../public/gestao/lib/destino-notificacao.js');
+  const r = regraPostos({}, { destinatarios: { modo: 'funcoes', funcoes: [3, 5] } });
+  assert.equal(recebe([], 1, r, [], 3), true);
+  assert.equal(recebe([], 1, r, [], 4), false);
+  assert.equal(recebe([], 1, r, [], null), false);
+  assert.deepEqual(limparDestinatarios({ modo: 'funcoes', funcoes: ['3', 3, 'x', 5] }, []), { valor: { modo: 'funcoes', funcoes: [3, 5] } });
+  assert.ok(limparDestinatarios({ modo: 'funcoes', funcoes: [] }, []).erro);
+});

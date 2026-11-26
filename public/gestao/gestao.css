@@ -1603,6 +1603,18 @@ table.dados.nt-tabela td{white-space:normal;vertical-align:middle;}
 .nt-previa .notif{max-width:380px;}
 .nt-opcao{display:flex;align-items:center;gap:8px;min-height:32px;font-size:14px;cursor:pointer;}
 .nt-usuarios{max-height:180px;overflow:auto;margin:4px 0 0 24px;padding:6px 10px;border:1px solid var(--borda);border-radius:var(--r);}
+/* "Para quem" por função e personalizado (26/11/2026): lista com busca */
+.nt-lista{margin:6px 0 10px 26px;border:1px solid var(--borda);border-radius:var(--r);background:var(--cartao-3);overflow:hidden;}
+.nt-lista .nt-lista-busca{width:100%;height:38px;padding:0 12px;border:0;border-bottom:1px solid var(--borda);background:transparent;color:var(--texto);font:inherit;font-size:13px;}
+.nt-lista .nt-lista-busca:focus{outline:none;box-shadow:inset 0 0 0 2px var(--primaria);}
+.nt-lista-itens{list-style:none;margin:0;padding:4px 0;max-height:220px;overflow:auto;}
+.nt-lista-itens li label{display:flex;align-items:center;gap:10px;min-height:36px;padding:4px 12px;cursor:pointer;font-size:13px;}
+.nt-lista-itens li label:hover{background:var(--cartao-2);}
+.nt-lista-itens .nt-lista-nome{flex:1 1 auto;min-width:0;font-weight:500;}
+.nt-lista-itens small{flex-shrink:0;color:var(--suave);font-size:12px;text-align:right;}
+.nt-lista .nt-lista-conta{margin:0;padding:6px 12px;border-top:1px solid var(--borda);font-size:12px;}
+.nt-lista > .nota{margin:0;padding:10px 12px;}
+@media (max-width:600px){ .nt-lista{margin-left:0;} }
 @media (max-width:600px){ .nt-grade{grid-template-columns:minmax(0,1fr);} .nt-ferramentas .nt-nova{margin-left:0;width:100%;} }
 .nt-grade .campo-sel{max-width:none;width:100%;}
 @media (max-width:760px){

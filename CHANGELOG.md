@@ -6,6 +6,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 26/11/2026
 
+- **"Para quem" por função e personalizado em lista** (pedido do usuário): nova opção **Por função** (recebe quem tem a função
+  marcada; administrador e acesso personalizado não têm função) e **Personalizado (escolher as pessoas)** no lugar de "Só estes
+  usuários". As duas em lista com busca, uma linha por item: as funções com quantas pessoas têm cada uma; as pessoas com a função
+  delas. A coluna "Para quem" mostra a função escolhida, e "Recebem agora" conta quem recebe.
 - **"Não volta (aparece uma vez só)"** em "Depois de fechar no X" (pedido do usuário): o aviso aparece uma vez no canto da tela
   (conta como visto já ao aparecer: não volta nem recarregando o portal) e chega uma vez só no celular, mesmo que a condição suma
   e volte; continua listado no sino enquanto valer.

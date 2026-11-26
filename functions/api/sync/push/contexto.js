@@ -26,7 +26,7 @@ export async function onRequestGet({ request, env }) {
   const { results: us } = await env.DB.prepare(`SELECT ${CAMPOS_USUARIO} ${DE_USUARIOS} WHERE u.id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all();
   const usuarios = us.map((x) => {
     const perms = permissoesDe(x), bases = basesDoUsuario(x);
-    return { id: x.id, recebe: regras.filter((r) => recebe(perms, x.id, r, USAM_DADOS)).map((r) => r.id),
+    return { id: x.id, recebe: regras.filter((r) => recebe(perms, x.id, r, USAM_DADOS, x.papel === 'admin' ? null : x.funcao_id)).map((r) => r.id),
       pode: { estoque: pode(x, 'bomba-estoque'), cartoes: pode(x, 'cartoes-frota'), dados: pode(x, ...USAM_DADOS) }, bases: bases ? [...bases] : null,
       unidades: unidadesDe(x) };   // aviso personalizado separado por unidade (26/11/2026)
   }).filter((u) => u.recebe.length);

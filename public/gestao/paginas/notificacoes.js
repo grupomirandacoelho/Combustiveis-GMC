@@ -34,11 +34,11 @@ async function chamar(metodo, corpo) {
 export async function montar(ctx) {
   const { pagina, pode } = ctx;
   pagina.innerHTML = '<div class="carregando"><div class="giro"></div>Carregando as notificações…</div>';
-  let regras = [], usuarios = [], contexto = {}, bases = [], unidades = [], ctxAval = null, telas = [], usamDados = [];
+  let regras = [], usuarios = [], contexto = {}, bases = [], unidades = [], ctxAval = null, telas = [], usamDados = [], funcoes = [];
   const filtro = { busca: '', ver: 'todas' };
   try {
     const j = await chamar('GET');
-    regras = j.regras; usuarios = j.usuarios; contexto = j.contexto || {}; telas = j.telas || []; usamDados = j.usamDados || [];
+    regras = j.regras; usuarios = j.usuarios; contexto = j.contexto || {}; telas = j.telas || []; usamDados = j.usamDados || []; funcoes = j.funcoes || [];
     if (pode('bomba-estoque')) {
       const b = await fetch('/api/bomba/bases', { credentials: 'same-origin', cache: 'no-store' }).then((r) => (r.ok ? r.json() : { bases: [] })).catch(() => ({ bases: [] }));
       bases = b.bases.filter((x) => x.ativo);
@@ -77,10 +77,12 @@ export async function montar(ctx) {
           <div class="largo nt-previa-caixa"><span class="nt-previa-rot" id="nt-previa-rot">Como fica</span><div class="nt-previa" id="nt-previa" aria-live="polite"></div></div>
           <fieldset class="campo-form largo"><legend>Para quem</legend>
             <label class="nt-opcao"><input type="radio" name="dest" value="todos"> <span id="nt-quem-todos">Todos</span></label>
+            <label class="nt-opcao"><input type="radio" name="dest" value="funcoes"> Por função (quem tem a função recebe):</label>
+            <div class="nt-lista oculto" id="nt-funcoes"></div>
             <label class="nt-opcao"><input type="radio" name="dest" value="telas"> Quem tem acesso a estas telas:</label>
             <div class="nt-telas oculto" id="nt-telas"></div>
-            <label class="nt-opcao"><input type="radio" name="dest" value="usuarios"> Só estes usuários:</label>
-            <div class="nt-usuarios" id="nt-usuarios"></div>
+            <label class="nt-opcao"><input type="radio" name="dest" value="usuarios"> Personalizado (escolher as pessoas):</label>
+            <div class="nt-lista oculto" id="nt-usuarios"></div>
             <p class="nota nt-recebem" id="nt-recebem" aria-live="polite"></p>
           </fieldset>
           <label class="campo-form largo"><span>Depois de fechar no X</span><select name="repetir" class="campo-sel">${REPETIR.map(([k, r]) => '<option value="' + k + '">' + esc(r) + '</option>').join('')}</select></label>
@@ -106,11 +108,13 @@ export async function montar(ctx) {
   const quemTodos = (tipo) => (TIPOS[tipo] ? TIPOS[tipo].quem : 'Todos');
   const nomeTela = (id) => { for (const g of telas) { const i = g.itens.find((x) => x.id === id); if (i) return i.rotulo.replace(/ \(.*\)$/, ''); } return id; };
   const listaCurta = (ns) => (ns.length <= 2 ? ns.join(' e ') : ns.slice(0, 2).join(', ') + ' e mais ' + (ns.length - 2));
+  const nomeFuncao = (id) => (funcoes.find((f) => f.id === id) || {}).nome || 'função ' + id;
   const paraQuem = (r) => (r.destinatarios.modo === 'usuarios'
-    ? (r.destinatarios.ids.length === 1 ? '1 usuário' : r.destinatarios.ids.length + ' usuários')
+    ? (r.destinatarios.ids.length === 1 ? '1 pessoa' : r.destinatarios.ids.length + ' pessoas')
+    : r.destinatarios.modo === 'funcoes' ? 'Função ' + listaCurta(r.destinatarios.funcoes.map(nomeFuncao))
     : r.destinatarios.modo === 'telas' ? 'Quem acessa ' + listaCurta(r.destinatarios.telas.map(nomeTela)) : quemTodos(r.tipo));
   // quem recebe agora (mesma conta do servidor): nomes no título da coluna "Para quem"
-  const recebedores = (r) => usuarios.filter((u) => recebe(u.permissoes || [], u.id, r, usamDados));
+  const recebedores = (r) => usuarios.filter((u) => recebe(u.permissoes || [], u.id, r, usamDados, u.funcao_id));
   const nomesDest = (r) => { const us = recebedores(r); return us.length ? 'Recebem agora (' + us.length + '): ' + us.map((u) => u.nome).join(', ') : 'Ninguém recebe agora'; };
   const rotuloDe = (lista, v) => (lista.find(([k]) => k === v) || [null, v])[1];
   function agoraHtml(r) {
@@ -218,6 +222,7 @@ export async function montar(ctx) {
     return c;
   }
   const lerDestIds = () => [...form.querySelectorAll('input[name="u"]:checked')].map((c) => Number(c.value));
+  const lerFuncoes = () => [...form.querySelectorAll('input[name="f"]:checked')].map((c) => Number(c.value));
   const lerTelas = () => [...form.querySelectorAll('input[name="tela"]:checked')].map((c) => c.value);
   // telas do menu para marcar (por grupo); vêm marcadas as do padrão do tipo quando a regra ainda não tem lista própria
   function desenharTelas(sel) {
@@ -236,6 +241,7 @@ export async function montar(ctx) {
       id: editando ? editando.id : undefined, nome: form.nome.value.trim(), tipo: tipoAtual, ativa: form.ativa.checked, condicao: lerCondicao(),
       mensagem: form.mensagem.value.trim(), nivel,
       destinatarios: dest && dest.value === 'usuarios' ? { modo: 'usuarios', ids: lerDestIds() }
+        : dest && dest.value === 'funcoes' ? { modo: 'funcoes', funcoes: lerFuncoes() }
         : dest && dest.value === 'telas' ? { modo: 'telas', telas: lerTelas() } : { modo: 'todos' },
       repetir: form.repetir.value, celular: form.celular.checked,
     };
@@ -270,11 +276,38 @@ export async function montar(ctx) {
     form.querySelectorAll('[data-nivel]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.nivel === n)));
     previa();
   }
+  // lista com busca (26/11/2026, pedido do usuário: funções e pessoas "em formato de lista"): uma linha por item, caixa de marcar,
+  // nome e detalhe; a busca esconde as linhas que não combinam (as marcadas continuam marcadas)
+  function htmlLista(nome, itens, vazio, rotuloBusca) {
+    if (!itens.length) return '<p class="nota">' + esc(vazio) + '</p>';
+    return '<input type="search" class="nt-lista-busca" placeholder="' + esc(rotuloBusca) + '" aria-label="' + esc(rotuloBusca) + '" autocomplete="off">' +
+      '<ul class="nt-lista-itens">' + itens.map((i) => '<li data-busca="' + esc(i.busca.toLowerCase()) + '"><label><input type="checkbox" name="' + nome + '" value="' + i.id + '"' +
+        (i.marcado ? ' checked' : '') + '> <span class="nt-lista-nome">' + esc(i.nome) + '</span>' + (i.detalhe ? '<small>' + i.detalhe + '</small>' : '') + '</label></li>').join('') +
+      '</ul><p class="nota nt-lista-conta"></p>';
+  }
+  function contarLista(caixa) {
+    const n = caixa.querySelectorAll('input[type="checkbox"]:checked').length, p = caixa.querySelector('.nt-lista-conta');
+    if (p) p.textContent = n ? n + (n === 1 ? ' marcado' : ' marcados') : 'Nenhum marcado';
+  }
   function desenharUsuarios(ids) {
     const acesso = TIPOS[tipoAtual].acesso;
-    el('nt-usuarios').innerHTML = usuarios.map((u) => '<label class="nt-opcao"><input type="checkbox" name="u" value="' + u.id + '"' + (ids.includes(u.id) ? ' checked' : '') + '> ' + esc(u.nome) +
-      (acesso && u.acessos && !u.acessos[acesso] ? ' <small class="aviso-linha">sem acesso a estes dados: não vai ver</small>' : '') + '</label>').join('') || '<p class="nota">Nenhum usuário ativo.</p>';
+    el('nt-usuarios').innerHTML = htmlLista('u', usuarios.map((u) => ({ id: u.id, nome: u.nome, marcado: ids.includes(u.id), busca: u.nome + ' ' + (u.funcao_nome || ''),
+      detalhe: esc(u.funcao_nome || '') + (acesso && u.acessos && !u.acessos[acesso] ? ' · <span class="aviso-linha">sem acesso a estes dados: não vai ver</span>' : '') })),
+      'Nenhum usuário ativo.', 'Procurar pessoa ou função…');
+    contarLista(el('nt-usuarios'));
   }
+  function desenharFuncoes(ids) {
+    el('nt-funcoes').innerHTML = htmlLista('f', funcoes.map((f) => {
+      const n = usuarios.filter((u) => u.funcao_id === f.id).length;
+      return { id: f.id, nome: f.nome, marcado: ids.includes(f.id), busca: f.nome, detalhe: n ? n + (n === 1 ? ' pessoa' : ' pessoas') : 'ninguém com esta função' };
+    }), 'Nenhuma função cadastrada (Gerenciar acessos > Funções).', 'Procurar função…');
+    contarLista(el('nt-funcoes'));
+  }
+  form.addEventListener('input', (e) => {
+    if (!e.target.classList.contains('nt-lista-busca')) return;
+    const t = e.target.value.trim().toLowerCase(), caixa = e.target.closest('.nt-lista');
+    caixa.querySelectorAll('li[data-busca]').forEach((li) => { li.hidden = !!t && !li.dataset.busca.includes(t); });
+  });
   function trocarTipo(novo, manterNome) {
     const anterior = TIPOS[tipoAtual];
     tipoAtual = novo;
@@ -301,13 +334,15 @@ export async function montar(ctx) {
     form.ativa.checked = r ? r.ativa : true;
     form.celular.checked = r ? !!r.celular : false;   // notificações no celular (26/11/2026)
     const dst = r ? r.destinatarios : { modo: 'todos' };
-    form.querySelector('input[name="dest"][value="' + (['usuarios', 'telas'].includes(dst.modo) ? dst.modo : 'todos') + '"]').checked = true;
+    form.querySelector('input[name="dest"][value="' + (['usuarios', 'telas', 'funcoes'].includes(dst.modo) ? dst.modo : 'todos') + '"]').checked = true;
     desenharTelas(dst.modo === 'telas' ? dst.telas : (TELAS_PADRAO[tipo] || []));
     el('nt-telas').classList.toggle('oculto', dst.modo !== 'telas');
     desenharCamposTipo(r ? r.condicao : null);
     ultimaCond = lerCondicao();
     desenharUsuarios(dst.ids || []);
+    desenharFuncoes(dst.funcoes || []);
     el('nt-usuarios').classList.toggle('oculto', dst.modo !== 'usuarios');
+    el('nt-funcoes').classList.toggle('oculto', dst.modo !== 'funcoes');
     el('nt-erro').classList.add('oculto');
     marcarNivel(r ? r.nivel : 'alerta');
     el('nt-dlg').showModal();
@@ -325,8 +360,10 @@ export async function montar(ctx) {
       previa();
       return;
     }
+    if (e.target.name === 'u' || e.target.name === 'f') contarLista(e.target.closest('.nt-lista'));
     if (e.target.name === 'dest') {
       el('nt-usuarios').classList.toggle('oculto', e.target.value !== 'usuarios');
+      el('nt-funcoes').classList.toggle('oculto', e.target.value !== 'funcoes');
       el('nt-telas').classList.toggle('oculto', e.target.value !== 'telas');
     }
     previa();
