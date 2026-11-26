@@ -6,6 +6,13 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 26/11/2026
 
+- **Estoque de Jequié x TruckPag conferido** (usuário mandou o relatório de 23/10 a hoje): todas as transações do portal estão no
+  relatório; das 10 que só o relatório tinha, 9 eram lançamentos refeitos (a original e a refeita aparecem) e 1 era a RND0H44 de
+  12/11 08:30 (216,66 L) lançada duas vezes e descontada duas vezes no tanque da TruckPag. A TruckPag cancelou a duplicada e os
+  tanques bateram. **Proteção nova nos estornos:** quando a TruckPag cancela uma de duas transações iguais (mesmos litros, mesmo
+  hodômetro ou placa, até 2 min), o portal não apaga a linha dele se ela representa a que continua válida (antes, se a cancelada
+  fosse a do mesmo segundo da linha, o abastecimento sumiria). Conferido com a rotina rodando: o cancelamento da RND0H44 ficou como
+  "refeita" e a linha continua.
 - **Estoque da bomba acima do portal da TruckPag** (correção; usuário: diesel de Jequié com 6.689,124 L na TruckPag): a publicação
   tirava dos dashboards as transações das APIs de hoje, mas o Estoque usa os mesmos dados e deixou de descontar as saídas de hoje
   (Jequié: 139,197 L às 06:00). Agora só os **dashboards** ficam na publicação; as telas de **operação** (Estoque, Lançar

@@ -14,7 +14,7 @@ export function serial(s) {
 }
 
 // lista = base-copia.json; estornadas = transações ESTORNADA; aprovadas = as válidas (COMPRA/MANUAL APROVADA) do mesmo
-// período -> {indices, ambiguos: [transação], semLinha: [transação]}.
+// período -> {indices, ambiguos: [transação], semLinha: [transação], refeitas: [transação] (canceladas que foram refeitas: não apagam)}.
 // O posto costuma desfazer e refazer na hora (mesma litragem e hodômetro, segundos depois): a linha é achada pelo segundo
 // exato (±5 s); sem ela, até 1,5 min, mas nunca uma linha que bate (±5 s) com uma transação aprovada.
 export function acharNaBase(lista, estornadas, aprovadas = []) {
@@ -34,14 +34,26 @@ export function acharNaBase(lista, estornadas, aprovadas = []) {
     return r;
   };
   const deAprovada = new Set(aprovadas.flatMap((a) => candidatas(a, SEG)));
+  // Refeita (26/11/2026; caso RND0H44 de 12/11: lançada duas vezes, 08:30:18 e 08:30:40, e a TruckPag cancelou uma): a importação
+  // guarda uma linha só por placa + minuto + litros, então a linha do portal pode ser a da transação cancelada e representar a
+  // que continua válida. Se há transação válida igual (mesmos litros, mesmo hodômetro ou placa, até 2 min), só se apaga uma linha
+  // quando o portal tem mais linhas do que as válidas; senão a cancelada fica como refeita e nada sai.
+  const GEMEA = 2 / 1440, refeitas = [];
+  const gemeas = (t) => {
+    const dt = serial(t.transacao_data), litros = Number(t.litragem), km = Number(t.quilometragem);
+    return aprovadas.filter((a) => { const da = serial(a.transacao_data); return da !== null && dt !== null && Math.abs(da - dt) <= GEMEA &&
+      Math.abs(Number(a.litragem) - litros) <= 0.011 && (Number(a.quilometragem) === km || placaK(a.veiculo_placa) === placaK(t.veiculo_placa)); });
+  };
   for (const t of estornadas) {
+    const g = gemeas(t);
+    if (g.length && candidatas(t, GEMEA).length <= g.length) { refeitas.push(t); continue; }
     let achadas = candidatas(t, SEG).filter((i) => !deAprovada.has(i));
     if (!achadas.length) achadas = candidatas(t, MIN).filter((i) => !deAprovada.has(i));
     if (achadas.length === 1) indices.push(achadas[0]);
     else if (achadas.length > 1) ambiguos.push(t);
     else semLinha.push(t);
   }
-  return { indices: [...new Set(indices)], ambiguos, semLinha };
+  return { indices: [...new Set(indices)], ambiguos, semLinha, refeitas };
 }
 
 // Exclusão de linhas da Base_copia (estorno, duplicado) + km do abastecimento seguinte de cada uma: o seguinte que contava

@@ -40,5 +40,27 @@ test('estorno refeito na hora (transação aprovada igual): não exclui a linha 
   const est = [{ transacao_id: 1, transacao_data: '2026-11-11 08:00:00', litragem: 50, quilometragem: 1300, veiculo_placa: 'ABC1D23' }];
   const apr = [{ transacao_id: 2, transacao_data: '2026-11-11 08:00:03', litragem: 50, quilometragem: 1300, veiculo_placa: 'ABC1D23' }];
   const r = acharNaBase(lista, est, apr);
-  assert.deepEqual([r.indices, r.semLinha.length], [[], 1]);
+  assert.deepEqual([r.indices, r.semLinha.length, r.refeitas.length], [[], 0, 1]);   // desde 26/11: reconhecida como refeita
+});
+
+// caso RND0H44 (12/11/2026): lançada duas vezes (08:30:18 e 08:30:40, mesmo hodômetro e litros); o portal tem uma linha só (a das
+// 08:30:18, a importação junta por placa + minuto + litros). A TruckPag cancelou uma: em nenhum dos dois casos a linha pode sair.
+const umaLinha = {
+  dic: { placa: ['RND0H44'], forma: ['TRUCKPAG'], fuel: ['DIESEL S-10 COMUM'] },
+  col: { linha: [62587], placa: [0], forma: [0], fuel: [0], dt: [s('2026-11-12 08:30:18')], litros: [216.661], hodo: [466191], km: [300], kml: [1.4] },
+};
+const tr = (id, hora) => ({ transacao_id: id, transacao_data: '2026-11-12 ' + hora, litragem: 216.66, quilometragem: 466191, veiculo_placa: 'RND0H44' });
+test('estorno de uma de duas transações iguais: cancelou a original (mesmo segundo da linha) -> a linha fica (refeita)', () => {
+  const r = acharNaBase(umaLinha, [tr(30715483, '08:30:18')], [tr(30793500, '08:30:40')]);
+  assert.deepEqual([r.indices, r.refeitas.length, r.semLinha.length, r.ambiguos.length], [[], 1, 0, 0]);
+});
+test('estorno de uma de duas transações iguais: cancelou a cópia -> a linha fica', () => {
+  const r = acharNaBase(umaLinha, [tr(30793500, '08:30:40')], [tr(30715483, '08:30:18')]);
+  assert.deepEqual(r.indices, []);
+});
+test('portal com mais linhas que as válidas (duas linhas, uma cancelada): ainda exclui a da cancelada', () => {
+  const duas = { dic: umaLinha.dic, col: { linha: [1, 2], placa: [0, 0], forma: [0, 0], fuel: [0, 0], dt: [s('2026-11-12 08:30:18'), s('2026-11-12 08:31:30')],
+    litros: [216.66, 216.66], hodo: [466191, 466191], km: [300, 0], kml: [1.4, 0] } };
+  const r = acharNaBase(duas, [tr(1, '08:30:18')], [tr(2, '08:31:30')]);
+  assert.deepEqual(r.indices, [0]);
 });

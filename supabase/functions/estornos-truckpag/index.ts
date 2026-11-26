@@ -28,7 +28,7 @@ rotina('estornos-truckpag', async ({ modo, estado }) => {
   const estornadas = todas.filter((t: any) => t.transacao_status === 'ESTORNADA' && t.transacao_tipo !== 'ESTORNO' && !feitos.has(String(t.transacao_id)));
   // deno-lint-ignore no-explicit-any
   const aprovadas = todas.filter((t: any) => t.transacao_status === 'APROVADA' && t.transacao_tipo !== 'ESTORNO');
-  const { indices, ambiguos, semLinha } = acharNaBase(lista, estornadas, aprovadas);
+  const { indices, ambiguos, semLinha, refeitas } = acharNaBase(lista, estornadas, aprovadas);
   const itens = indices.length ? itensExclusao(lista, indices) : [];
   let inseridos = null;
   if (itens.length && modo === 'ligado') inseridos = (await portal('POST', '/api/sync/base-copia/automaticas', { quem: 'Estorno TruckPag (automático)', itens })).inseridos;
@@ -48,7 +48,7 @@ rotina('estornos-truckpag', async ({ modo, estado }) => {
       itens, inseridos,
       // deno-lint-ignore no-explicit-any
       ambiguos: ambiguos.map((t: any) => ({ placa: t.veiculo_placa, data: t.transacao_data, litros: t.litragem })),
-      sem_linha: semLinha.length,
+      sem_linha: semLinha.length, refeitas: refeitas.length,   // canceladas que foram refeitas (26/11/2026): não apagam
     },
   };
 });
