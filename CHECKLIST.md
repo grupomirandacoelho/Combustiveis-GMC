@@ -69,7 +69,8 @@ e vai para o `CHANGELOG.md`. Regra de toda alteração: rodar `npm run verificar
 - [x] Cais da Vibra (CAANA, CALAN, CABET, CAAPE) como base; rateio do portal a partir das planilhas (16/11/2026).
 - [x] NFs 1722159 e 1722862 do Cais Viana lançadas sem mudar o volume (16/11/2026).
 - [x] Cartões do Estoque alinhados (16/11/2026).
-- [ ] Lançar as próximas NFs de Betim, Suape e Uberlândia (faltam ~2 notas de Uberlândia desde 31/10).
+- [x] NFs dos cais lançadas pelas planilhas e as fechadas validadas (27/11/2026; ids 16–20).
+- [ ] Próximas NFs dos cais: abastecimentos sem nota em 27/11 — Betim 1.078,02 L, Suape 96,58 L, Uberlândia 7.119,60 L. As planilhas de Betim e Suape não têm os abastecimentos de 19/11.
 
 - [x] Preço do Rateio das NFs só com a nota fechada, travado depois, sem contar API e Base em dobro e no combustível certo (17/11).
 

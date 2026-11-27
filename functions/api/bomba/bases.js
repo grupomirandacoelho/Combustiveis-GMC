@@ -14,7 +14,9 @@ function validarTanque(t, nome) {
   const capacidade = numero(t.capacidade), inicial = numero(t.inicial), precoInicial = numero(t.precoInicial);
   const erros = [];
   if (!(capacidade > 0 && capacidade <= 1_000_000)) erros.push(`Capacidade do tanque de ${nome} inválida.`);
-  if (!(inicial >= 0 && inicial <= 1_000_000)) erros.push(`Estoque inicial do tanque de ${nome} inválido.`);
+  // negativo só faz sentido nos cais (27/11/2026, usuário: o cais fica na Petrobras; quando acaba a nossa litragem eles usam a
+  // deles e abatem na próxima nota). A tela só deixa negativo nos cais; aqui o limite é largo para não depender do tipo da base.
+  if (!(inicial >= -1_000_000 && inicial <= 1_000_000)) erros.push(`Estoque inicial do tanque de ${nome} inválido.`);
   else if (capacidade > 0 && inicial > capacidade * 1.05) erros.push(`O estoque inicial do tanque de ${nome} passa da capacidade.`);
   if (!quandoValido(t.inicialEm)) erros.push(`Informe a data e a hora da medição do tanque de ${nome}.`);
   if (precoInicial !== null && !(precoInicial > 0 && precoInicial < 50)) erros.push(`Preço inicial do tanque de ${nome} inválido.`);

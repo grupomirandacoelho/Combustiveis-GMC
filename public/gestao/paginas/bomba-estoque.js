@@ -204,6 +204,11 @@ export async function montar(ctx) {
     }
     const corpo = { id: editando ? editando.id : undefined, nome: f.nome.value, posto: f.posto.value, ativo: f.ativo.checked, tanques };
     const btn = el('be-salvar'), erro = el('be-erro');
+    // estoque negativo só nos cais (27/11/2026): o cais usa o diesel da Petrobras quando o nosso acaba e abate na próxima nota
+    const negativo = Object.values(tanques).some((t) => t && t.inicial < 0);
+    if (negativo && !postosCais.has(String(f.posto.value || '').trim().toUpperCase())) {
+      erro.textContent = 'O estoque na medição só pode ficar negativo nos cais.'; erro.classList.remove('oculto'); return;
+    }
     btn.disabled = true; btn.textContent = 'Salvando…';
     try {
       const r = await fetch('/api/bomba/bases', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });

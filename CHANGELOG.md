@@ -6,6 +6,18 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 27/11/2026
 
+- **Rateio e estoque dos cais atualizados pelas planilhas** (pedido do usuário):
+  - notas novas no Rateio das NFs: Betim 5041578, Uberlândia 281468 (10.000 L), Suape 2968873 e 2971530, Viana 1730011;
+  - validadas as que fecham no portal: Betim 5041578, Uberlândia 281468, Suape 2968873 e 2971530 (os totais batem com as notas).
+    Viana segue em aberto (1722159 com 609,63 L rateados; 1722862 e 1730011 ainda sem abastecimento);
+  - virada do rateio de Betim corrigida: 3,57 L do abastecimento de 12/11 17:14 ficaram na nota anterior da planilha (estava 0);
+  - medições de 26/11 (planilha Volume cais): Betim 3.921,98 L (23:51), Uberlândia −2.161,10 L (20:51) e Viana 3.257,46 L (17:50);
+    Suape fica com a medição de 15/11. Nos cais a medição pode ser negativa (o cais usa o diesel da Petrobras quando o nosso acaba
+    e abate na próxima nota); nas bombas internas, não;
+  - as planilhas de Betim e Suape não têm os abastecimentos de 19/11 que estão no portal (Betim 1.187,48 L, Suape 840,14 L): por
+    isso o rateio do portal anda mais que o da planilha. Ficaram sem nota: Betim 1.078,02 L, Suape 96,58 L e Uberlândia 7.119,60 L
+    (esperando as próximas notas).
+
 - **Sem erros no console ao trocar de tela rápido** (pedido do usuário): quando a pessoa saía de uma tela antes de ela terminar de
   carregar (ou com dados novos chegando), a tela antiga continuava desenhando e dava erros como "Cannot read properties of null"
   (Operação por motorista, Divisão por cartão, Média geral, Preço x ANP); indo e voltando rápido, ela também podia reescrever o
