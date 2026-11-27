@@ -9,7 +9,7 @@
 //  - nosso preço e o preço da refinaria são PONDERADOS pelos litros (soma do valor ÷ soma dos litros; Σ litros × preço
 //    da refinaria ÷ Σ litros); a diferença inclui tributos, biodiesel, frete e as margens da distribuidora e do posto
 import { carregarDados, fmt, esc, fmtDia, fmtMes, mesDoDia, inicioDoMes, chaveNome } from '../lib/dados.js';
-import { criarFiltros, htmlApoio, agendador } from '../lib/filtros.js';
+import { criarFiltros, htmlApoio, agendador, trocarEndereco } from '../lib/filtros.js';
 import { graficoPeriodo, emAndamento } from '../lib/graficos.js';
 
 const ROTA = '#/preco-refinaria';
@@ -145,7 +145,7 @@ export async function montar(ctx) {
     origem: ORIGENS.some(([o]) => o === q.get('origem')) ? q.get('origem') : 'externo',
     ordem: { col: 'litros', dir: -1 },
   };
-  if (!location.hash.includes('?')) history.replaceState(null, '', ROTA + '?periodo=3meses');
+  if (!location.hash.includes('?')) trocarEndereco(ROTA, ROTA + '?periodo=3meses');
 
   pagina.innerHTML = `
     <div class="anp-controles">

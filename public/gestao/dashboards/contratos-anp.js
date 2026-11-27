@@ -3,7 +3,7 @@
 //  - ANP: preço médio de revenda do óleo diesel S10 do estado, semana a semana (/gestao/dados/anp.json)
 //  - variação = ANP da semana escolhida ÷ ANP da semana da data do contrato − 1 (por padrão, a última semana publicada)
 import { fmt, esc, fmtDia } from '../lib/dados.js';
-import { htmlApoio, agendador } from '../lib/filtros.js';
+import { htmlApoio, agendador, trocarEndereco } from '../lib/filtros.js';
 import { graficoPeriodo } from '../lib/graficos.js';
 import { carregarOpcoes, listaEfetiva, temConfig, BOTAO_OPCOES, abrirOpcoes } from '../lib/opcoes.js';
 
@@ -131,7 +131,7 @@ export async function montar(ctx) {
     if (estado.semana !== semanas[semanas.length - 1]) s.set('semana', estado.semana);
     if (estado.sel) s.set('unidade', estado.sel);
     const novo = ROTA + (s.toString() ? '?' + s : '');
-    if (location.hash !== novo) history.replaceState(null, '', novo);
+    trocarEndereco(ROTA, novo);
   }
 
   const COLUNAS = [

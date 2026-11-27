@@ -6,6 +6,13 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 27/11/2026
 
+- **Sem erros no console ao trocar de tela rápido** (pedido do usuário): quando a pessoa saía de uma tela antes de ela terminar de
+  carregar (ou com dados novos chegando), a tela antiga continuava desenhando e dava erros como "Cannot read properties of null"
+  (Operação por motorista, Divisão por cartão, Média geral, Preço x ANP); indo e voltando rápido, ela também podia reescrever o
+  endereço e levar a pessoa de volta. Agora cada navegação tem a sua própria área de página: o que a tela antiga ainda fizer cai
+  fora da tela, sem erro; só a montagem mais recente fica valendo; e nenhuma tela troca o endereço depois que a pessoa já saiu.
+  Teste de troca rápida em 15 telas, com redimensionar e dados novos no meio: nenhum erro.
+
 - **Textos sem Base, Base_copia e planilhas** (pedido do usuário): com o vigia desligado, cerca de 220 textos de 38 telas e mensagens
   foram reescritos. Saíram "Base enviada em", "gravado na Base_copia", "planilha aberta no Excel", "o computador da sincronização
   grava…", "planilha de controle" e parecidos; no lugar, "Dados atualizados em", "Gravado", "abastecimentos", "histórico" e

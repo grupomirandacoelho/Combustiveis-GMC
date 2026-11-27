@@ -7,7 +7,7 @@
 //    só entram na comparação as semanas/meses em que a ANP pesquisou aquele local
 //  - semana da ANP: domingo a sábado (a mesma da "DATA INICIAL" dos arquivos dela); mês: do dia 1 ao último
 import { carregarDados, fmt, esc, fmtDia, fmtMes, mesDoDia, inicioDoMes, chaveNome } from '../lib/dados.js';
-import { criarFiltros, htmlApoio, agendador, statusHtml } from '../lib/filtros.js';
+import { criarFiltros, htmlApoio, agendador, statusHtml, trocarEndereco } from '../lib/filtros.js';
 import { graficoPeriodo, emAndamento } from '../lib/graficos.js';
 
 const ROTA = '#/preco-anp';
@@ -113,7 +113,7 @@ export async function montar(ctx) {
     local: q.get('local') || '',
     ordem: { col: 'litros', dir: -1 },
   };
-  if (!location.hash.includes('?')) history.replaceState(null, '', ROTA + '?periodo=3meses');
+  if (!location.hash.includes('?')) trocarEndereco(ROTA, ROTA + '?periodo=3meses');
 
   pagina.innerHTML = `
     <div class="grupo-filtros">

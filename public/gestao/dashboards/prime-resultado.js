@@ -14,7 +14,7 @@
 //    contra o que foi pago pela lista de premiados sem deflatores. A economia é a mesma nos dois: quem não recebeu economizou
 //    de qualquer forma, os deflatores só tiram o prêmio (19/11/2026).
 import { carregarDados, fmt, esc, fmtMes, mesDoDia, ehDiesel } from '../lib/dados.js';
-import { htmlApoio, metaHtml, statusHtml } from '../lib/filtros.js';
+import { htmlApoio, metaHtml, statusHtml, trocarEndereco } from '../lib/filtros.js';
 import { tabelaOrdenavel } from '../lib/tabela.js';
 
 // unidades que não participam do Programa PRIME (11/11/2026: RAJA ADM)
@@ -153,7 +153,7 @@ export async function montar(ctx) {
 
   function desenhar() {
     const ym = info.mes, m = mDe(ym);
-    history.replaceState(null, '', ROTA + '?mes=' + ym);
+    trocarEndereco(ROTA, ROTA + '?mes=' + ym);
     const fechados = (info.meses || []).filter((x) => x.situacao === 'fechado');
     el('prr-mes').innerHTML = (fechados.some((x) => x.mes === ym) ? fechados : [{ mes: ym }, ...fechados])
       .map((x) => '<option value="' + x.mes + '"' + (x.mes === ym ? ' selected' : '') + '>' + esc(fmtMes(mDe(x.mes), true)) + '</option>').join('');

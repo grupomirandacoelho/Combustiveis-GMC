@@ -324,7 +324,7 @@ export function criarFiltros(o) {
     }
     const s = q.toString();
     const novo = rota + (s ? '?' + s : '');
-    if (location.hash !== novo) history.replaceState(null, '', novo);   // sem recarregar a rota
+    trocarEndereco(rota, novo);   // sem recarregar a rota
     salvarFiltros(rota, s);   // ao voltar para esta tela, os filtros continuam (até sair do portal)
   }
 
@@ -353,6 +353,13 @@ export function criarFiltros(o) {
 // ---------- filtros guardados por tela, só nesta sessão do navegador (sessionStorage) ----------
 // Saem ao fechar o navegador, ao clicar em Sair e ao entrar de novo no portal (limparFiltrosSalvos).
 const PREFIXO_FILTROS = 'filtros:';
+// troca o endereço (#/rota?...) sem recarregar, só se a página aberta ainda é a desta tela (27/11/2026: uma tela que terminava
+// de carregar depois que a pessoa já tinha ido para outra reescrevia o endereço e a levava de volta)
+export function trocarEndereco(rota, novo) {
+  if (location.hash.split('?')[0] !== String(rota).split('?')[0]) return;
+  if (location.hash !== novo) history.replaceState(null, '', novo);
+}
+
 export function salvarFiltros(rota, consulta) {
   try {
     if (consulta) sessionStorage.setItem(PREFIXO_FILTROS + rota, consulta);

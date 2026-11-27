@@ -338,7 +338,6 @@ function rotuloTema() { $('btn-tema').setAttribute('aria-checked', String(temaEf
   });
 })();
 rotuloTema();
-iniciarToqueLongo($('pagina'));   // celular: segurar o dedo = Ctrl+clique (somar à seleção), 26/11/2026
 $('btn-tema').addEventListener('click', () => {
   const novo = temaEfetivo() === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', novo);
@@ -524,6 +523,10 @@ for (const [id, r] of Object.entries(ROTAS)) if (id !== 'inicio' && r.perm === u
 
 let rotaAtual = null;
 let desmontar = null;
+// cada navegação ganha um número: só a montagem da navegação mais recente fica valendo (27/11/2026: indo e voltando rápido para a
+// mesma tela, as duas montagens terminavam com a rota certa, a segunda sobrescrevia a primeira e a primeira nunca era desmontada;
+// os ouvintes dela seguiam rodando e davam "Cannot read properties of null" no console)
+let navegacao = 0;
 
 // ---------- dados novos: botão Atualizar ----------
 let dadosNovos = null;          // versão nova encontrada no servidor, ainda não carregada
@@ -687,6 +690,7 @@ async function desenharRota() {
     if (salvo) history.replaceState(null, '', '#/' + rota + '?' + salvo);
   }
   if (desmontar) { try { desmontar(); } catch (e) {} desmontar = null; }
+  const vez = ++navegacao;
   rotaAtual = rota;
   const r = ROTAS[rota];
   document.title = r.titulo + ' · RajaLog - Gestão de combustíveis';
@@ -705,7 +709,12 @@ async function desenharRota() {
   });
   if (!r.apresentavel && document.body.classList.contains('apresentando')) alternarApresentacao(false);
   desenharAcoes();
-  const pagina = $('pagina');
+  // área nova a cada navegação (27/11/2026): a tela que sai fica com o elemento antigo, já fora da página. O que ela ainda fizer
+  // depois de sair (dados que chegam, redimensionar, temporizadores) cai nele: sem erro no console e sem desenhar por cima da
+  // tela nova. Mesmo id e classe: o CSS (.pagina > * na grade de 12 colunas) continua igual.
+  const velha = $('pagina'), pagina = velha.cloneNode(false);
+  velha.replaceWith(pagina);
+  ligarPagina(pagina);
   // enquanto o arquivo da página chega (import), mostra o "Carregando…" em vez da área vazia
   pagina.innerHTML = '<div class="carregando"><div class="giro"></div>Carregando…</div>';
   const ctx = { pagina, definirSub: (t) => { $('sub-pagina').textContent = t; }, pode, usuario, aviso };
@@ -716,11 +725,13 @@ async function desenharRota() {
     return;
   }
   const res = await r.montar(ctx);
-  if (rotaAtual === rota) desmontar = res && res.desmontar ? res.desmontar : null;
-  else if (res && res.desmontar) res.desmontar();
+  if (vez === navegacao) desmontar = res && res.desmontar ? res.desmontar : null;
+  else if (res && res.desmontar) { try { res.desmontar(); } catch (e) {} }
 }
 window.addEventListener('hashchange', desenharRota);
-iniciarAcoesLinha($('pagina'));
+// o que vale para a área da página: toque longo no celular (= Ctrl+clique, 26/11/2026) e os botões de ações das linhas
+function ligarPagina(el) { iniciarToqueLongo(el); iniciarAcoesLinha(el); }
+ligarPagina($('pagina'));
 iniciarMascaraMoeda(document);
 iniciarMascaras(document);       // CPF, datas e placa: pontos, traço e barras entram sozinhos ao digitar   // campos de valor (R$) com máscara: só números, vírgula e pontos automáticos
 iniciarSelecao(document);        // selects e campos com sugestões abrem a lista de seleção do site (com todas as opções)

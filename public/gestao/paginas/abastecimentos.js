@@ -15,7 +15,7 @@
 //  - "Salvar alterações" grava no banco e o computador da sincronização escreve na Base_copia (cópia de segurança antes).
 //    Até a lista ser publicada de novo, a página mostra as correções por cima dos valores da planilha.
 import { fmt, esc, fmtDia, carregarDesabilitadas, placaDesabilitada } from '../lib/dados.js';
-import { criarFiltros } from '../lib/filtros.js';
+import { criarFiltros, trocarEndereco } from '../lib/filtros.js';
 import { seloCartao as selo, nomeCartao } from '../lib/cartoes.js';
 import { normFuel, normKey, chaveCadeia } from '../lib/consolidador.js';
 import { carregarExcelJS, linhaPlanilha, montarPlanilha, confere } from '../lib/exportar-base.js';
@@ -855,7 +855,7 @@ export async function montar(ctx) {
     const bate = (x) => !!x && limparPlaca(x.placa) === pl && Math.round(x.serial * 1440) === Number(mi);
     let l = porLinha.get(Number(daConferencia.get('aplicar')));
     if (!bate(l)) l = linhas.find(bate) || null;
-    history.replaceState(null, '', '#/abastecimentos');   // recarregar a página não aplica de novo
+    trocarEndereco('#/abastecimentos', '#/abastecimentos');   // recarregar a página não aplica de novo
     if (!l) ctx.aviso('O abastecimento da conferência não foi encontrado (pode já ter sido excluído).');
     else {
       const valores = [...daConferencia.entries()].filter(([k]) => /^v(F|Q|O|T)$/.test(k)).map(([k, x]) => [k.slice(1), k === 'vF' ? x : x === '' ? null : Number(x)]);

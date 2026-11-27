@@ -282,6 +282,7 @@ export async function montar(ctx) {
 
   function desenharEvolucao() {
     const box = el('om-evolucao');
+    if (!box) return;   // a tela já saiu (redimensionar atrasado; erro "clientWidth" de null, 27/11/2026)
     const pts = pontosEvol, comDado = pts.filter((p) => p.media !== null);
     if (comDado.length < 2) {
       box.removeAttribute('tabindex'); box.removeAttribute('role'); box.removeAttribute('aria-label');
@@ -770,17 +771,20 @@ export async function montar(ctx) {
   atualizar();
 
   // botão Atualizar da barra: dados novos entram mantendo os filtros escolhidos
-  const aoAtualizarDados = () => carregarDados().then((d) => { usarDados(d); atualizar(); });
+  // parado: a tela saiu; chamadas atrasadas (dados novos, redimensionar) não desenham mais (27/11/2026)
+  let parado = false;
+  const aoAtualizarDados = () => carregarDados().then((d) => { if (parado) return; usarDados(d); atualizar(); });
   window.addEventListener('dados-atualizados', aoAtualizarDados);
 
   let tRedim = null;
-  const aoRedimensionar = () => { clearTimeout(tRedim); tRedim = setTimeout(desenharEvolucao, 120); };
+  const aoRedimensionar = () => { if (parado) return; clearTimeout(tRedim); tRedim = setTimeout(desenharEvolucao, 120); };
   window.addEventListener('resize', aoRedimensionar);
   const ro = new ResizeObserver(aoRedimensionar);
   ro.observe(el('om-evolucao'));
 
   return {
     desmontar() {
+      parado = true; clearTimeout(tRedim); clearTimeout(tRolar);
       filtros.destruir();
       window.removeEventListener('resize', aoRedimensionar);
       window.removeEventListener('dados-atualizados', aoAtualizarDados);

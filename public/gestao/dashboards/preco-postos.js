@@ -11,7 +11,7 @@
 //    R$ 5,84 em 20/08/2025) e não entra na rodada; abastecimento com a negociação do dia bloqueada não é comparado
 //    (não conta em "pago acima"), aparece como "abastecido em posto bloqueado"
 import { carregarDados, fmt, esc, fmtDia, fmtMes, mesDoDia, chaveNome, ehDiesel } from '../lib/dados.js';
-import { criarFiltros, htmlBomba, htmlApoio, agendador, botoesMaisMenos, statusHtml } from '../lib/filtros.js';
+import { criarFiltros, htmlBomba, htmlApoio, agendador, botoesMaisMenos, statusHtml, trocarEndereco } from '../lib/filtros.js';
 import { graficoPeriodo, emAndamento } from '../lib/graficos.js';
 import { carregarOpcoes as carregarOpcoesCadastro, listaEfetiva, temConfig, BOTAO_OPCOES, abrirOpcoes } from '../lib/opcoes.js';
 
@@ -127,7 +127,7 @@ export async function montar(ctx) {
       }).filter((o) => o.Posto && (o.Status || '').toUpperCase().includes('AUTORIZ'));
     } catch {}
   }
-  if (!location.hash.includes('?')) history.replaceState(null, '', ROTA + '?periodo=3meses');
+  if (!location.hash.includes('?')) trocarEndereco(ROTA, ROTA + '?periodo=3meses');
 
   let filtradas = base;
   let ordem = { campo: 'acima', dir: -1 };

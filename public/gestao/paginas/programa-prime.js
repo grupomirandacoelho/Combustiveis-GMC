@@ -5,7 +5,7 @@
 // rodado dele continua contando no km do mês (faixa do prêmio). A nota da telemetria só vale com cobertura de 50% do km dos abastecimentos,
 // a não ser que ela não dê prêmio; sem telemetria a nota é manual. O mês só fecha com todos os motoristas com nota.
 import { carregarDados, esc, fmt, fmtDia, chaveNome, ehDiesel, mesDoDia, inicioDoMes, fmtMes } from '../lib/dados.js';
-import { metaHtml, botoesMaisMenos } from '../lib/filtros.js';
+import { metaHtml, botoesMaisMenos, trocarEndereco } from '../lib/filtros.js';
 import { seloCartao } from '../lib/cartoes.js';
 import { carregarSheetJS } from '../lib/sheetjs.js';
 import { ligarBaixar } from '../lib/baixar.js';
@@ -253,7 +253,7 @@ export async function montar(ctx) {
 
   function escreverURL() {
     const novo = '#/programa-prime?mes=' + ymDeMes(mes) + (aba !== 'ranking' ? '&aba=' + aba : '');
-    if (location.hash !== novo) history.replaceState(null, '', novo);
+    trocarEndereco('#/programa-prime', novo);
   }
 
   async function carregar(silencioso) {

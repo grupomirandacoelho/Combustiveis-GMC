@@ -5,7 +5,7 @@
 //    que a matriz do Power BI exclui
 //  - verde quando a economia de litros é positiva (dentro da meta), vermelho quando é negativa
 import { carregarDados, fmt, esc, fmtMes, mesDoDia, ehDiesel } from '../lib/dados.js';
-import { criarFiltros, statusHtml, htmlApoio, agendador, faixaMeta, metaHtml, legendaMeta } from '../lib/filtros.js';
+import { criarFiltros, statusHtml, htmlApoio, agendador, faixaMeta, metaHtml, legendaMeta, trocarEndereco } from '../lib/filtros.js';
 import { htmlMedidor, emAndamento } from '../lib/graficos.js';
 
 const DIESEL = { has: ehDiesel };   // todo tipo de diesel (lib/dados.js)
@@ -53,7 +53,7 @@ export async function montar(ctx) {
   usarDados(dados);
 
   // sem filtro no endereço, abre no ano atual (a matriz com todos os meses desde 2023 fica larga demais)
-  if (!location.hash.includes('?')) history.replaceState(null, '', ROTA + '?periodo=ano');
+  if (!location.hash.includes('?')) trocarEndereco(ROTA, ROTA + '?periodo=ano');
 
   let ordem = 'placa';                 // 'placa' (A-Z) ou 'pct' (melhor % primeiro)
   let filtradas = base;

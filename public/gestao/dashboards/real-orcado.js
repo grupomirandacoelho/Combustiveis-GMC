@@ -9,7 +9,7 @@ import { carregarDados, recarregarDados, fmt, esc, fmtMes, mesDoDia, fmtDia, ini
 import { carregarSheetJS } from '../lib/sheetjs.js';
 import { confirmar } from '../lib/confirmar.js';
 import { lerOrcamento } from '../lib/orcamento.js';
-import { criarFiltros, statusHtml, agendador, ICONES } from '../lib/filtros.js';
+import { criarFiltros, statusHtml, agendador, ICONES, trocarEndereco } from '../lib/filtros.js';
 import { graficoPeriodo } from '../lib/graficos.js';
 import { pesosSemana, fracaoDoMes } from '../lib/esperado.js';
 
@@ -183,8 +183,8 @@ export async function montar(ctx) {
     if (atual) atual.desmontar();
     visao = v;
     pagina.querySelectorAll('[data-visao]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.visao === v)));
-    if (!inicial) history.replaceState(null, '', ROTA + '?visao=' + v + (v === 'consumo' ? '&periodo=ano' : ''));
-    else if (v === 'consumo' && ![...q0.keys()].some((k) => k !== 'visao')) history.replaceState(null, '', ROTA + '?visao=consumo&periodo=ano');
+    if (!inicial) trocarEndereco(ROTA, ROTA + '?visao=' + v + (v === 'consumo' ? '&periodo=ano' : ''));
+    else if (v === 'consumo' && ![...q0.keys()].some((k) => k !== 'visao')) trocarEndereco(ROTA, ROTA + '?visao=consumo&periodo=ano');
     atual = v === 'custos' ? montarCustos() : montarConsumo();
   }
   // ======================================================================== ORÇAMENTOS

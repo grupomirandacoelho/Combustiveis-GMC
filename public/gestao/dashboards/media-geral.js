@@ -3,7 +3,7 @@
 //  - combustível começa com todos os tipos de diesel que aparecem na Base (S-10, S-10 aditivado, comum...: lib/dados.js ehDiesel)
 //  - Média real = km ÷ litros; Meta média = km ÷ litros se meta; Economia = litros se meta − litros
 import { carregarDados, fmt, esc, fmtMes, mesDoDia, fmtDia, inicioDoMes, ehDiesel } from '../lib/dados.js';
-import { criarFiltros, statusHtml, htmlApoio, agendador, botoesMaisMenos, metaHtml, faixaMeta, legendaMeta } from '../lib/filtros.js';
+import { criarFiltros, statusHtml, htmlApoio, agendador, botoesMaisMenos, metaHtml, faixaMeta, legendaMeta, trocarEndereco } from '../lib/filtros.js';
 import { graficoPeriodo, htmlMedidor, emAndamento } from '../lib/graficos.js';
 
 const CATEGORIAS = new Set(['3/4', 'BITRUCK', 'CAVALO', 'TOCO', 'TRUCK']);
@@ -54,7 +54,7 @@ export async function montar(ctx) {
   usarDados(dados);
   if (!location.hash.includes('?')) {
     const diesels = [...new Set(dados.linhas.map((l) => l.combustivel).filter(ehDiesel))].sort();
-    history.replaceState(null, '', ROTA + '?' + diesels.map((c) => 'combustivel=' + encodeURIComponent(c)).join('&'));
+    trocarEndereco(ROTA, ROTA + '?' + diesels.map((c) => 'combustivel=' + encodeURIComponent(c)).join('&'));
   }
 
   let filtradas = base;

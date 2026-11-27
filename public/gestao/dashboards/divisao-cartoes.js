@@ -369,14 +369,17 @@ export async function montar(ctx) {
   // ---------- altura da lista de fornecedores: lado a lado com a matriz, a mesma altura dela (a lista rola dentro);
   // um embaixo do outro (tela estreita), até 520 px ----------
   function ajustarAltura() {
-    const mat = el('dc-matriz').closest('section'), forn = el('dc-forn').closest('section'), rol = el('dc-forn').closest('.tabela-rolagem');
+    const matriz = el('dc-matriz'), lista = el('dc-forn');
+    if (!matriz || !lista) return;   // a tela já saiu (erro "closest" de null, 27/11/2026)
+    const mat = matriz.closest('section'), forn = lista.closest('section'), rol = lista.closest('.tabela-rolagem');
     if (!mat || !forn || !rol) return;
     rol.style.maxHeight = '';
     const ladoALado = Math.abs(mat.getBoundingClientRect().top - forn.getBoundingClientRect().top) < 2;
     const resto = forn.offsetHeight - rol.offsetHeight;   // cabeçalho, busca e paginação
     rol.style.maxHeight = (ladoALado ? Math.max(220, mat.offsetHeight - resto) : 520) + 'px';
   }
-  const ro = new ResizeObserver(() => ajustarAltura());
+  let parado = false;   // a tela saiu: chamadas atrasadas não desenham mais (27/11/2026)
+  const ro = new ResizeObserver(() => { if (!parado) ajustarAltura(); });
   ro.observe(el('dc-matriz').closest('section'));
 
   // ---------- ciclo ----------
@@ -395,11 +398,11 @@ export async function montar(ctx) {
   });
   atualizar();
 
-  const aoAtualizarDados = () => carregarDados().then((d) => { usarDados(d); atualizar(); });
+  const aoAtualizarDados = () => carregarDados().then((d) => { if (parado) return; usarDados(d); atualizar(); });
   window.addEventListener('dados-atualizados', aoAtualizarDados);
   // o gráfico do Ticket acompanha a largura da tela
   let tRedim = null;
-  const aoRedimensionar = () => { clearTimeout(tRedim); tRedim = setTimeout(desenharTicket, 150); };
+  const aoRedimensionar = () => { if (parado) return; clearTimeout(tRedim); tRedim = setTimeout(desenharTicket, 150); };
   window.addEventListener('resize', aoRedimensionar);
-  return { desmontar() { window.removeEventListener('dados-atualizados', aoAtualizarDados); window.removeEventListener('resize', aoRedimensionar); ro.disconnect(); filtros.destruir(); } };
+  return { desmontar() { parado = true; clearTimeout(tRedim); clearTimeout(tBusca); window.removeEventListener('dados-atualizados', aoAtualizarDados); window.removeEventListener('resize', aoRedimensionar); ro.disconnect(); filtros.destruir(); } };
 }
