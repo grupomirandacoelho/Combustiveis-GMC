@@ -6,7 +6,7 @@ import { criarFiltros } from '../lib/filtros.js';
 import { confirmar } from '../lib/confirmar.js';
 import { carregarOpcoes, listaEfetiva, temConfig, BOTAO_OPCOES, abrirOpcoes } from '../lib/opcoes.js';
 
-const NOME_ESTADO = { pendente: 'Aguardando gravação', aguardando: 'Planilha aberta no Excel', aplicada: 'Gravada na planilha', erro: 'Erro ao gravar' };
+const NOME_ESTADO = { pendente: 'Aguardando gravação', aguardando: 'Aguardando gravação', aplicada: 'Gravada', erro: 'Erro ao gravar' };
 const emAberto = (a) => a.estado === 'pendente' || a.estado === 'aguardando';
 const semAcento = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const cmp = (a, b) => semAcento(a).localeCompare(semAcento(b), 'pt-BR', { numeric: true, sensitivity: 'base' });
@@ -52,8 +52,7 @@ export async function montar(ctx, tipo) {
   }
   let opc = await opcPronto;
   if (!info.lista) {
-    pagina.innerHTML = '<div class="vazio"><strong>A lista ainda não foi publicada.</strong> O computador da sincronização envia a planilha ' +
-      'de placas e motoristas em instantes; abra esta página de novo daqui a pouco.</div>';
+    pagina.innerHTML = '<div class="vazio"><strong>A lista ainda não está disponível.</strong> Abra esta página de novo daqui a pouco.</div>';
     return {};
   }
   // campos ocultos (matrícula, código Ticket, ID TruckPag) ficam fora da tabela e do formulário; o histórico ainda os mostra
@@ -66,8 +65,8 @@ export async function montar(ctx, tipo) {
   const usuarioDe = (r) => { const d = String(r.usuario ?? '').replace(/\D/g, ''); return d ? d.padStart(6, '0') : ''; };
   let recado = null;   // aviso da última gravação desta tela (ex.: o usuário do motorista novo)
   ctx.definirSub(editar
-    ? 'Planilha de controle de ' + T.varios + '. As alterações feitas aqui são gravadas na planilha pelo computador da sincronização.'
-    : 'Consulta da planilha de controle de ' + T.varios + '.');
+    ? 'Cadastro de ' + T.varios + '. As alterações feitas aqui valem na hora em todo o portal.'
+    : 'Consulta do cadastro de ' + T.varios + '.');
 
   const estado = { busca: '', senhas: false, ordem: { col: tipo === 'placas' ? 'placa' : 'nome', dir: 1 } };
   const temSenhas = campos.some((c) => c.tipo === 'senha');
@@ -194,7 +193,7 @@ export async function montar(ctx, tipo) {
       ...(ehMot ? [['Entraram nos últimos 30 dias', fmt.int(todas.filter((r) => r._ultimo && Date.now() - Date.parse(r._ultimo) < 30 * 864e5).length)]] : []),
       tipo === 'placas' ? ['Desabilitadas / vendidas', fmt.int(todas.filter((r) => r.situacao === 'DESABILITADA').length) + ' / ' + fmt.int(todas.filter((r) => r.situacao === 'VENDIDO').length)] : ['Sem senha Ticket', fmt.int(todas.filter((r) => !r.senhaTicket).length)],
       // data no número e a hora embaixo (no padrão com o valor embaixo do rótulo, data e hora juntas vazavam; 26/11/2026)
-      [info.fonte === 'banco' ? 'Lista do banco de dados, atualizada em' : 'Lista lida da planilha em', at ? at.toLocaleDateString('pt-BR') : '—',
+      [info.fonte === 'banco' ? 'Lista do banco de dados, atualizada em' : 'Lista atualizada em', at ? at.toLocaleDateString('pt-BR') : '—',
         at ? 'às ' + at.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : ''],
     ];
     $('cd-resumo').innerHTML = resumo.map(([d, v, det]) => '<div><dt>' + esc(d) + '</dt><dd><span class="num">' + esc(v) + '</span>' + (det ? '<small class="rt-quem">' + esc(det) + '</small>' : '') + '</dd></div>').join('');
@@ -211,9 +210,9 @@ export async function montar(ctx, tipo) {
     const salvo = ultimoSalvo && linhas().find((r) => (r._pendente && r._pendente.id === ultimoSalvo.id) || chaveNorm(r[K]) === ultimoSalvo.chave);
     const escondido = salvo && (!filtros.passa(salvo, null) || (t && !busca(salvo))) ? salvo : null;
     const avisos = [];
-    if (noExcel) avisos.push(noExcel + (noExcel === 1 ? ' alteração espera' : ' alterações esperam') + ' a planilha de placas e motoristas ser fechada no Excel para ser gravada.');
-    else if (pend.length) avisos.push(pend.length + (pend.length === 1 ? ' alteração sendo gravada' : ' alterações sendo gravadas') + ' na planilha. A lista é atualizada logo em seguida.');
-    else if (gravadas) avisos.push((gravadas === 1 ? 'Alteração gravada' : 'Alterações gravadas') + ' na planilha. A lista é atualizada em instantes.');
+    if (noExcel) avisos.push(noExcel + (noExcel === 1 ? ' alteração espera' : ' alterações esperam') + ' a gravação.');
+    else if (pend.length) avisos.push(pend.length + (pend.length === 1 ? ' alteração sendo gravada' : ' alterações sendo gravadas') + '. A lista é atualizada logo em seguida.');
+    else if (gravadas) avisos.push((gravadas === 1 ? 'Alteração gravada' : 'Alterações gravadas') + '. A lista é atualizada em instantes.');
     $('cd-pendencias').classList.toggle('oculto', !avisos.length && !escondido && !recado);
     $('cd-pendencias').innerHTML = (avisos.length ? '<svg aria-hidden="true" class="girando"><use href="#i-atualizar"/></svg><span>' + esc(avisos.join(' ')) + '</span>' : '') +
       (recado ? '<span class="cd-escondido"><strong>' + esc(recado) + '</strong> <button type="button" class="link-acao" id="cd-fechar-recado">Ok</button></span>' : '') +
@@ -234,13 +233,13 @@ export async function montar(ctx, tipo) {
     $('cd-tabela').innerHTML = '<thead><tr>' + colunas.map((col) => {
       const ativa = estado.ordem.col === col.id;
       return '<th aria-sort="' + (ativa ? (estado.ordem.dir > 0 ? 'ascending' : 'descending') : 'none') + '"' + (numerico(col) ? ' class="n"' : '') +
-        '><button type="button" data-col="' + col.id + '"' + (col.explica ? ' title="' + (col.tipo === 'calculado' ? 'Calculado na planilha: ' : '') + esc(col.explica) + '"' : '') + '>' +
+        '><button type="button" data-col="' + col.id + '"' + (col.explica ? ' title="' + (col.tipo === 'calculado' ? 'Calculado: ' : '') + esc(col.explica) + '"' : '') + '>' +
         esc(col.rotulo) + (ativa ? '<span class="seta">' + (estado.ordem.dir > 0 ? '▲' : '▼') + '</span>' : '') + '</button></th>';
     }).join('') + (editar ? '<th class="acoes-linha"><span>Ações</span></th>' : '') + '</tr></thead><tbody>' +
       (visiveis.length ? visiveis.map((r, i) => {
         const p = r._pendente;
-        const selo = p ? '<span class="selo-pendente" title="' + esc(p.estado === 'aplicada' ? 'Gravada na planilha; a lista é atualizada em instantes' : NOME_ESTADO[p.estado]) + '">' +
-          (p.estado === 'aguardando' ? 'planilha aberta' : p.estado === 'aplicada' ? 'gravada, atualizando lista' : 'aguardando gravação') + '</span>' : '';
+        const selo = p ? '<span class="selo-pendente" title="' + esc(p.estado === 'aplicada' ? 'Gravada; a lista é atualizada em instantes' : NOME_ESTADO[p.estado]) + '">' +
+          (p.estado === 'aguardando' ? 'aguardando' : p.estado === 'aplicada' ? 'gravada, atualizando lista' : 'aguardando gravação') + '</span>' : '';
         const apagada = tipo === 'placas' && (r.situacao === 'DESABILITADA' || r.situacao === 'VENDIDO');
         return '<tr' + (apagada ? ' class="linha-apagada"' : '') + '>' + colunas.map((col, j) => '<td' + (numerico(col) ? ' class="n"' : col.id === 'nome' ? ' class="trunc"' : col.id === 'usuario' ? ' class="num"' : '') + '>' +
           (j === 0 ? '<strong>' + celula(col, r[col.id], r) + '</strong>' + selo : celula(col, r[col.id], r)) + '</td>').join('') +
@@ -270,7 +269,7 @@ export async function montar(ctx, tipo) {
     $('cd-conta-hist').textContent = alt.length ? fmt.int(alt.length) + ' mais recentes' : '';
     $('cd-historico').innerHTML = alt.length
       ? '<thead><tr><th><span>Quando</span></th><th><span>Quem</span></th><th><span>O que</span></th><th><span>' + esc(campo(K).rotulo) + '</span></th>' +
-        '<th><span>Alteração</span></th><th><span>Gravação na planilha</span></th></tr></thead><tbody>' +
+        '<th><span>Alteração</span></th><th><span>Gravação</span></th></tr></thead><tbody>' +
         alt.map((a) => {
           const q = new Date(a.criado_em);
           const cls = a.estado === 'aplicada' ? 'selo-ok' : a.estado === 'erro' ? 'selo-bloq' : 'selo-espera';
@@ -311,7 +310,7 @@ export async function montar(ctx, tipo) {
     }
     if (c.tipo === 'calculado' || c.tipo === 'leitura') {   // leitura: vem das APIs dos cartões
       return '<label class="campo-form"><span>' + esc(c.rotulo) + '</span><input name="' + c.id + '" readonly tabindex="-1" class="campo-calculado">' +
-        '<small class="nota-campo">' + (c.tipo === 'calculado' ? 'Calculado na planilha: ' : '') + esc(c.explica) + '</small></label>';
+        '<small class="nota-campo">' + (c.tipo === 'calculado' ? 'Calculado: ' : '') + esc(c.explica) + '</small></label>';
     }
     return '<label class="campo-form' + (c.id === 'nome' ? ' largo' : '') + '"><span>' + esc(c.rotulo) + opcional + '</span>' +
       '<input name="' + c.id + '" autocomplete="off" spellcheck="false"' + lista + modo + '>' + dl + dica + '</label>';
@@ -340,9 +339,9 @@ export async function montar(ctx, tipo) {
     });
     $('cd-pessoais-titulo').textContent = editando ? 'Repetir na TruckPag (opcional)' : cartoes ? 'Dados para o usuário e para os cartões' : 'CPF para criar o usuário';
     $('cd-pessoais-explica').textContent = editando
-      ? 'A TruckPag exige CPF e data de nascimento em toda alteração de nome ou senha. Eles vão só para lá e não ficam guardados. Em branco, a alteração fica só no portal e na planilha.'
-      : cartoes ? 'O usuário de acesso do motorista são os 6 primeiros números do CPF. CPF, nascimento e categoria da CNH vão para a Ticket e a TruckPag e são apagados depois: não ficam no portal nem na planilha.'
-        : 'O usuário de acesso do motorista são os 6 primeiros números do CPF. O CPF não fica guardado no portal nem na planilha.';
+      ? 'A TruckPag exige CPF e data de nascimento em toda alteração de nome ou senha. Eles vão só para lá e não ficam guardados. Em branco, a alteração fica só no portal.'
+      : cartoes ? 'O usuário de acesso do motorista são os 6 primeiros números do CPF. CPF, nascimento e categoria da CNH vão para a Ticket e a TruckPag e são apagados depois: não ficam no portal.'
+        : 'O usuário de acesso do motorista são os 6 primeiros números do CPF. O CPF não fica guardado no portal.';
   }
   form.addEventListener('change', (e) => { if (e.target.name === 'cartoes') prepararPessoais(); });
 
@@ -394,8 +393,8 @@ export async function montar(ctx, tipo) {
     $('cd-dlg-titulo').textContent = r ? (tipo === 'placas' ? 'Editar placa ' + r.placa : 'Editar ' + (r.nome || 'motorista')) : T.novo;
     $('cd-salvar').textContent = r ? 'Salvar alteração' : T.novo;
     $('cd-dlg-explica').textContent = r
-      ? 'Só os campos que você mudar são gravados na planilha' + (r.linha ? ' (linha ' + r.linha + ' da aba ' + T.aba + ')' : '') + '.'
-      : 'A linha nova entra no fim da aba ' + T.aba + ' da planilha.';
+      ? 'Só os campos que você mudar são gravados.'
+      : 'O cadastro novo vale na hora em todo o portal.';
     for (const c of campos) {
       if (c.tipo === 'opcao' || c.selecao) prepararSelecao(c, r ? paraCampo(c, r[c.id]) : '', !r);
       else form[c.id].value = r ? paraCampo(c, r[c.id]) : (c.padrao || '');

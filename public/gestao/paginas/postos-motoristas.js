@@ -13,7 +13,7 @@ const semAcento = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
 const chave = (s) => semAcento(s).toUpperCase().replace(/\s+/g, ' ').trim();
 const COMBUSTIVEIS = ['DIESEL S-10 COMUM', 'DIESEL', 'DIESEL S-10 ADITIVADO'];
 const NOME_ACAO = { adicionar: 'Adicionou', editar: 'Editou', bloquear: 'Bloqueou', autorizar: 'Autorizou' };
-const NOME_ESTADO = { pendente: 'Aguardando gravação', aguardando: 'Planilha aberta no Excel', aplicada: 'Gravada na planilha', erro: 'Erro ao gravar' };
+const NOME_ESTADO = { pendente: 'Aguardando gravação', aguardando: 'Aguardando gravação', aplicada: 'Gravada', erro: 'Erro ao gravar' };
 const emAberto = (a) => a.estado === 'pendente' || a.estado === 'aguardando';
 
 function lerCSV(texto) {
@@ -48,7 +48,7 @@ export async function montar(ctx) {
     pagina.innerHTML = '<div class="vazio">' + esc(e.message) + '</div>';
     return {};
   }
-  ctx.definirSub('A lista que os motoristas veem, incluindo os bloqueados. Alterações feitas aqui vão para a planilha de negociações.');
+  ctx.definirSub('A lista que os motoristas veem, incluindo os bloqueados. Alterações feitas aqui viram negociações e valem na hora para os motoristas.');
 
   // nome exibido da unidade -> código da planilha (Belém -> BELEM)
   const codigoUnidade = (nome) => opcoes.unidades.find((u) => chave(u) === chave(nome)) || chave(nome);
@@ -230,13 +230,13 @@ export async function montar(ctx) {
       if (c && !form.latitude.value && !form.longitude.value) { form.latitude.value = valorBR(c[0]); form.longitude.value = valorBR(c[1]); }
     }
     const c = locais[chave(p.posto)];
-    caixa.innerHTML = '<strong>Posto sem negociação: preenchido com os abastecimentos da Base.</strong> ' +
+    caixa.innerHTML = '<strong>Posto sem negociação: preenchido com os abastecimentos.</strong> ' +
       esc(fmt.int(p.n)) + (p.n === 1 ? ' abastecimento' : ' abastecimentos') + ' de diesel' +
       (porUso.length ? ' (' + esc(porUso.map(([u, q]) => u + ': ' + q).join(', ') +
         (p.n > porUso.reduce((s, x) => s + x[1], 0) ? ', outros centros de custo: ' + (p.n - porUso.reduce((s, x) => s + x[1], 0)) : '')) + ')' : '') + '. Último: <strong>R$ ' + esc(fmt.d3(p.preco)) + '</strong> em ' +
       esc(fmtDia(p.dia)) + (p.placa ? ', placa ' + esc(p.placa) : '') + (p.motorista ? ', ' + esc(p.motorista) : '') + (p.cartao ? ', cartão ' + esc(p.cartao) : '') + '.' +
       ' O valor negociado veio do último preço pago: troque pelo preço que você negociou.' +
-      (c ? ' Coordenada do mapa de calor (planilha LOCALIZAÇÃO).' : ' Sem coordenada no mapa de calor.') +
+      (c ? ' Coordenada do mapa de calor.' : ' Sem coordenada no mapa de calor.') +
       ' Escolha também a situação e o tipo.' + avisoNaLista(p.posto) + ' Confira os campos antes de salvar.';
     caixa.classList.remove('oculto');
   }
@@ -273,8 +273,8 @@ export async function montar(ctx) {
     const naLista = postos.find((p) => chave(p.Posto) === chave(n.posto) && chave(codigoUnidade(p.Unidade)) === chave(form.unidade.value));
     caixa.innerHTML = '<strong>Preenchido com a última negociação deste posto</strong> (' + esc(n.unidade) + ', ' + esc(fmtDia(n.dia)) +
       (n.valor ? ', R$ ' + esc(fmt.d3(n.valor)) + '/L' : '') + (n.status ? ', ' + esc(n.status.toLowerCase()) : '') + ').' +
-      (pago ? ' Último preço pago: <strong>R$ ' + esc(fmt.d3(pago.preco)) + '</strong> em ' + esc(fmtDia(pago.dia)) + '.' : ' Sem abastecimento de diesel nele na Base.') +
-      (c ? ' Coordenada da planilha LOCALIZAÇÃO.' : '') +
+      (pago ? ' Último preço pago: <strong>R$ ' + esc(fmt.d3(pago.preco)) + '</strong> em ' + esc(fmtDia(pago.dia)) + '.' : ' Sem abastecimento de diesel nele.') +
+      (c ? ' Coordenada cadastrada do posto.' : '') +
       (lista.length > 1 ? ' Também negociado em: ' + esc(lista.filter((x) => x !== n).map((x) => x.unidade).join(', ')) + ' (troque a unidade para usar a negociação dela).' : '') +
       (naLista ? '<br><span class="aviso-linha">Este posto já está na lista de ' + esc(naLista.Unidade) + ' como ' + esc(naLista.Status.toLowerCase()) +
         ': use "Editar" ou "Autorizar" na tabela em vez de adicionar de novo.</span>' : '') +
@@ -302,11 +302,11 @@ export async function montar(ctx) {
     const pago = abastecidos.get(chave(nomeNovo));
     const mudancas = [trocouNome ? 'nome "' + postoOriginal + '" → "' + nomeNovo.toUpperCase() + '"' : '',
       trocouUni ? 'unidade ' + nomeUni(unidadeOriginal) + ' → ' + nomeUni(nova) : ''].filter(Boolean).join('; ');
-    caixa.innerHTML = '<strong>Correção de cadastro: ' + esc(mudancas) + '.</strong> Na planilha de negociações, as linhas deste posto' +
+    caixa.innerHTML = '<strong>Correção de cadastro: ' + esc(mudancas) + '.</strong> Nas negociações, as linhas deste posto' +
       (trocouUni ? ' em ' + esc(nomeUni(unidadeOriginal)) : '') + ' passam a ' + (trocouNome ? 'ter o nome novo' : '') +
       (trocouNome && trocouUni ? ' e a ' : '') + (trocouUni ? 'ser de ' + esc(nomeUni(nova)) : '') + ', e a lista dos motoristas mostra só o cadastro corrigido.' +
-      (trocouNome ? (pago ? ' O nome novo já aparece nos abastecimentos da Base (' + esc(fmt.int(pago.n)) + ', último em ' + esc(fmtDia(pago.dia)) +
-        '): o Preço postos externos passa a ligar a negociação a eles.' : ' <span class="aviso-linha">Ainda não há abastecimento com este nome na Base; confira se está igual ao do portal do cartão.</span>') : '') +
+      (trocouNome ? (pago ? ' O nome novo já aparece nos abastecimentos (' + esc(fmt.int(pago.n)) + ', último em ' + esc(fmtDia(pago.dia)) +
+        '): o Preço postos externos passa a ligar a negociação a eles.' : ' <span class="aviso-linha">Ainda não há abastecimento com este nome; confira se está igual ao do portal do cartão.</span>') : '') +
       (jaExiste ? '<br><span class="aviso-linha">Já existe "' + esc(jaExiste.Posto) + '" na lista de ' + esc(jaExiste.Unidade) + ' (' + esc(jaExiste.Status.toLowerCase()) +
         '): as negociações dos dois ficam juntas e vale esta edição.</span>' : '');
     caixa.classList.remove('oculto');
@@ -394,10 +394,10 @@ export async function montar(ctx) {
     $('pm-pendencias').classList.toggle('oculto', !pend.length);
     $('pm-pendencias').innerHTML = pend.length
       ? '<svg aria-hidden="true" class="girando"><use href="#i-atualizar"/></svg><span>' + esc(noExcel
-        ? noExcel + (noExcel === 1 ? ' alteração espera' : ' alterações esperam') + ' a planilha de negociações ser fechada no Excel para ser gravada.'
+        ? noExcel + (noExcel === 1 ? ' alteração espera' : ' alterações esperam') + ' a gravação.'
         : pend.every((a) => a.estado === 'aplicada')
-          ? (pend.length === 1 ? 'Alteração gravada na planilha' : 'Alterações gravadas na planilha') + '; publicando a lista dos motoristas…'
-          : pend.length + (pend.length === 1 ? ' alteração sendo gravada' : ' alterações sendo gravadas') + ' na planilha. A lista dos motoristas é atualizada logo em seguida.') + '</span>'
+          ? (pend.length === 1 ? 'Alteração gravada' : 'Alterações gravadas') + '; publicando a lista dos motoristas…'
+          : pend.length + (pend.length === 1 ? ' alteração sendo gravada' : ' alterações sendo gravadas') + '. A lista dos motoristas é atualizada logo em seguida.') + '</span>'
       : '';
 
     const t = semAcento(estado.busca.trim()).toLowerCase();
@@ -433,7 +433,7 @@ export async function montar(ctx) {
         const pe = p.novoPendente ? [{ estado: p.estadoPendente || 'pendente' }] : pendentesDe(p);
         const ult = pe[pe.length - 1];
         const selo = ult ? '<span class="selo-pendente" title="' + esc(NOME_ESTADO[ult.estado]) + '">' +
-          (ult.estado === 'aguardando' ? 'planilha aberta' : ult.estado === 'aplicada' ? 'publicando' : 'aguardando gravação') + '</span>' : '';
+          (ult.estado === 'aguardando' ? 'aguardando' : ult.estado === 'aplicada' ? 'publicando' : 'aguardando gravação') + '</span>' : '';
         const mapa = p.Latitude && p.Longitude
           ? '<a class="btn-linha pm-mapa" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p.Latitude + ',' + p.Longitude) +
             '" title="Abrir a localização no Google Maps"><svg aria-hidden="true"><use href="#i-mapa"/></svg>Ver no mapa</a>'
@@ -458,7 +458,7 @@ export async function montar(ctx) {
 
     $('pm-conta-hist').textContent = alteracoes.length ? fmt.int(alteracoes.length) + ' mais recentes' : '';
     $('pm-historico').innerHTML = alteracoes.length
-      ? '<thead><tr><th><span>Quando</span></th><th><span>Quem</span></th><th><span>O que</span></th><th><span>Posto</span></th><th><span>Gravação na planilha</span></th></tr></thead><tbody>' +
+      ? '<thead><tr><th><span>Quando</span></th><th><span>Quem</span></th><th><span>O que</span></th><th><span>Posto</span></th><th><span>Gravação</span></th></tr></thead><tbody>' +
         alteracoes.map((a) => {
           const q = new Date(a.criado_em);
           const cls = a.estado === 'aplicada' ? 'selo-ok' : a.estado === 'erro' ? 'selo-bloq' : 'selo-espera';
@@ -477,8 +477,8 @@ export async function montar(ctx) {
   const TITULOS = { adicionar: 'Adicionar posto', editar: 'Editar posto', bloquear: 'Bloquear posto', autorizar: 'Autorizar posto' };
   const BOTOES = { adicionar: 'Adicionar posto', editar: 'Salvar alteração', bloquear: 'Bloquear posto', autorizar: 'Autorizar posto' };
   const EXPLICA = {
-    adicionar: 'O posto entra na lista dos motoristas assim que a linha for gravada na planilha de negociações.',
-    editar: 'A alteração vira uma negociação nova na planilha, com a data de hoje.',
+    adicionar: 'O posto entra na lista dos motoristas assim que a negociação for gravada.',
+    editar: 'A alteração vira uma negociação nova, com a data de hoje.',
     bloquear: 'O posto some da lista dos motoristas. Se quiser, deixe um aviso explicando o motivo.',
     autorizar: 'O posto volta a aparecer para os motoristas da unidade.',
   };

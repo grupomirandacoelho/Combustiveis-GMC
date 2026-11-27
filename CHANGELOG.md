@@ -6,6 +6,12 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 27/11/2026
 
+- **Textos sem Base, Base_copia e planilhas** (pedido do usuário): com o vigia desligado, cerca de 220 textos de 38 telas e mensagens
+  foram reescritos. Saíram "Base enviada em", "gravado na Base_copia", "planilha aberta no Excel", "o computador da sincronização
+  grava…", "planilha de controle" e parecidos; no lugar, "Dados atualizados em", "Gravado", "abastecimentos", "histórico" e
+  "cadastro". O aviso "Base desatualizada" saiu dos tipos de notificação (não havia nenhum cadastrado). Continuam com "planilha"
+  só o Exportar (para a Base.xlsx) e os envios de planilha (orçamento, telemetria do PRIME, nota do rateio).
+
 - **Mapa de calor sem erro ao sair da tela; limpeza da migração** (pedido do usuário):
   - ao sair do Mapa de calor, chamadas atrasadas (enquadrar o mapa, mudança de tamanho, recarga dos dados) rodavam com o mapa já
     fora da página e davam erro no console; agora param quando a tela sai;

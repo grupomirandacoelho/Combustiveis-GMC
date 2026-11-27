@@ -49,7 +49,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
   const acao = String(corpo.acao || '');
   if (!['editar', 'adicionar'].includes(acao)) return json({ erro: 'Ação desconhecida.' }, 400);
   const { itens, atualizadoEm } = await lista(env);
-  if (!itens) return json({ erro: 'A lista ainda não foi publicada pelo computador da sincronização. Tente mais tarde.' }, 409);
+  if (!itens) return json({ erro: 'A lista ainda não está disponível. Tente de novo em instantes.' }, 409);
 
   const { dados, erros } = validar(corpo.dados && typeof corpo.dados === 'object' ? corpo.dados : {});
   if (erros.length) return json({ erro: erros.join(' ') }, 400);

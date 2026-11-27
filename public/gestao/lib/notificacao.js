@@ -331,30 +331,7 @@ export const TIPOS = {
         motoristas: [...new Set(ls.map((x) => x.motorista))].slice(0, 4).join(', ') + (ls.length > 4 ? '…' : ''), mais_antigo: fmtData(antigo.criado_em) }) }];
     },
   },
-  'base-desatualizada': {
-    rotulo: 'Base desatualizada', nome: 'Base desatualizada', precisa: null, acesso: null, quem: 'Todos os usuários', acao: null, usa: ['contexto'],
-    campos: [
-      { id: 'planilha', rotulo: 'Planilha', tipo: 'select', opcoes: [['base', 'Base.xlsx'], ['copia', 'Base_copia (CONTROLES)'], ['ambas', 'Qualquer uma das duas']], padrao: 'base' },
-      { id: 'horas', rotulo: 'Avisar depois de (horas sem atualizar)', tipo: 'numero', padrao: 24 },
-    ],
-    variaveis: ['planilha', 'horas', 'desde', 'limite'],
-    mensagem: 'A {planilha} está há {horas} h sem atualizar no portal (última em {desde}). Atualize para os painéis mostrarem os abastecimentos novos.',
-    exemplo: { planilha: 'Base.xlsx', horas: '30', desde: '04/11 09:23', limite: '24 h' },
-    resumo: (c) => ({ base: 'Base.xlsx', copia: 'Base_copia', ambas: 'Base.xlsx ou Base_copia' }[c.planilha] + ' · mais de ' + c.horas + ' h sem atualizar'),
-    avaliar(r, ctx) {
-      const b = ctx.contexto && ctx.contexto.base;
-      if (!b) return null;
-      const c = r.condicao, out = [];
-      const ver = (nome, quando, k) => {
-        if (!quando) return;
-        const h = (Date.now() - new Date(quando).getTime()) / 3600e3;
-        if (h >= c.horas) out.push({ chave: 'r' + r.id + ':' + k, onde: nome, texto: montarTexto(r.mensagem, { planilha: nome, horas: String(Math.floor(h)), desde: fmtData(quando), limite: c.horas + ' h' }) });
-      };
-      if (c.planilha !== 'copia') ver('Base.xlsx', b.baseSalvaEm || b.geradoEm, 'base');
-      if (c.planilha !== 'base') ver('Base_copia', b.copiaEm, 'copia');
-      return out;
-    },
-  },
+  // 'base-desatualizada' saiu em 27/11/2026: com o vigia desligado não há mais Base.xlsx/Base_copia chegando ao portal
   // Aviso personalizado (26/11/2026, pedido do usuário: "uma opção em tipo de aviso para eu criar um tipo de aviso novo e que dê pra
   // eu configurar da forma que eu quiser"; o primeiro: mudanças nos postos, para os encarregados de cada unidade). Duas fontes:
   //  - postos: cada mudança feita nos Postos dos motoristas (adicionado, editado, autorizado, bloqueado, preço da rodada) vira um aviso;

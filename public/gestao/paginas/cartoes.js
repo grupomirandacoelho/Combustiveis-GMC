@@ -5,7 +5,7 @@
 import { carregarDados, esc, fmt, fmtDia } from '../lib/dados.js';
 import { BOTAO_OPCOES, abrirOpcoes } from '../lib/opcoes.js';
 
-const NOME_ESTADO = { pendente: 'Aguardando gravação', aguardando: 'Planilha aberta no Excel', aplicada: 'Gravada na planilha', erro: 'Erro ao gravar' };
+const NOME_ESTADO = { pendente: 'Aguardando gravação', aguardando: 'Aguardando gravação', aplicada: 'Gravada', erro: 'Erro ao gravar' };
 const emAberto = (a) => a.estado === 'pendente' || a.estado === 'aguardando';
 const semAcento = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const cmp = (a, b) => semAcento(a).localeCompare(semAcento(b), 'pt-BR', { numeric: true, sensitivity: 'base' });
@@ -39,9 +39,9 @@ export async function montar(ctx) {
   const comCartao = (p) => !['DESABILITADA', 'VENDIDO'].includes(p.situacao || 'ATIVA') && CATS_CARTAO.has(String(p.categoria || '').toUpperCase());
   const rotuloCartao = Object.fromEntries(CART.map((c) => [c.id, c.rotulo]));
   ctx.definirSub(editar
-    ? 'Planilha CONTROLE CARTÕES FROTA, ligada ao cadastro de placas (placas ativas de cavalo, truck, toco, bitruck e 3/4). ' +
-      'As mudanças feitas aqui são gravadas na planilha pelo computador da sincronização.'
-    : 'Consulta da planilha CONTROLE CARTÕES FROTA, ligada ao cadastro de placas.');
+    ? 'Cartões de cada placa, ligados ao cadastro de placas (placas ativas de cavalo, truck, toco, bitruck e 3/4). ' +
+      'As mudanças feitas aqui valem na hora em todo o portal.'
+    : 'Consulta dos cartões de cada placa, ligados ao cadastro de placas.');
 
   const estado = { busca: '', unidade: '', situacao: '', cartao: '', ordem: { col: 'placa', dir: 1 }, verResolvidos: false };
   let ultimas = null;          // 'mercosul|FORMA' -> {t, dia, seg, motorista}; null enquanto a Base carrega
@@ -69,7 +69,7 @@ export async function montar(ctx) {
         </select></label>
         <span class="conta" id="cf-conta"></span>
       </div>
-      <p class="nota" id="cf-nota-base">Carregando a última transação de cada cartão na Base…</p>
+      <p class="nota" id="cf-nota-base">Carregando a última transação de cada cartão…</p>
       <div class="tabela-rolagem tabela-alta"><table class="dados cf-tabela" id="cf-tabela"></table></div>
     </section>
     ${editar ? `<section class="painel">
@@ -100,7 +100,7 @@ export async function montar(ctx) {
   form.addEventListener('click', (e) => {
     if (!e.target.closest('[data-opcoes]')) return;
     abrirOpcoes({ tela: 'cartoes-frota', titulo: 'Opções do controle de cartões', podeEditar: false,
-      campos: [{ id: 'situacao', rotulo: 'Situações dos cartões', valores: SIT, fixo: true, explica: 'Gravadas na planilha CONTROLE CARTÕES FROTA e usadas nos avisos: não mudam por aqui.' },
+      campos: [{ id: 'situacao', rotulo: 'Situações dos cartões', valores: SIT, fixo: true, explica: 'Usadas nos avisos: não mudam por aqui.' },
         { id: 'categoria', rotulo: 'Categorias que entram no controle', valores: [...CATS_CARTAO], fixo: true, explica: 'As categorias do cadastro de placas que precisam de cartão. A categoria em si se configura no cadastro de placas.' }] });
   });
 
@@ -208,9 +208,9 @@ export async function montar(ctx) {
     if (ultimas === null) ult = '<small class="cf-ult">…</small>';
     else if (!semColunaCartao && !erroBase) {
       const u = ultimaTransacao(r, c);
-      ult = u ? '<small class="cf-ult" title="Última transação com este cartão na Base">' + esc(fmtDia(u.dia) + horaDoDia(u.seg)) +
+      ult = u ? '<small class="cf-ult" title="Última transação com este cartão">' + esc(fmtDia(u.dia) + horaDoDia(u.seg)) +
           '<span class="cf-ult-mot">' + esc(u.motorista) + '</span></small>'
-        : '<small class="cf-ult cf-ult-nenhuma">sem transação na Base</small>';
+        : '<small class="cf-ult cf-ult-nenhuma">sem transação</small>';
     }
     return sel + alerta + ult;
   }
@@ -230,23 +230,23 @@ export async function montar(ctx) {
       ['Placas', fmt.int(todas.length)], ['Avisos em aberto', fmt.int(abertos)],
       ...(todas.some((r) => r.foraCadastro) ? [['Fora do cadastro de placas', fmt.int(todas.filter((r) => r.foraCadastro).length)]] : []),
       ...SIT.map((s) => [s.charAt(0) + s.slice(1).toLowerCase(), fmt.int(conta(s))]),
-      ['Lista lida da planilha em', at ? at.toLocaleDateString('pt-BR') + ' ' + at.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'],
+      ['Lista atualizada em', at ? at.toLocaleDateString('pt-BR') + ' ' + at.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'],
     ].map(([d, v]) => '<div><dt>' + esc(d) + '</dt><dd><span class="num">' + esc(v) + '</span></dd></div>').join('');
 
     const pend = info.alteracoes.filter(emAberto);
     const noExcel = pend.filter((a) => a.estado === 'aguardando').length;
     const gravadas = info.alteracoes.filter(semListaNova).length;
-    const aviso = noExcel ? noExcel + (noExcel === 1 ? ' alteração espera' : ' alterações esperam') + ' a planilha dos cartões ser fechada no Excel para ser gravada.'
-      : pend.length ? pend.length + (pend.length === 1 ? ' alteração sendo gravada' : ' alterações sendo gravadas') + ' na planilha. A lista é atualizada logo em seguida.'
-      : gravadas ? (gravadas === 1 ? 'Alteração gravada' : 'Alterações gravadas') + ' na planilha. A lista é atualizada em instantes.' : '';
+    const aviso = noExcel ? noExcel + (noExcel === 1 ? ' alteração espera' : ' alterações esperam') + ' a gravação.'
+      : pend.length ? pend.length + (pend.length === 1 ? ' alteração sendo gravada' : ' alterações sendo gravadas') + '. A lista é atualizada logo em seguida.'
+      : gravadas ? (gravadas === 1 ? 'Alteração gravada' : 'Alterações gravadas') + '. A lista é atualizada em instantes.' : '';
     $('cf-pendencias').classList.toggle('oculto', !aviso);
     $('cf-pendencias').innerHTML = aviso ? '<svg aria-hidden="true" class="girando"><use href="#i-atualizar"/></svg><span>' + esc(aviso) + '</span>' : '';
 
-    $('cf-nota-base').textContent = !info.lista ? 'A lista da planilha ainda não foi publicada. O computador da sincronização envia em instantes; abra esta página de novo daqui a pouco.'
-      : erroBase ? 'Não foi possível ler a Base para a última transação: ' + erroBase
-      : semColunaCartao ? 'A última transação de cada cartão aparece depois da próxima carga da Base (o envio passa a trazer o cartão usado em cada abastecimento).'
-      : ultimas === null ? 'Carregando a última transação de cada cartão na Base…'
-      : 'Embaixo de cada situação: a última transação com aquele cartão na Base (data, hora e motorista).';
+    $('cf-nota-base').textContent = !info.lista ? 'A lista ainda não está disponível; abra esta página de novo daqui a pouco.'
+      : erroBase ? 'Não foi possível ler os abastecimentos para a última transação: ' + erroBase
+      : semColunaCartao ? 'A última transação de cada cartão aparece depois da próxima atualização dos dados.'
+      : ultimas === null ? 'Carregando a última transação de cada cartão…'
+      : 'Embaixo de cada situação: a última transação com aquele cartão (data, hora e motorista).';
 
     const f = valorOrdem[estado.ordem.col];
     visiveis = todas.filter(passa).sort((a, b) => {
@@ -264,12 +264,12 @@ export async function montar(ctx) {
       th('ultima', 'Último uso') + (editar ? '<th class="acoes-linha"><span>Ações</span></th>' : '') + '</tr></thead><tbody>' +
       (visiveis.length ? visiveis.map((r, i) => {
         const p = r._pendente;
-        const selo = p ? '<span class="selo-pendente" title="' + esc(p.estado === 'aplicada' ? 'Gravada na planilha; a lista é atualizada em instantes' : NOME_ESTADO[p.estado]) + '">' +
-          (p.estado === 'aguardando' ? 'planilha aberta' : p.estado === 'aplicada' ? 'gravada, atualizando lista' : 'aguardando gravação') + '</span>' : '';
+        const selo = p ? '<span class="selo-pendente" title="' + esc(p.estado === 'aplicada' ? 'Gravada; a lista é atualizada em instantes' : NOME_ESTADO[p.estado]) + '">' +
+          (p.estado === 'aguardando' ? 'aguardando' : p.estado === 'aplicada' ? 'gravada, atualizando lista' : 'aguardando gravação') + '</span>' : '';
         const ult = ultimoUso(r);
         return '<tr' + (r.alertas.length ? ' class="cf-linha-alerta"' : r._entrando ? ' class="linha-apagada"' : '') + '>' +
           '<td><strong>' + esc(r.placa) + '</strong>' + selo +
-            (r._entrando ? '<span class="selo-pendente" title="Placa ativa no cadastro de placas; o computador da sincronização inclui na planilha dos cartões em instantes">entrando no controle</span>' : '') +
+            (r._entrando ? '<span class="selo-pendente" title="Placa ativa no cadastro de placas; entra na lista dos cartões em instantes">entrando no controle</span>' : '') +
             (r.foraCadastro ? '<small class="cidade-linha cf-fora" title="Esta placa não está no cadastro de placas. Ela fica no controle até ser cadastrada.">fora do cadastro de placas</small>' : '') + '</td>' +
           '<td>' + (r.unidade ? esc(r.unidade) : '<span class="sem-dado">—</span>') + '</td>' +
           CART.map((c) => '<td class="cf-cel">' + celulaCartao(r, c) + '</td>').join('') +
@@ -292,7 +292,7 @@ export async function montar(ctx) {
       return '<li class="cf-alerta' + (a.estado === 'resolvido' ? ' cf-alerta-resolvido' : '') + '">' +
         '<div class="cf-alerta-txt"><strong>' + esc(a.placa) + ' · falta ' + esc(a.cartoes.map((c) => rotuloCartao[c] || c).join(', ')) + '</strong>' +
         '<small>' + esc('Aviso de ' + a.motorista + (a.telefone ? ' (' + a.telefone + ')' : '') + ' em ' + quando(a.criado_em)) +
-          (naLista ? '' : ' · placa fora da planilha dos cartões') + '</small>' +
+          (naLista ? '' : ' · placa fora da lista dos cartões') + '</small>' +
         (a.observacao ? '<small class="cf-alerta-obs">“' + esc(a.observacao) + '”</small>' : '') +
         (a.estado === 'resolvido' ? '<small>' + esc('Resolvido por ' + (a.resolvido_por || '—') + ' em ' + quando(a.resolvido_em)) + '</small>' : '') + '</div>' +
         (editar ? '<div class="cf-alerta-acoes">' + (a.estado === 'aberto'
@@ -345,7 +345,7 @@ export async function montar(ctx) {
     const alt = info.alteracoes;
     $('cf-conta-hist').textContent = alt.length ? fmt.int(alt.length) + ' mais recentes' : '';
     $('cf-historico').innerHTML = alt.length
-      ? '<thead><tr><th><span>Quando</span></th><th><span>Quem</span></th><th><span>Placa</span></th><th><span>Alteração</span></th><th><span>Gravação na planilha</span></th></tr></thead><tbody>' +
+      ? '<thead><tr><th><span>Quando</span></th><th><span>Quem</span></th><th><span>Placa</span></th><th><span>Alteração</span></th><th><span>Gravação</span></th></tr></thead><tbody>' +
         alt.map((a) => {
           const cls = a.estado === 'aplicada' ? 'selo-ok' : a.estado === 'erro' ? 'selo-bloq' : 'selo-espera';
           // troca do nome da placa (ex.: antiga -> Mercosul, 13/11/2026) + mudanças de situação dos cartões
@@ -371,7 +371,7 @@ export async function montar(ctx) {
     $('cf-dlg-titulo').textContent = r ? 'Cartões da placa ' + r.placa : 'Adicionar placa';
     $('cf-salvar').textContent = r ? 'Salvar' : 'Adicionar placa';
     $('cf-dlg-explica').textContent = (alerta ? 'Aviso de ' + alerta.motorista + ': falta ' + alerta.cartoes.map((c) => rotuloCartao[c]).join(', ') + '. ' : '') +
-      (r ? 'Só os cartões que você mudar são gravados na planilha' + (r.linha ? ' (linha ' + r.linha + ' da aba CARTÕES)' : '') + '.'
+      (r ? 'Só os cartões que você mudar são gravados' + (r.linha ? ' (linha ' + r.linha + ' da aba CARTÕES)' : '') + '.'
         : 'Placas do cadastro de placas (ativas, de cavalo, truck, toco, bitruck e 3/4) entram e saem sozinhas. ' +
           'Use aqui só para caminhão que ainda não está no cadastro; ele entra no fim da aba CARTÕES.');
     for (const c of CART) {

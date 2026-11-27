@@ -50,7 +50,7 @@ export async function montar(ctx) {
     return {};
   }
   if (!dados.negociacao.length) {
-    pagina.innerHTML = '<div class="vazio">As negociações da bomba interna ainda não chegaram ao site. Rode a sincronização da Base.</div>';
+    pagina.innerHTML = '<div class="vazio">As negociações da bomba interna ainda não chegaram ao site. Tente de novo em alguns minutos.</div>';
     return {};
   }
   const podeEditar = infoBomba.podeEditar;
@@ -141,7 +141,7 @@ export async function montar(ctx) {
     <dialog class="dialogo" id="pf-dlg-neg" aria-labelledby="pf-dlg-neg-titulo">
       <form method="dialog" id="pf-form-neg" novalidate>
         <h2 id="pf-dlg-neg-titulo">Lançar negociação</h2>
-        <p class="dialogo-explica">Preço por litro de cada fornecedor no dia. Só os preenchidos são gravados na planilha de negociações.
+        <p class="dialogo-explica">Preço por litro de cada fornecedor no dia. Só os preenchidos são gravados nas negociações.
           No Arla o preço já vem com o último (ele se repete todo dia até mudar); no diesel, preencha o do dia.</p>
         <p class="erro-form oculto" id="pf-erro-neg" role="alert"></p>
         <div class="grade-form">
@@ -160,7 +160,7 @@ export async function montar(ctx) {
       <form method="dialog" id="pf-form-forn" novalidate>
         ${BOTAO_OPCOES}
         <h2 id="pf-dlg-forn-titulo">Novo fornecedor</h2>
-        <p class="dialogo-explica">Entra na aba Fornecedores da planilha de negociações e passa a aparecer no lançamento do produto e das unidades marcadas.</p>
+        <p class="dialogo-explica">Entra na lista de fornecedores e passa a aparecer no lançamento do produto e das unidades marcadas.</p>
         <p class="erro-form oculto" id="pf-erro-forn" role="alert"></p>
         <div class="grade-form">
           <label class="campo-form largo"><span>Fornecedor</span><input name="fornecedor" maxlength="60" autocomplete="off" placeholder="Nome como aparece na negociação"></label>
@@ -183,7 +183,7 @@ export async function montar(ctx) {
     if (!e.target.closest('[data-opcoes]')) return;
     abrirOpcoes({ tela: 'preco-fornecedor', titulo: 'Opções do cadastro de fornecedores', podeEditar: opc.podeEditar,
       campos: [{ id: 'unidade', rotulo: 'Unidades (praças)', valores: unidadesForm(), configurado: temConfig(opc, 'unidade'),
-        explica: 'Use o nome da praça como na planilha de negociações (ex.: JEQUIE, SP, BELEM).' },
+        explica: 'Use o nome da praça como nas negociações (ex.: JEQUIE, SP, BELEM).' },
         { id: 'produto', rotulo: 'Produtos', valores: ['Diesel', 'Arla 32'], fixo: true }],
       aoSalvar: (novos) => { opc = { ...opc, opcoes: { ...opc.opcoes, ...novos } }; } });
   });
@@ -431,7 +431,7 @@ export async function montar(ctx) {
         return '<tr><td>' + esc(fmtDia(d)) + '</td>' + pts.map((p) => {
           const v = p ? p.preco : null;
           return '<td class="n' + (v === min ? ' menor-dia' : '') + '">' + (v === null ? '<span class="sem-dado">—</span>' : esc(preco(v)) + (v === min ? '<span class="sr"> (menor do dia)</span>' : '') +
-            (p.pendente ? '<small class="cidade-linha pf-pendente" title="Lançado no site; o computador da sincronização grava na planilha">' + (p.pendente === 'aplicada' ? 'gravado' : 'aguardando gravação') + '</small>' : '')) + '</td>';
+            (p.pendente ? '<small class="cidade-linha pf-pendente" title="Lançado no site; aguardando gravação">' + (p.pendente === 'aplicada' ? 'gravado' : 'aguardando gravação') + '</small>' : '')) + '</td>';
         }).join('') + '</tr>';
       }).join('') + '</tbody>';
   }
@@ -491,7 +491,7 @@ export async function montar(ctx) {
       (podeEditar ? '<th class="acoes-linha"><span>Ações</span></th>' : '') + '</tr></thead><tbody>' +
       ls.map((x, i) => '<tr><td><strong>' + esc(x.f) + '</strong></td><td>' + esc(nomeProduto(x.p)) + '</td><td>' + esc(nomeUnidade(x.u)) + '</td>' +
         '<td>' + (x.cnpj ? esc(fmtCnpj(x.cnpj)) : '<span class="sem-dado">sem CNPJ</span>') + '</td>' +
-        '<td>' + (x.ativo ? 'Ativo' : 'Inativo') + (x.pendente ? '<small class="cidade-linha">aguardando gravação na planilha</small>' : '') + '</td>' +
+        '<td>' + (x.ativo ? 'Ativo' : 'Inativo') + (x.pendente ? '<small class="cidade-linha">aguardando gravação</small>' : '') + '</td>' +
         (podeEditar ? '<td class="acoes-linha"><button type="button" class="btn-linha" data-cad="' + i + '">Editar</button></td>' : '') + '</tr>').join('') + '</tbody>';
     el('pf-cadastro').onclick = (e) => {
       const b = e.target.closest('[data-cad]'); if (!b) return;
@@ -554,7 +554,7 @@ export async function montar(ctx) {
       if (ruins.length) { erro('pf-erro-neg', 'Confira o preço de ' + ruins.join(', ') + ' (ex.: 5,2825).'); return; }
       if (!itens.length) { erro('pf-erro-neg', 'Nada mudou: preencha um preço novo ou apague um preço do dia para excluí-lo.'); return; }
       const excl = itens.filter((x) => x.excluir).map((x) => x.fornecedor);
-      if (excl.length && !(await confirmar('Excluir o preço de ' + excl.join(', ') + ' em ' + fmtDia(dia) + '? Ele sai da planilha de negociações.'))) return;
+      if (excl.length && !(await confirmar('Excluir o preço de ' + excl.join(', ') + ' em ' + fmtDia(dia) + '? Ele sai das negociações.'))) return;
       await enviar({ negociacoes: itens }, 'pf-salvar-neg', 'pf-erro-neg', dlgNeg, () => {
         produto = formNeg.produto.value; unidade = formNeg.unidade.value;
       });
@@ -620,8 +620,8 @@ export async function montar(ctx) {
     const pend = infoBomba.alteracoes.filter((a) => a.estado === 'pendente' || a.estado === 'aguardando');
     // "Cancelado: ..." (preço excluído antes de gravar) não é falha: fica fora do aviso
     const erros = infoBomba.alteracoes.filter((a) => a.estado === 'erro' && !/^Cancelado/.test(a.mensagem || ''));
-    caixa.innerHTML = (pend.length ? esc(fmt.int(pend.length)) + (pend.length === 1 ? ' lançamento aguardando' : ' lançamentos aguardando') + ' gravação na planilha' +
-      (pend.some((a) => a.estado === 'aguardando') ? ' (a planilha está aberta no Excel)' : '') + '.' : '') +
+    caixa.innerHTML = (pend.length ? esc(fmt.int(pend.length)) + (pend.length === 1 ? ' lançamento aguardando' : ' lançamentos aguardando') + ' gravação' +
+      (pend.some((a) => a.estado === 'aguardando') ? '' : '') + '.' : '') +
       (erros.length ? ' <span class="aviso-linha">' + esc(fmt.int(erros.length)) + ' não gravado(s): ' + esc(erros[0].mensagem || '') + '</span>' : '');
   }
   // enquanto houver lançamento esperando a planilha, confere a cada 15 s

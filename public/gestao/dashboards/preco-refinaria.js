@@ -475,9 +475,9 @@ export async function montar(ctx) {
       'por ponto de entrega e data de vigência, desde ' + esc(fmtDia(petro.vigenciaMin)) + '. Última vigência: ' + esc(fmtDia(petro.vigenciaMax)) + '. ' +
       'Modalidade usada: EXA (retirada no ponto); onde não há EXA, a próxima disponível. A diferença para o nosso preço inclui tributos (ICMS, PIS/Cofins, CIDE), ' +
       'biodiesel, frete e as margens da distribuidora e do posto. Desde mai/2026 alguns preços da tabela têm desconto de subvenção federal ao diesel ' +
-      '(MP 1.358, MP 1.363 e MP 1.391), por isso há saltos grandes em poucas semanas. O computador da sincronização confere o portal de hora em hora.';
+      '(MP 1.358, MP 1.363 e MP 1.391), por isso há saltos grandes em poucas semanas. A atualização automática confere o portal da Petrobras a cada 3 horas.';
     const g = new Date(dados.geradoEm);
-    ctx.definirSub('Diesel ' + nomeOrigem() + ' contra o preço da Petrobras às distribuidoras (refinaria/terminal mais perto). Base enviada em ' +
+    ctx.definirSub('Diesel ' + nomeOrigem() + ' contra o preço da Petrobras às distribuidoras (refinaria/terminal mais perto). Dados atualizados em ' +
       g.toLocaleDateString('pt-BR') + ' às ' + g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '.');
   }
 

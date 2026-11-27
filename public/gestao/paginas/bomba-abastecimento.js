@@ -8,7 +8,7 @@ import { NOME_TANQUE, COMBUSTIVEL_DO_TANQUE, calcularEstoque, tanqueDe, minutosD
 
 const PLACA_OK = /^[A-Z]{3}\d[A-Z0-9]\d{2}$/;
 const SEM_MOTORISTA = '(sem motorista)';
-const ESTADO = { pendente: 'Aguardando gravação', aguardando: 'Base_copia aberta no Excel', aplicada: 'Gravado na Base_copia', erro: 'Não gravado' };
+const ESTADO = { pendente: 'Aguardando gravação', aguardando: 'Aguardando gravação', aplicada: 'Gravado', erro: 'Não gravado' };
 async function obter(url) {
   const r = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
   if (r.status === 401 || r.redirected) { location.href = '/?entrar=1'; throw new Error('sessão'); }
@@ -73,7 +73,7 @@ export async function montar(ctx) {
         <input type="search" id="ba-busca" placeholder="Placa, motorista, unidade, data…" aria-label="Pesquisar abastecimentos" autocomplete="off">
         <span class="conta" id="ba-conta"></span>
       </div>
-      <p class="nota">Últimos 90 dias. Editar e excluir liberam depois que o abastecimento entra na Base_copia.</p>
+      <p class="nota">Últimos 90 dias. Editar e excluir liberam depois que o abastecimento é gravado.</p>
       <div class="tabela-rolagem"><table class="dados" id="ba-lista"></table></div>
     </section>
     <dialog class="dialogo" id="ba-dlg-novo" aria-labelledby="ba-novo-titulo">
@@ -103,7 +103,7 @@ export async function montar(ctx) {
     <dialog class="dialogo" id="ba-dlg" aria-labelledby="ba-dlg-titulo">
       <form id="ba-form-ed" novalidate>
         <h2 id="ba-dlg-titulo">Editar abastecimento</h2>
-        <p class="dialogo-explica">A correção vai para a Base_copia pela mesma fila do "Editar abastecimentos". Se mudar o KM, a placa, o
+        <p class="dialogo-explica">A correção vai para os abastecimentos pela mesma fila do "Editar abastecimentos". Se mudar o KM, a placa, o
           combustível ou a data, o km rodado do próximo abastecimento da placa também é refeito.</p>
         <p class="erro-form oculto" id="ba-ed-erro" role="alert"></p>
         <div class="grade-form">
@@ -125,7 +125,7 @@ export async function montar(ctx) {
   if (!pode || !bases.length) return {};
   const el = (id) => pagina.querySelector('#' + id);
   const f = el('ba-form');
-  ctx.definirSub('Lança os abastecimentos das bombas internas direto na Base_copia, como o Consolidador.');
+  ctx.definirSub('Lança os abastecimentos das bombas internas direto nos abastecimentos do portal, como o Consolidador.');
   let modo = 'rapido', tanque = null;
 
   function desenharCombustivel() {
@@ -157,7 +157,7 @@ export async function montar(ctx) {
           (rod !== null ? ' · rodou <strong class="' + (rod < 0 ? 'neg-txt' : '') + '">' + num(rod) + ' km</strong>' + (rod > 0 && litros > 0 ? ' · média <strong>' + num(rod / litros, 2) + ' km/L</strong>' : '') : ''));
         if (rod !== null && rod < 0) partes.push('<span class="aviso-linha">O KM está menor que o do último abastecimento desta placa: confira.</span>');
         if (rod !== null && rod > 3000) partes.push('<span class="aviso-linha">Mais de 3.000 km desde o último abastecimento: confira o KM.</span>');
-      } else partes.push('Sem abastecimento anterior de ' + NOME_TANQUE[tanque] + ' para ' + esc(placa) + ' na Base: o KM rodado fica em branco.');
+      } else partes.push('Sem abastecimento anterior de ' + NOME_TANQUE[tanque] + ' para ' + esc(placa) + ' nos abastecimentos: o KM rodado fica em branco.');
     } else if (f.placa.value && !PLACA_OK.test(placa)) partes.push('<span class="aviso-linha">Placa no formato ABC1234 ou ABC1D23.</span>');
     if (e && litros > 0 && litros > e.volume) partes.push('<span class="aviso-linha">A litragem passa do estoque calculado do tanque.</span>');
     el('ba-resumo').innerHTML = partes.map((p) => '<p>' + p + '</p>').join('');
@@ -224,17 +224,17 @@ export async function montar(ctx) {
     const est = estoqueAgora();
     const preco = est && est.preco !== null ? Math.round(est.preco * 10000) / 10000 : null;
     const btn = el('ba-salvar');
-    btn.disabled = true; btn.textContent = historico ? 'Lançando…' : 'Preparando o histórico da Base…';
+    btn.disabled = true; btn.textContent = historico ? 'Lançando…' : 'Preparando o histórico dos abastecimentos…';
     try {
       if (historico && historico.erro) preparar = buscarHistorico();   // falhou antes: tenta de novo
       await preparar;
-      if (!historico || historico.erro) throw new Error('Não foi possível carregar o histórico da Base' + (historico && historico.erro ? ': ' + historico.erro.replace(/\.$/, '') : '') + '. Recarregue a página em alguns minutos.');
+      if (!historico || historico.erro) throw new Error('Não foi possível carregar o histórico dos abastecimentos' + (historico && historico.erro ? ': ' + historico.erro.replace(/\.$/, '') : '') + '. Recarregue a página em alguns minutos.');
       if (!baseHist) baseHist = CORE.carregarHistorico(historico);
       const ev = CORE.eventoManual({ quando: q, placa, km, litros, combustivel: COMBUSTIVEL_DO_TANQUE[tanque], posto: b.posto, motorista, preco });
       // consolidar() acrescenta o evento ao histórico em memória (cadeia de KM): em caso de falha o histórico é refeito
       let r;
       try { r = CORE.consolidar({ base: baseHist, manuais: [ev] }); } catch (x) { baseHist = null; throw x; }
-      if (r.duplicados.length || !r.eventos.length) throw new Error('Já existe um abastecimento de ' + placa + ' com o KM ' + num(km) + ' e este combustível (na Base ou lançado agora).');
+      if (r.duplicados.length || !r.eventos.length) throw new Error('Já existe um abastecimento de ' + placa + ' com o KM ' + num(km) + ' e este combustível (nos abastecimentos ou lançado agora).');
       const pronto = r.eventos[0];
       const linha = ['MANUAL', ...CORE.buildRow(pronto)];
       const resp = await fetch('/api/bomba/abastecimentos', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
@@ -253,7 +253,7 @@ export async function montar(ctx) {
       dlgNovo.close();
       mensagem('<p class="ba-ok"><strong>Lançado:</strong> ' + esc(placa) + ', ' + num(litros, 2) + ' L de ' + NOME_TANQUE[tanque] + ' em ' + esc(fmtQuando(q)) +
         (typeof rodado === 'number' ? ', ' + num(rodado) + ' km rodados' : '') +
-        '. O computador da sincronização grava na Base_copia em instantes.</p>');
+        '. A gravação leva alguns instantes.</p>');
       desenharLista();
       vigiar();
       botaoNovo.focus();
@@ -268,8 +268,8 @@ export async function montar(ctx) {
   const emEspera = (e) => !e || e === 'pendente' || e === 'aguardando';
   function situacao(a) {
     if (a.excluido) {
-      if (!a.alt_estado) return '<span class="ea-st ea-st-excluir">Excluído</span><small class="cidade-linha">não estava na Base_copia</small>';
-      return '<span class="ea-st ea-st-' + esc(a.alt_estado) + '">' + (emEspera(a.alt_estado) ? 'Exclusão aguardando gravação' : a.alt_estado === 'aplicada' ? 'Excluído da Base_copia' : 'Exclusão não gravada') + '</span>' +
+      if (!a.alt_estado) return '<span class="ea-st ea-st-excluir">Excluído</span><small class="cidade-linha">ainda não tinha sido gravado</small>';
+      return '<span class="ea-st ea-st-' + esc(a.alt_estado) + '">' + (emEspera(a.alt_estado) ? 'Exclusão aguardando gravação' : a.alt_estado === 'aplicada' ? 'Excluído' : 'Exclusão não gravada') + '</span>' +
         (a.alt_mensagem && a.alt_estado !== 'aplicada' ? '<small class="cidade-linha">' + esc(a.alt_mensagem) + '</small>' : '');
     }
     if (a.alt_acao === 'editar' && a.alt_estado && a.alt_estado !== 'aplicada') {
@@ -304,7 +304,7 @@ export async function montar(ctx) {
     }) : todos;
     el('ba-conta').textContent = termos.length ? num(visiveis.length) + ' de ' + num(todos.length) : num(ativos) + (ativos === 1 ? ' abastecimento' : ' abastecimentos');
     el('ba-lista').innerHTML = '<thead><tr><th><span>Data e hora</span></th><th><span>Unidade</span></th><th><span>Combustível</span></th><th><span>Placa</span></th>' +
-      '<th class="n"><span>KM</span></th><th class="n"><span>Litros</span></th><th class="n"><span>R$/L</span></th><th><span>Motorista</span></th><th><span>Lançado por</span></th><th><span>Base_copia</span></th>' +
+      '<th class="n"><span>KM</span></th><th class="n"><span>Litros</span></th><th class="n"><span>R$/L</span></th><th><span>Motorista</span></th><th><span>Lançado por</span></th><th><span>Gravação</span></th>' +
       '<th class="acoes-linha"><span>Ações</span></th></tr></thead><tbody>' +
       (visiveis.length ? visiveis.map((a) => '<tr class="' + (a.excluido ? 'linha-apagada' : '') + '"><td>' + esc(fmtQuando(a.quando)) + '</td><td>' + esc(nomeBase(a.base_id)) + '</td><td>' + esc(NOME_TANQUE[a.tanque]) + '</td>' +
         '<td><strong>' + esc(a.placa) + '</strong></td><td class="n">' + num(a.km) + '</td><td class="n">' + num(a.litros, 2) + '</td><td class="n">' + (a.preco ? num(a.preco, 2) : '—') + '</td>' +
@@ -395,7 +395,7 @@ export async function montar(ctx) {
   async function prepararMotor() {
     if (historico && historico.erro) preparar = buscarHistorico();
     await preparar;
-    if (!historico || historico.erro) throw new Error('Não foi possível carregar o histórico da Base' + (historico && historico.erro ? ': ' + historico.erro.replace(/\.$/, '') : '') + '. Recarregue a página em alguns minutos.');
+    if (!historico || historico.erro) throw new Error('Não foi possível carregar o histórico dos abastecimentos' + (historico && historico.erro ? ': ' + historico.erro.replace(/\.$/, '') : '') + '. Recarregue a página em alguns minutos.');
   }
 
   fe.addEventListener('submit', async (e) => {
@@ -436,8 +436,8 @@ export async function montar(ctx) {
         linha_planilha: viz.linha, vizinhos: viz.vizinhos });
       dlg.close();
       mensagem('<p class="ba-ok"><strong>Correção salva:</strong> ' + esc(placa) + ' em ' + esc(fmtQuando(q)) +
-        (viz.vizinhos.length ? ' (e o km rodado de ' + viz.vizinhos.length + ' abastecimento(s) seguinte(s) da placa)' : '') + '. O computador da sincronização grava na Base_copia em instantes.' +
-        (viz.semLista && mexeuCadeia ? ' Não consegui ler a lista da Base_copia: confira o km rodado do próximo abastecimento desta placa em Editar abastecimentos.' : '') + '</p>');
+        (viz.vizinhos.length ? ' (e o km rodado de ' + viz.vizinhos.length + ' abastecimento(s) seguinte(s) da placa)' : '') + '. A gravação leva alguns instantes.' +
+        (viz.semLista && mexeuCadeia ? ' Não consegui ler a lista dos abastecimentos: confira o km rodado do próximo abastecimento desta placa em Editar abastecimentos.' : '') + '</p>');
     } catch (err) {
       if (err.message !== 'sessão') falhaEd(err.message);
     } finally {
@@ -448,13 +448,13 @@ export async function montar(ctx) {
   async function excluirLancamento(a) {
     const gravado = a.estado === 'aplicada';
     if (!await confirmar('Excluir o abastecimento de ' + a.placa + ' (' + fmtQuando(a.quando) + ', ' + num(a.litros, 2) + ' L)?' +
-      (gravado ? '\nA linha sai da Base_copia e o km rodado do próximo abastecimento da placa é refeito.' : '\nEle não chegou a ser gravado na Base_copia; só sai do site.'))) return;
+      (gravado ? '\nA linha sai dos abastecimentos e o km rodado do próximo abastecimento da placa é refeito.' : '\nEle não chegou a ser gravado; só sai do site.'))) return;
     try {
       if (gravado) await prepararMotor();   // normKey/normFuel para achar a cadeia na lista da Base_copia
       const viz = gravado ? await vizinhosDe(a, null) : { linha: null, vizinhos: [] };
       await enviarCorrecao({ id: a.id, acao: 'excluir', linha_planilha: viz.linha, vizinhos: viz.vizinhos });
       mensagem('<p class="ba-ok"><strong>Excluído:</strong> ' + esc(a.placa) + ' em ' + esc(fmtQuando(a.quando)) +
-        (gravado ? '. O computador da sincronização tira a linha da Base_copia em instantes.' : '.') + '</p>');
+        (gravado ? '. A linha sai dos abastecimentos em instantes.' : '.') + '</p>');
     } catch (err) {
       if (err.message !== 'sessão') alert(err.message);
     }

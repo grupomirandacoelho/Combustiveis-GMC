@@ -21,7 +21,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
   if (!linhas.length) return json({ erro: 'Nenhum abastecimento para gravar.' }, 400);
   if (linhas.some((l) => !Array.isArray(l) || l.length !== 49 || !FONTES.has(l[0]) ||
       l.slice(1).some((v) => v !== null && !['string', 'number'].includes(typeof v)))) {
-    return json({ erro: 'Linhas fora do formato da Base (48 colunas). Recarregue a página e processe de novo.' }, 400);
+    return json({ erro: 'Linhas fora do formato dos abastecimentos (48 colunas). Recarregue a página e processe de novo.' }, 400);
   }
   const chaves = (Array.isArray(d.chaves) ? d.chaves : []).filter((c) => Array.isArray(c) && typeof c[0] === 'string').slice(0, 5000);
   const resumo = d.resumo && typeof d.resumo === 'object' ? d.resumo : {};

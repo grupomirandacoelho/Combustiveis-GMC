@@ -31,7 +31,7 @@ function carregarBruto() {
     const base = fetch('/gestao/dados/abastecimentos.json', { credentials: 'same-origin' })
       .then(async (r) => {
         if (r.status === 401 || r.redirected) { location.href = '/?entrar=1'; throw new Error('sessão'); }
-        if (r.status === 503) throw new Error('Os dados ainda não foram enviados para o site. Rode a sincronização da Base.');
+        if (r.status === 503) throw new Error('Os dados ainda não foram gerados. Tente de novo em alguns minutos.');
         if (!r.ok) throw new Error('Não foi possível carregar os dados (' + r.status + ').');
         // versão = ETag (sem aspas), a mesma que o /api/dados/versao devolve: com os dados do banco ela junta a versão dos
         // abastecimentos e a das partes (negociações, coordenadas, orçamento); com a planilha é a versão da carga do vigia

@@ -96,7 +96,7 @@ export async function montar(ctx) {
         modelo: v.modelo || '', unidade: v.unidade || '', categoria: v.categoria || '',
       };
     });
-    ctx.definirSub('Último hodômetro informado nos abastecimentos de cada placa. Base com abastecimentos até ' + fmtDia(d.diaMax) + '.');
+    ctx.definirSub('Último hodômetro informado nos abastecimentos de cada placa. Abastecimentos até ' + fmtDia(d.diaMax) + '.');
   }
   usarDados(dados);
 
@@ -216,8 +216,8 @@ export async function montar(ctx) {
         const ant = ls[i + 1];
         const dif = ant ? l.kmCorrido - ant.kmCorrido : null;   // com a virada marcada, a diferença passa pelo milhão
         const virou = ant && l.kmCorrido - l.hodometro > ant.kmCorrido - ant.hodometro;
-        return '<tr><td>' + esc(fmtDia(l.dia) + ' ' + hora(l.seg)) + (l.tempoReal ? '<span class="selo-tempo-real" title="Veio da API do cartão e ainda não está na planilha Base">API</span>' : '') + '</td><td class="n"><strong class="num">' + fmt.int(l.hodometro) + '</strong>' +
-          (l.corrigido ? '<small class="cidade-linha" title="Corrigido no Editar abastecimentos (Base_copia); a Base.xlsx ainda tem o valor antigo">corrigido</small>' : '') +
+        return '<tr><td>' + esc(fmtDia(l.dia) + ' ' + hora(l.seg)) + (l.tempoReal ? '<span class="selo-tempo-real" title="Veio da API do cartão hoje; entra nos abastecimentos no dia seguinte (D-1)">API</span>' : '') + '</td><td class="n"><strong class="num">' + fmt.int(l.hodometro) + '</strong>' +
+          (l.corrigido ? '<small class="cidade-linha" title="Corrigido no Editar abastecimentos">corrigido</small>' : '') +
           (virou ? '<small class="cidade-linha">virou 1 milhão</small>' : '') + '</td>' +
           '<td class="n">' + (dif === null ? '<span class="sem-dado">—</span>' : dif < 0 ? '<span class="var-alerta">' + fmt.int(dif) + ' km</span>' : '+' + fmt.int(dif) + ' km') + '</td>' +
           '<td class="trunc">' + esc(l.fornecedor) + '</td><td class="trunc">' + esc(l.motorista) + '</td></tr>';

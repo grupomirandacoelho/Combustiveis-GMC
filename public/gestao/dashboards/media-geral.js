@@ -47,7 +47,7 @@ export async function montar(ctx) {
     // combustível vazio ou vindo de outro link, entrava na média (10/11/2026)
     base = d.linhas.filter((l) => CATEGORIAS.has(l.categoria) && !/ARLA/i.test(l.combustivel || ''));
     const g = new Date(d.geradoEm);
-    ctx.definirSub('Base enviada em ' + g.toLocaleDateString('pt-BR') + ' às ' +
+    ctx.definirSub('Dados atualizados em ' + g.toLocaleDateString('pt-BR') + ' às ' +
       g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + ', com abastecimentos até ' + fmtDia(d.diaMax) +
       '. Categorias 3/4, bitruck, cavalo, toco e truck.');
   }

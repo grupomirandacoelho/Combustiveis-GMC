@@ -166,7 +166,7 @@ export async function montar(ctx) {
     C = d.linhas.filter((l) => l.abastecimento && ehDiesel(l.combustivel) && d.veiculos[l.placa] && d.veiculos[l.placa].categoria !== 'VENDA')
       .map((l) => Object.assign(Object.create(l), { _cc: l.cc3 || '(sem unidade)', _cat: l.categoria || '(sem categoria)' }));
     const g = new Date(d.geradoEm);
-    ctx.definirSub('Dados reais até ' + fmtDia(d.diaMax) + ' (mês ' + fmtMes(mesDoDia(d.diaMax)) + ' parcial). Base enviada em ' + g.toLocaleDateString('pt-BR') +
+    ctx.definirSub('Dados reais até ' + fmtDia(d.diaMax) + ' (mês ' + fmtMes(mesDoDia(d.diaMax)) + ' parcial). Dados atualizados em ' + g.toLocaleDateString('pt-BR') +
       ' às ' + g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + (M ? '. Orçamento: ' + M.arquivo + '.' : '.'));
   }
   usarDados(dados);

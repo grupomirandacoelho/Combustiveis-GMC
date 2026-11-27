@@ -27,7 +27,7 @@ const CAMPO = { E: 'serial', F: 'placa', L: 'mot', O: 'litros', P: 'vl', Q: 'hod
 const ROTULO = { E: 'Data e hora', F: 'Placa', L: 'Motorista', O: 'Litros', P: 'V/litro', Q: 'Hodômetro', R: 'KM rodados', S: 'KM/litro', T: 'Valor total', AB: 'Inf. adicional 1', AD: 'Inf. adicional 3' };
 const PLACA_OK = /^[A-Z]{3}\d[A-Z0-9]\d{2}$/;   // ABC1234 ou ABC1D23
 const limparPlaca = (s) => String(s ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-const NOME_ESTADO = { pendente: 'Aguardando gravação', aguardando: 'Base_copia aberta no Excel', aplicada: 'Gravado na Base_copia', erro: 'Não gravado' };
+const NOME_ESTADO = { pendente: 'Aguardando gravação', aguardando: 'Aguardando gravação', aplicada: 'Gravado', erro: 'Não gravado' };
 const VAZIO = '(vazio)';
 const r6 = (v) => Math.round(v * 1e6) / 1e6;   // como a Base: sem arredondar para 2 casas (só tira o ruído do ponto flutuante)
 const fVl = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
@@ -41,7 +41,7 @@ function cartaoDe(forma, dia) {
   return f;
 }
 const seloCartao = (c) => (c ? selo(c, 'ea-cartao')
-  : '<span class="sem-dado" title="Forma de pagamento vazia na Base_copia">—</span>');
+  : '<span class="sem-dado" title="Forma de pagamento vazia">—</span>');
 const hora = (seg) => String(Math.floor(seg / 3600)).padStart(2, '0') + ':' + String(Math.floor(seg / 60) % 60).padStart(2, '0');
 // data e hora da Base (número de série do Excel, hora local) <-> "16/11/2026 07:49:38"
 const SERIE_MIN = 43831;   // 01/01/2020
@@ -81,7 +81,7 @@ async function buscarLista() {
   const r = await fetch('/gestao/dados/base-copia.json', { credentials: 'same-origin' });
   if (r.status === 401 || r.redirected) { location.href = '/?entrar=1'; throw new Error('sessão'); }
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.erro || 'Não foi possível carregar a lista da Base_copia (' + r.status + ').');
+  if (!r.ok) throw new Error(j.erro || 'Não foi possível carregar a lista dos abastecimentos (' + r.status + ').');
   return j;
 }
 async function buscarAlteracoes() {
@@ -94,7 +94,7 @@ async function buscarAlteracoes() {
 
 export async function montar(ctx) {
   const { pagina } = ctx;
-  pagina.innerHTML = '<div class="carregando"><div class="giro"></div>Carregando os abastecimentos da Base_copia…</div>';
+  pagina.innerHTML = '<div class="carregando"><div class="giro"></div>Carregando os abastecimentos…</div>';
   const desabPronto = carregarDesabilitadas();   // placas desabilitadas no cadastro: fora das sugestões de placa
   let lista, info;
   try { [lista, info] = await Promise.all([buscarLista(), buscarAlteracoes()]); } catch (e) {
@@ -146,8 +146,8 @@ export async function montar(ctx) {
     diaMin = linhas.reduce((m, l) => Math.min(m, l.dia), Infinity);
     diaMax = linhas.reduce((m, l) => Math.max(m, l.dia), -Infinity);
     const g = new Date(d.geradoEm);
-    ctx.definirSub(fmt.int(d.linhas) + ' abastecimentos da ' + (d.arquivo || 'Base_copia') + ', lida em ' + g.toLocaleDateString('pt-BR') + ' às ' +
-      g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '. A Base.xlsx original não é alterada.');
+    ctx.definirSub(fmt.int(d.linhas) + ' abastecimentos, lista atualizada em ' + g.toLocaleDateString('pt-BR') + ' às ' +
+      g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '. Para levar os dados à Base.xlsx, use Exportar.');
     montarServidor();
     refazerCadeias();
     calcularSuspeitos();
@@ -320,7 +320,7 @@ export async function montar(ctx) {
       <div class="tabela-ferramentas">
         <label class="ea-alternar"><input type="checkbox" id="ea-suspeitos"> Só os KM para conferir <span class="ea-qtd" id="ea-qtd-suspeitos"></span></label>
         <label class="ea-alternar"><input type="checkbox" id="ea-alterados"> Só os alterados</label>
-        <button type="button" class="btn ea-exportar" id="ea-exportar" title="Planilha igual à Base_copia, só com os abastecimentos dos filtros">
+        <button type="button" class="btn ea-exportar" id="ea-exportar" title="Planilha no formato da Base.xlsx, só com os abastecimentos dos filtros">
           <svg aria-hidden="true"><use href="#i-baixar"/></svg><span class="txt">Exportar</span></button>
         ${editar ? `<button type="button" class="btn btn-principal ea-publicar" id="ea-publicar" title="Leva para os dashboards os abastecimentos até ontem, já validados">
           <svg aria-hidden="true"><use href="#i-atualizar"/></svg><span class="txt">Publicar nos dashboards</span></button>` : ''}
@@ -361,19 +361,19 @@ export async function montar(ctx) {
       // cada linha do banco tem de ser o mesmo abastecimento da tela (placa, minuto e litros); senão a cópia do banco e a lista
       // da tela são de versões diferentes da Base_copia e a exportação sairia com linhas trocadas
       const trocadas = banco.filter((r) => !confere(r, porLinha.get(r[41]))).length;
-      if (trocadas) throw new Error('A lista da tela e o banco estão em versões diferentes da Base_copia (' + fmt.int(trocadas) +
+      if (trocadas) throw new Error('A lista da tela e o banco estão em versões diferentes (' + fmt.int(trocadas) +
         ' abastecimento(s) não batem). Nada foi exportado: recarregue a página em alguns minutos e exporte de novo.');
       txt.textContent = 'Montando a planilha…';
       const linhasPl = banco.map(linhaPlanilha);
       const datas = linhasPl.map((l) => l[4]).filter(Boolean).sort((a, c) => a - c);
       const dia = (d) => d.toISOString().slice(0, 10).split('-').reverse().join('-');
-      const nome = 'Base_copia ' + (datas.length ? dia(datas[0]) + (dia(datas[0]) !== dia(datas[datas.length - 1]) ? ' a ' + dia(datas[datas.length - 1]) : '') : 'exportada') + '.xlsx';
+      const nome = 'Abastecimentos ' + (datas.length ? dia(datas[0]) + (dia(datas[0]) !== dia(datas[datas.length - 1]) ? ' a ' + dia(datas[datas.length - 1]) : '') : 'exportada') + '.xlsx';
       const buf = await montarPlanilha(ExcelJS, linhasPl).xlsx.writeBuffer();
       salvar(nome, new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
       const faltam = nums.length - banco.length;
       ctx.aviso(fmt.int(banco.length) + ' abastecimento(s) exportado(s) em "' + nome + '".' +
         (faltam > 0 ? ' ' + fmt.int(faltam) + ' não estavam no banco ainda (a lista da tela é mais nova que a cópia do banco); exporte de novo em alguns minutos.' : '') +
-        (servidor.size || servidorExcl.size ? ' Correções ainda não gravadas na Base_copia saem como estavam antes.' : ''));
+        (servidor.size || servidorExcl.size ? ' Correções ainda não gravadas saem como estavam antes.' : ''));
     } catch (e) {
       ctx.aviso(e.message);
     } finally {
@@ -528,15 +528,15 @@ export async function montar(ctx) {
     const curto = (s) => '<td title="' + esc(s) + '"><span class="ea-trunc">' + txt(s) + '</span></td>';
     const exc = excluida(l), rasc = excluir.has(l.linha);
     const edita = editar && !exc;   // excluído: só mostra (com "Desfazer" enquanto não salvo)
-    const estadoTxt = st ? '<small class="cidade-linha ea-st-' + st + '">' + esc(servidorExcl.has(l.linha) ? (st === 'aplicada' ? 'Excluído da Base_copia' : 'Exclusão: ' + NOME_ESTADO[st].toLowerCase()) : NOME_ESTADO[st]) + '</small>'
+    const estadoTxt = st ? '<small class="cidade-linha ea-st-' + st + '">' + esc(servidorExcl.has(l.linha) ? (st === 'aplicada' ? 'Excluído' : 'Exclusão: ' + NOME_ESTADO[st].toLowerCase()) : NOME_ESTADO[st]) + '</small>'
       : rasc ? '<small class="cidade-linha ea-st-excluir">Será excluído ao salvar</small>' : '';
     const acao = !editar ? '' : '<td class="ea-acao">' + (servidorExcl.has(l.linha) ? ''
       : '<button type="button" class="ea-excluir' + (rasc ? ' ea-desfazer' : '') + '" data-excluir="' + l.linha + '" title="' + (rasc ? 'Desfazer a exclusão' : 'Excluir este abastecimento') +
         '" aria-label="' + esc((rasc ? 'Desfazer a exclusão do abastecimento de ' : 'Excluir o abastecimento de ') + e.placa + ' em ' + fmtDia(l.dia)) + '">' +
         (rasc ? '↶' : '<svg aria-hidden="true"><use href="#i-lixeira"/></svg>') + '</button>') + '</td>';
     return '<tr data-linha="' + l.linha + '" class="' + (rascunho.has(l.linha) ? 'ea-tr-alterada' : '') + (exc ? ' ea-tr-excluida' : '') + (estado.destaque === l.linha ? ' selecionado' : '') + '">' +
-      (edita ? '<td class="ea-data" title="Linha ' + l.linha + ' da Base_copia">' + campo(l, 'E', e.serial, 'd') + '</td>'
-        : '<td class="ea-data" title="Linha ' + l.linha + ' da Base_copia">' + esc(fmtDia(e.dia).replace(/\/(\d{2})(\d{2})$/, '/$2')) +
+      (edita ? '<td class="ea-data" title="Linha ' + l.linha + '">' + campo(l, 'E', e.serial, 'd') + '</td>'
+        : '<td class="ea-data" title="Linha ' + l.linha + '">' + esc(fmtDia(e.dia).replace(/\/(\d{2})(\d{2})$/, '/$2')) +
         '<small class="cidade-linha">' + esc(hora(e.seg)) + '</small></td>') +
       '<td>' + (edita ? campo(l, 'F', e.placa, 'p') : '<strong>' + esc(e.placa) + '</strong>') + '<div class="ea-placa-cartao">' + seloCartao(l.cartao) + '</div>' + estadoTxt + '</td>' +
       (edita ? '<td>' + campo(l, 'L', e.mot, 'm') + '</td>' : curto(e.mot)) + curto(l.posto) + curto(l.fuel) +
@@ -799,7 +799,7 @@ export async function montar(ctx) {
       }
       if (!itens.length) return;
       if (excluir.size && !await confirmar((excluir.size === 1 ? 'Excluir 1 abastecimento' : 'Excluir ' + excluir.size + ' abastecimentos') +
-        ' da Base_copia? A linha sai da planilha e as de baixo sobem (o computador da sincronização guarda uma cópia de segurança antes).')) return;
+        '? Eles saem dos abastecimentos do portal.')) return;
       const b = el('ea-salvar');
       b.disabled = true; b.textContent = 'Salvando…';
       try {
@@ -856,7 +856,7 @@ export async function montar(ctx) {
     let l = porLinha.get(Number(daConferencia.get('aplicar')));
     if (!bate(l)) l = linhas.find(bate) || null;
     history.replaceState(null, '', '#/abastecimentos');   // recarregar a página não aplica de novo
-    if (!l) ctx.aviso('O abastecimento da conferência não foi encontrado na Base_copia (pode já ter sido excluído).');
+    if (!l) ctx.aviso('O abastecimento da conferência não foi encontrado (pode já ter sido excluído).');
     else {
       const valores = [...daConferencia.entries()].filter(([k]) => /^v(F|Q|O|T)$/.test(k)).map(([k, x]) => [k.slice(1), k === 'vF' ? x : x === '' ? null : Number(x)]);
       const ordem = ['F', 'Q', 'O', 'T'];   // o valor do cartão por último (litros novos recalculam o valor)

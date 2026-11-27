@@ -9,6 +9,6 @@ export async function onRequestGet({ request, env }) {
   if (!u) return json({ erro: 'Não conectado.' }, 401);
   if (!pode(u, 'fiscal-conciliacao')) return json({ erro: 'Seu acesso não inclui a conciliação de NFs.' }, 403);
   const d = await env.DADOS.get('conciliacao-nfs', 'json').catch(() => null);
-  if (!d) return json({ erro: 'A conciliação ainda não foi enviada pelo computador da sincronização. Tente mais tarde.' }, 503);
+  if (!d) return json({ erro: 'A conciliação ainda não foi feita (roda a cada 6 horas). Tente mais tarde.' }, 503);
   return json(d);
 }

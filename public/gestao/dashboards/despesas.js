@@ -55,7 +55,7 @@ export async function montar(ctx) {
     // gasolina/etanol: carros sem categoria nas Metas ou PICAPE/VENDA (a regra de categoria deixaria o grupo sempre vazio)
     base = d.linhas.filter((l) => grupo.tem(l.combustivel) && (grupo.id === 'gasolina' || (l.categoria && !CATEGORIAS_FORA.has(l.categoria))));
     const g = new Date(d.geradoEm);
-    ctx.definirSub('Base enviada em ' + g.toLocaleDateString('pt-BR') + ' às ' +
+    ctx.definirSub('Dados atualizados em ' + g.toLocaleDateString('pt-BR') + ' às ' +
       g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '. ' + grupo.rot + (grupo.id === 'diesel' ? ' (todos os tipos: S-10, comum, S500…)' : '') + '.');
   }
   usarDados(dados);

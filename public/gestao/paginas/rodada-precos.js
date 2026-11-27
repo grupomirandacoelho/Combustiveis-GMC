@@ -37,7 +37,7 @@ export async function montar(ctx) {
     return {};
   }
   if (!dados.negPostos.length) {
-    pagina.innerHTML = '<div class="vazio">A planilha de negociações ainda não chegou ao site. Ela vai junto com a próxima sincronização da Base.</div>';
+    pagina.innerHTML = '<div class="vazio">As negociações ainda não chegaram ao site. Tente de novo em alguns minutos.</div>';
     return {};
   }
 
@@ -89,7 +89,7 @@ export async function montar(ctx) {
       let bloqueio = null;
       if (estado.enviados.has(k)) bloqueio = 'Enviado nesta rodada';
       else if (pendentes.has(k)) bloqueio = 'Há uma alteração deste posto ainda não gravada';
-      else if (!validas(n)) bloqueio = 'Cartão, tipo ou situação fora das opções da planilha: corrija em Postos dos motoristas';
+      else if (!validas(n)) bloqueio = 'Cartão, tipo ou situação fora das opções do cadastro: corrija em Postos dos motoristas';
       const padrao = !!nova && !alerta && !bloqueio && n.status !== 'POSTO BLOQUEADO';
       linhas.push({
         k, n, nova, ultimaQualquer, valor, variacao, alerta, bloqueio,
@@ -144,7 +144,7 @@ export async function montar(ctx) {
     const limTxt = fmt.pct(lim.variacao).replace(',0', '');
     $('rp-regra').title = 'Para cada posto, vale a última transação de diesel feita depois da transação usada na negociação anterior ' +
       '(de preferência do mesmo combustível). Variação acima de ' + limTxt + ' só entra se você marcar o posto, confirmando o preço.';
-    ctx.definirSub('Dados da Base até ' + fmtDia(dados.diaMax) + '.');
+    ctx.definirSub('Abastecimentos até ' + fmtDia(dados.diaMax) + '.');
     const novas = linhas.filter((l) => l.nova);
     const marc = linhas.filter((l) => l.marcado);
     $('rp-resumo').innerHTML = htmlApoio([
@@ -193,7 +193,7 @@ export async function montar(ctx) {
             : '<span class="sem-dado">—</span>') + '</td>' +
           '<td class="n">' + htmlVariacao(l) + '</td></tr>';
       }).join('') : '<tr><td colspan="6"><div class="vazio">' + (estado.ver === 'novas'
-        ? 'Nenhum posto com transação nova desde a última rodada. Quando a Base trouxer abastecimentos novos, eles aparecem aqui.'
+        ? 'Nenhum posto com transação nova desde a última rodada. Quando entrarem abastecimentos novos, eles aparecem aqui.'
         : 'Nenhum posto com esses filtros.') + '</div></td></tr>') + '</tbody>';
     $('rp-mais').innerHTML = botoesMaisMenos(vis.length, limite, PASSO);
   }
@@ -256,7 +256,7 @@ export async function montar(ctx) {
   }
   const pend = alteracoes.filter(emAberto).length;
   if (pend) aviso('<span>' + pend + (pend === 1 ? ' alteração de posto ainda não foi gravada' : ' alterações de posto ainda não foram gravadas') +
-    ' na planilha. Os postos envolvidos ficam de fora desta rodada.</span>');
+    '. Os postos envolvidos ficam de fora desta rodada.</span>');
 
   $('rp-enviar').addEventListener('click', async () => {
     const marc = linhas.filter((l) => l.marcado);
@@ -282,7 +282,7 @@ export async function montar(ctx) {
       if (r.status === 401) { location.href = '/?entrar=1'; return; }
       if (!r.ok) { aviso('<span>' + esc(j.erro || 'Não foi possível enviar a rodada. Tente de novo.') + '</span>', true); return; }
       marc.forEach((l) => estado.enviados.add(l.k));
-      aviso('<span>' + j.postos + (j.postos === 1 ? ' posto enviado' : ' postos enviados') + '. O computador da sincronização grava as linhas na planilha ' +
+      aviso('<span>' + j.postos + (j.postos === 1 ? ' posto enviado' : ' postos enviados') + '. As linhas são gravadas nas negociações ' +
         'de negociações em instantes (se ela estiver aberta no Excel, espera fechar). Acompanhe em ' +
         '<a href="#/postos-motoristas">Postos dos motoristas</a>.</span>');
     } catch (e) {

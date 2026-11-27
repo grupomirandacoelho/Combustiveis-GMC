@@ -4,15 +4,15 @@
 import { pode } from '../../../lib/permissoes.js';
 import { fonteBanco, abastecimentosDoBanco, GERADOS, usaBanco, geradoDoBanco } from '../../../lib/dados-painel.js';
 const ARQUIVOS = {
-  'abastecimentos.json': { dados: 'abastecimentos', versao: 'versao', falta: 'Ainda não há dados enviados. Rode a sincronização da Base.' },
-  'anp.json': { perms: ['preco-anp', 'contratos-anp'], dados: 'anp', versao: 'anp-versao', falta: 'Os preços da ANP ainda não foram enviados. O computador da sincronização envia na próxima conferência.' },
+  'abastecimentos.json': { dados: 'abastecimentos', versao: 'versao', falta: 'Os dados ainda não foram gerados. Tente de novo em alguns minutos.' },
+  'anp.json': { perms: ['preco-anp', 'contratos-anp'], dados: 'anp', versao: 'anp-versao', falta: 'Os preços da ANP ainda não foram enviados. A atualização automática traz em até 3 horas.' },
   // preços da Petrobras às distribuidoras por ponto de entrega (scripts/petrobras_precos.py) para "Preço x Refinaria"
-  'petrobras.json': { perms: ['preco-refinaria'], dados: 'petrobras', versao: 'petrobras-versao', falta: 'Os preços da Petrobras ainda não foram enviados. O computador da sincronização envia na próxima conferência.' },
+  'petrobras.json': { perms: ['preco-refinaria'], dados: 'petrobras', versao: 'petrobras-versao', falta: 'Os preços da Petrobras ainda não foram enviados. A atualização automática traz em até 3 horas.' },
   // reajustes.json saiu em 27/11/2026 (15.4): nenhuma tela lê; Contratos x ANP usa os contratos do portal
   // histórico da Base para o Consolidador (Base.xlsx + CONTROLES\Base_copia.xlsx; scripts/consolidador_historico.py)
-  'consolidacao.json': { perms: ['consolidador', 'bomba-abastecimento'], dados: 'consolidacao', versao: 'consolidacao-versao', falta: 'O histórico da Base para o consolidador ainda não foi enviado. O computador da sincronização envia em instantes.' },
+  'consolidacao.json': { perms: ['consolidador', 'bomba-abastecimento'], dados: 'consolidacao', versao: 'consolidacao-versao', falta: 'O histórico dos abastecimentos para o consolidador ainda não foi gerado. Tente de novo em instantes.' },
   // abastecimentos da CONTROLES\Base_copia.xlsx para Operacional > Editar abastecimentos (scripts/base_copia_lista.py)
-  'base-copia.json': { perms: ['abastecimentos', 'bomba-abastecimento', 'bomba-estoque'], dados: 'base-copia', versao: 'base-copia-versao', falta: 'A lista da Base_copia ainda não foi enviada. O computador da sincronização envia em instantes.' },
+  'base-copia.json': { perms: ['abastecimentos', 'bomba-abastecimento', 'bomba-estoque'], dados: 'base-copia', versao: 'base-copia-versao', falta: 'A lista dos abastecimentos ainda não foi gerada. Tente de novo em instantes.' },
   // transações das APIs dos cartões (Ticket Log e TruckPag) que ainda não estão na Base (scripts/cartoes_api.mjs): os painéis somam na hora
   'tempo-real.json': { dados: 'tempo-real', versao: 'tempo-real-versao', falta: 'Ainda não há transações em tempo real.' },
 };

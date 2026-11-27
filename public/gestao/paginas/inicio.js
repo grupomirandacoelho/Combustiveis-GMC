@@ -255,7 +255,7 @@ export async function montarResumo(caixa, { pode, texto }) {
 
   if (texto && r) {
     texto.textContent = 'Resumo de ' + mesTxt + ' de ' + Math.floor(r.m / 12) +
-      (r.completo ? ' (mês completo), comparado com ' + mesAntTxt : ' até ' + fmtDia(r.ate) + ', o último abastecimento na Base, comparado com os mesmos dias da semana de 4 semanas antes (' + antPeriodo + ')') +
+      (r.completo ? ' (mês completo), comparado com ' + mesAntTxt : ' até ' + fmtDia(r.ate) + ', o último abastecimento registrado, comparado com os mesmos dias da semana de 4 semanas antes (' + antPeriodo + ')') +
       '. Clique num cartão ou numa linha para abrir o painel.';
   }
 

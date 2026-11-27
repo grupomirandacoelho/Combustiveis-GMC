@@ -55,8 +55,6 @@ const TIPOS = {
   },
   'falta-cartao': (c) => ({ cartao: umDe(c.cartao, ['todos', 'ticket', 'truckpag', 'veloe'], 'todos'), cc: txt(c.cc),
     minimo: n(c.minimo, 1, 999, 'O mínimo de pedidos abertos precisa ser de 1 a 999.'), horas: n(c.horas, 0, 720, 'As horas precisam ficar entre 0 e 720.') }),
-  'base-desatualizada': (c) => ({ planilha: umDe(c.planilha, ['base', 'copia', 'ambas'], 'base'),
-    horas: n(c.horas, 1, 720, 'As horas sem atualizar precisam ficar entre 1 e 720.') }),
   // aviso personalizado (26/11/2026): o usuário monta (lib/notificacao.js TIPOS.personalizado)
   personalizado: (c) => {
     const lista = (v, validos, max) => (Array.isArray(v) ? [...new Set(v.map(String).filter((x) => !validos || validos.includes(x)))].slice(0, max || 50) : []);

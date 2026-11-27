@@ -47,7 +47,7 @@ export async function montar(ctx) {
     dados = d;
     base = d.linhas.filter((l) => DIESEL.has(l.combustivel) && l.categoria && !CATEGORIAS_FORA.has(l.categoria) && !MOTORISTAS_FORA.has(l.motorista));
     const g = new Date(d.geradoEm);
-    ctx.definirSub('Base enviada em ' + g.toLocaleDateString('pt-BR') + ' às ' +
+    ctx.definirSub('Dados atualizados em ' + g.toLocaleDateString('pt-BR') + ' às ' +
       g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '. % da meta de km/L de cada placa, mês a mês.');
   }
   usarDados(dados);

@@ -76,7 +76,7 @@ export async function montar(ctx) {
     dados = d;
     base = d.linhas.filter((l) => DIESEL.has(l.combustivel) && l.categoria && !CATEGORIAS_FORA.has(l.categoria));
     const g = new Date(d.geradoEm);
-    ctx.definirSub('Base enviada em ' + g.toLocaleDateString('pt-BR') + ' às ' +
+    ctx.definirSub('Dados atualizados em ' + g.toLocaleDateString('pt-BR') + ' às ' +
       g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + ', com abastecimentos até ' + fmtDia(d.diaMax));
   }
   usarDados(dados);
@@ -561,7 +561,7 @@ export async function montar(ctx) {
         if (c.cor) { const v = c.v(l); cls += v >= 0 ? ' pos-txt' : ' neg-txt'; }
         const t = c.txt(l);
         // transação da API do cartão que ainda não está na planilha (tempo real)
-        const selo = c.id === 'dia' && l.tempoReal ? '<span class="selo-tempo-real" title="Veio da API do cartão e ainda não está na planilha Base">API</span>' : '';
+        const selo = c.id === 'dia' && l.tempoReal ? '<span class="selo-tempo-real" title="Veio da API do cartão hoje; entra nos abastecimentos no dia seguinte (D-1)">API</span>' : '';
         // horário do abastecimento embaixo da data
         const horaTxt = c.id === 'dia' && l.seg !== null && l.seg !== undefined ? '<small class="cidade-linha num">' + esc(hora(l.seg)) + '</small>' : '';
         return '<td class="' + cls + '"' + (c.trunc ? ' title="' + esc(t) + '"' : '') + '>' + esc(t) + selo + horaTxt + '</td>';

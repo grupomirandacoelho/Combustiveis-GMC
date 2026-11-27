@@ -92,7 +92,7 @@ export async function montar(ctx) {
   function desenhar() {
     el('rt-base').value = String(estado.base);
     el('rt-tanque').innerHTML = baseAtual().tanques.map((t) => '<button type="button" data-tanque="' + t + '" aria-pressed="' + (t === estado.tanque) + '">' + NOME_TANQUE[t] + '</button>').join('');
-    if (editor) ctx.definirSub(d.lista ? 'Abastecimentos atualizados pelo vigia em ' + fmtUtc(d.lista.geradoEm) + '.' : 'O vigia ainda não mandou a lista de abastecimentos.');
+    if (editor) ctx.definirSub(d.lista ? 'Abastecimentos atualizados em ' + fmtUtc(d.lista.geradoEm) + '.' : 'A lista de abastecimentos ainda não foi gerada.');
     const c = calcular();
     desenharNotas(c);
     desenharDetalhe(c);
@@ -186,7 +186,7 @@ export async function montar(ctx) {
         '<button type="button" class="btn ' + (meu ? '' : 'btn-principal') + '" id="rt-conferir">' + (meu ? 'Desfazer "conferido"' : 'Marcar como conferido') + '</button></div>';
     } else if (calc) {
       const fechada = calc.situacao === 'fechada';
-      acoes = '<p class="nota">' + (fechada ? 'Confira as linhas e o centro de custo (pode corrigir na tabela; a correção vai também para a Base_copia). Ao validar, o rateio fica disponível para o fiscal.'
+      acoes = '<p class="nota">' + (fechada ? 'Confira as linhas e o centro de custo (pode corrigir na tabela; a correção vai também para os abastecimentos). Ao validar, o rateio fica disponível para o fiscal.'
         : 'A nota ainda está em uso: ' + num(calc.rateado, 2) + ' de ' + num(calc.litros, 0) + ' L rateados. A validação abre quando a nota fechar.') + '</p>' +
         '<div class="dialogo-acoes rt-acoes"><button type="button" class="btn btn-principal" id="rt-validar"' + (fechada ? '' : ' disabled') + '>Validar rateio</button></div>';
     }
@@ -318,7 +318,7 @@ export async function montar(ctx) {
           (ini && quandoDoMs(t.t) === ini.quando && (!ini.placa || ini.placa === t.placa) ? ' selected' : '') + '>' + esc(fmtMs(t.t) + ' · ' + t.placa + ' · ' + num(t.litros, 2) + ' L · ' + (t.motorista || '')) + '</option>').join('') + '</select></label>' +
         '<label class="campo-form"><span>Litros dele na nota anterior</span><input name="ja" inputmode="decimal" value="' + (ini ? num(ini.ja_rateado, 2) : '0') + '"></label>' +
         '<div class="campo-form"><span>&nbsp;</span><button type="submit" class="btn btn-principal">Salvar início</button></div></form></details>'
-        : '<p class="nota">Sem abastecimentos deste tanque na lista do vigia.</p>');
+        : '<p class="nota">Sem abastecimentos deste tanque na lista.</p>');
     const f = sec.querySelector('#rt-ini-form');
     if (!f) return;
     f.addEventListener('submit', async (e) => {

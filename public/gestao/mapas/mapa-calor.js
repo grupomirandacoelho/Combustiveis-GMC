@@ -31,7 +31,7 @@ function lerPar(t) {
 const lerNum = (t) => { const s = String(t || '').trim().replace(',', '.'); return /^-?\d+(\.\d+)?$/.test(s) ? Number(s) : null; };
 const noBrasil = (lat, lon) => lat > -35 && lat < 6 && lon > -75 && lon < -30;
 const LIMITE_KM_CIDADE = 100;   // o mesmo do importar_base.py: mais longe que isso da cidade, a coordenada fica fora do mapa
-const NOME_ESTADO = { pendente: 'aguardando gravação na planilha', aguardando: 'LOCALIZAÇÃO aberta no Excel', aplicada: 'gravada na planilha', erro: 'não gravada' };
+const NOME_ESTADO = { pendente: 'aguardando gravação', aguardando: 'aguardando gravação', aplicada: 'gravada', erro: 'não gravada' };
 
 const DIESEL = { has: ehDiesel };   // todo tipo de diesel (lib/dados.js)
 const CC_FORA = new Set(['RAJA ADM']);
@@ -187,7 +187,7 @@ export async function montar(ctx) {
         <h2 id="mc-un-titulo">Trocar a unidade do abastecimento</h2>
         <p class="dialogo-explica" id="mc-un-sub"></p>
         <label class="campo-form largo"><span>Unidade (centro de custo)</span><select name="un" class="campo-sel mc-un-sel"></select></label>
-        <p class="nota">A troca vai para a Base_copia (INFORMAÇÃO ADICIONAL 3), pela mesma fila do Editar abastecimentos. O mapa e os outros painéis mudam quando a Base for atualizada; até lá a tabela mostra a unidade nova.</p>
+        <p class="nota">A troca vai para os abastecimentos (INFORMAÇÃO ADICIONAL 3), como no Editar abastecimentos. O mapa e os outros painéis mudam na próxima publicação dos dashboards; até lá a tabela mostra a unidade nova.</p>
         <p class="erro-form oculto" id="mc-un-erro" role="alert"></p>
         <div class="dialogo-acoes"><button type="button" class="btn" id="mc-un-cancelar">Cancelar</button><button type="submit" class="btn btn-principal" id="mc-un-ok">Trocar unidade</button></div>
       </form>
@@ -379,7 +379,7 @@ export async function montar(ctx) {
           ? '<span class="link-botao nome-clicavel"><i class="ponto-faixa" style="background:' + f.cor + '" aria-hidden="true"></i>' + esc(a.nome) + '</span>'
           : '<button type="button" class="link-tabela link-botao">' + esc(a.nome) + '</button>') +
         '<small class="cidade-linha">' + esc(a.cidade || '') + '</small>' +
-        (susp ? '<small class="cidade-linha aviso-linha">na planilha: coordenada a ' + esc(fmt.int(susp.km)) + ' km da cidade (fora do mapa)</small>' : '') +
+        (susp ? '<small class="cidade-linha aviso-linha">no cadastro: coordenada a ' + esc(fmt.int(susp.km)) + ' km da cidade (fora do mapa)</small>' : '') +
         (site ? '<small class="cidade-linha mc-site-' + esc(site.estado) + '">coordenada ' + esc(NOME_ESTADO[site.estado] || '') + '</small>' : '') + '</td>' +
         '<td class="n">' + esc(fmt.int(a.litros)) + '</td><td class="n' + opc('pct') + '">' + esc(fmt.pct(a.pct)) + '</td>' +
         '<td class="n">' + esc(fmt.moeda(a.preco)) + '</td><td class="n' + opc('ult') + '">' + esc(fmt.moeda(a.ultPreco)) + '</td>' +
@@ -482,13 +482,13 @@ export async function montar(ctx) {
         data: '<td class="mc-ab-data num">' + esc(fmtDia(l.dia)) + (l.seg !== null && l.seg !== undefined ? '<small class="cidade-linha">' + esc(hora(l.seg)) + '</small>' : '') + '</td>',
         placa: '<td class="mc-ab-id"><strong>' + esc(l.placa || '—') + '</strong></td>',
         cartao: '<td class="mc-ab-cartao">' + (l.cartao ? seloCartao(l.cartao) : '<span class="sem-dado" title="Cartão não informado">—</span>') +
-          (l.tempoReal ? ' <span class="selo-tempo-real" title="Veio da API do cartão e ainda não está na planilha Base">API</span>' : '') + '</td>',
+          (l.tempoReal ? ' <span class="selo-tempo-real" title="Veio da API do cartão hoje; entra nos abastecimentos no dia seguinte (D-1)">API</span>' : '') + '</td>',
         motorista: '<td class="mc-ab-mot">' + esc(l.motorista || '—') + '</td>',
         posto: '<td class="mc-ab-posto col-opc1">' + esc(l.fornecedor || '—') + '</td>',
         unidade: '<td class="mc-ab-un"><div class="mc-un"><span>' + esc(un || '—') +
             (l.ccBase ? '<small class="cidade-linha">' + esc(ESTADO_BC[l.ccEstado] || '') + ' · era ' + esc(l.ccBase) + '</small>' : '') + '</span>' +
             (podeTrocarUnidade ? (l.tempoReal
-              ? '<button type="button" class="btn-lixeira btn-editar" disabled aria-label="Ainda não dá para trocar: abastecimento da API, entra na Base_copia às 6h do dia seguinte" title="Veio da API do cartão: entra na Base_copia às 6h do dia seguinte; troque depois disso"><svg aria-hidden="true"><use href="#i-lapis"/></svg></button>'
+              ? '<button type="button" class="btn-lixeira btn-editar" disabled aria-label="Ainda não dá para trocar: abastecimento da API, entra nos abastecimentos às 6h do dia seguinte" title="Veio da API do cartão: entra nos abastecimentos às 6h do dia seguinte; troque depois disso"><svg aria-hidden="true"><use href="#i-lapis"/></svg></button>'
               : '<button type="button" class="btn-lixeira btn-editar" data-un="' + i + '" aria-label="Trocar a unidade do abastecimento de ' + esc(l.placa) + ' em ' + esc(fmtDia(l.dia)) + '" title="Trocar a unidade"><svg aria-hidden="true"><use href="#i-lapis"/></svg></button>') : '') +
           '</div></td>',
         litros: '<td class="n num">' + esc(fmt.d2(l.litros)) + '</td>',
@@ -561,7 +561,7 @@ export async function montar(ctx) {
       el('mc-un-dlg').close();
       usarDados(dados);   // o filtro, o mapa e os totais já passam a usar a unidade nova
       atualizar();
-      ctx.aviso('Unidade trocada para ' + nova + '. Já vale nesta tela; vai para a Base_copia em instantes e para os outros painéis quando a Base for atualizada.');
+      ctx.aviso('Unidade trocada para ' + nova + '. Já vale nesta tela e nos abastecimentos; os outros painéis mudam na próxima publicação dos dashboards.');
     } catch (err) {
       if (err.message !== 'sessão') { el('mc-un-erro').textContent = err.message; el('mc-un-erro').classList.remove('oculto'); }
     } finally { ok.disabled = false; ok.textContent = 'Trocar unidade'; }
@@ -621,10 +621,10 @@ export async function montar(ctx) {
     aberto = a;
     const susp = suspeitos.get(nome.toUpperCase()), site = coordSite.get(nome.toUpperCase());
     el('mc-ficha').innerHTML = [
-      ['Posto', a.nome], ['Cidade', a.cidade || '—'], ['Endereço na Base', dados.enderecos[a.nome.toUpperCase()] || '—'],
+      ['Posto', a.nome], ['Cidade', a.cidade || '—'], ['Endereço nos abastecimentos', dados.enderecos[a.nome.toUpperCase()] || '—'],
       ['Último abastecimento', fmtDia(a.ultDia) + (a.ultSeg >= 0 ? ' ' + hora(a.ultSeg) : '') + (a.ultPlaca ? ' · placa ' + a.ultPlaca : '')],
       ['Litros no recorte', fmt.int(a.litros) + ' L · preço médio ' + fmt.moeda(a.preco)],
-      ...(susp ? [['Na planilha hoje', susp.lat + ', ' + susp.lng + ' (a ' + fmt.int(susp.km) + ' km da cidade, fora do mapa)']] : []),
+      ...(susp ? [['No cadastro hoje', susp.lat + ', ' + susp.lng + ' (a ' + fmt.int(susp.km) + ' km da cidade, fora do mapa)']] : []),
       ...(site ? [['Cadastrada pelo site', site.coord.join(', ') + ' · ' + (NOME_ESTADO[site.estado] || '') + (site.mensagem ? ' · ' + site.mensagem : '')]] : []),
     ].map(([t, v]) => '<div><dt>' + esc(t) + '</dt><dd>' + esc(v) + '</dd></div>').join('');
     form.reset();

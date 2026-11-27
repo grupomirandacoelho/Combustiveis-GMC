@@ -472,7 +472,7 @@ export async function montar(ctx) {
     const conta = (c) => viaveis.filter((p) => p.classe === c).length;
     ctx.definirSub(fmt.int(viaveis.length) + ' postos com preço ' + (estado.dias > 9999 ? 'de qualquer data' : 'dos últimos ' + estado.dias + ' dias') + ' (' + conta('polo') + ' polo, ' +
       (conta('autorizado') + conta('minimo')) + ' outros autorizados, ' + conta('livre') + ' fora da lista); ' +
-      fmt.int(bloqueados.length) + ' bloqueados ficam de fora. Base até ' + fmtDia(dados.diaMax) + '.');
+      fmt.int(bloqueados.length) + ' bloqueados ficam de fora. Abastecimentos até ' + fmtDia(dados.diaMax) + '.');
   }
   function usarDados(d) {
     dados = d;
@@ -575,8 +575,8 @@ export async function montar(ctx) {
     el.classList.toggle('oculto', !s.length);
     el.innerHTML = s.length
       // resumo de uma linha (recolhido); a explicação e a lista abrem ao clicar
-      ? '<summary>⚠ ' + s.length + (s.length === 1 ? ' posto fora do mapa' : ' postos fora do mapa') + ' (coordenada errada na planilha) · ver quais</summary>' +
-        '<p class="nota">A coordenada na planilha LOCALIZAÇÃO DOS POSTOS está longe da cidade informada na mesma linha. Corrija a latitude e longitude (ou a cidade) na planilha.</p><ul>' +
+      ? '<summary>⚠ ' + s.length + (s.length === 1 ? ' posto fora do mapa' : ' postos fora do mapa') + ' (coordenada errada no cadastro) · ver quais</summary>' +
+        '<p class="nota">A coordenada cadastrada do posto está longe da cidade informada. Corrija a coordenada no Mapa de calor (ou a cidade em Postos dos motoristas).</p><ul>' +
         s.map((x) => '<li><strong>' + esc(x.nome) + '</strong> · ' + esc(x.cidade + ' - ' + x.uf) + ': a coordenada ' +
           '<a class="link-tabela" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + x.lat + ',' + x.lng + '">' +
           esc(String(x.lat).replace('.', ',') + '; ' + String(x.lng).replace('.', ',')) + '</a> fica a ' + fmt.int(x.km) + ' km da cidade</li>').join('') + '</ul>'
@@ -707,7 +707,7 @@ export async function montar(ctx) {
   }
   function detalheBase(b) {
     const p = postoDaBase.get(b.nome);
-    return p ? detalhePosto(p) : '<strong>' + esc(b.nome) + '</strong><br><small>Unidade da empresa (sem posto interno com preço na Base)</small>';
+    return p ? detalhePosto(p) : '<strong>' + esc(b.nome) + '</strong><br><small>Unidade da empresa (sem posto interno com preço nos abastecimentos)</small>';
   }
 
   // ---------- mapa ----------

@@ -46,11 +46,11 @@ async function validarLancamento(env, u, d) {
   if (preco !== null && !(preco > 0 && preco < 50)) erros.push('Preço por litro inválido.');
   const linha = d.linha;
   if (!Array.isArray(linha) || linha.length !== 49 || linha[0] !== 'MANUAL' || linha.slice(1).some((v) => v !== null && !['string', 'number'].includes(typeof v))) {
-    erros.push('Linha da Base fora do formato. Recarregue a página e tente de novo.');
+    erros.push('Linha do abastecimento fora do formato. Recarregue a página e tente de novo.');
   } else if (base && !erros.length && (linha[L.placa] !== placa || linha[L.hodo] !== km || Math.abs(Number(linha[L.litros]) - litros) > 0.001 ||
       String(linha[L.posto] || '').toUpperCase() !== base.posto || linha[L.forma] !== 'BOMBA INTERNA' || typeof linha[L.data] !== 'number' ||
       Math.abs(linha[L.data] - serialDe(d.quando)) > 0.0001)) {
-    erros.push('A linha da Base não confere com o abastecimento. Recarregue a página e tente de novo.');
+    erros.push('A linha não confere com o abastecimento. Recarregue a página e tente de novo.');
   }
   return { erros, base, placa, km, litros, preco, motorista, linha };
 }
@@ -118,25 +118,25 @@ async function corrigir(env, u, d) {
   if (!atual || atual.excluido || !veBase(basesDoUsuario(u), atual.base_id)) return json({ erro: 'Abastecimento não encontrado.' }, 404);
   if (d.acao !== 'editar' && d.acao !== 'excluir') return json({ erro: 'Ação inválida.' }, 400);
   if (atual.alt_estado === 'pendente' || atual.alt_estado === 'aguardando') {
-    return json({ erro: 'A correção anterior deste abastecimento ainda não foi gravada na Base_copia. Aguarde e tente de novo.' }, 409);
+    return json({ erro: 'A correção anterior deste abastecimento ainda não foi gravada. Aguarde e tente de novo.' }, 409);
   }
   const agora = new Date().toISOString().slice(0, 19) + 'Z';
   // lote que deu erro: a linha nunca entrou na planilha
   if (atual.estado === 'erro') {
-    if (d.acao === 'editar') return json({ erro: 'Este abastecimento não foi gravado na Base_copia. Exclua e lance de novo.' }, 400);
+    if (d.acao === 'editar') return json({ erro: 'Este abastecimento não foi gravado. Exclua e lance de novo.' }, 400);
     await env.DB.prepare('UPDATE bomba_abastecimentos SET excluido = 1, editado_em = ?, editado_por = ? WHERE id = ?').bind(agora, u.nome, atual.id).run();
     return json({ ok: true, abastecimento: await ler(env, atual.id) });
   }
   if (atual.estado !== 'aplicada') {
     return json({ erro: atual.estado === 'aguardando'
-      ? 'Este abastecimento ainda não foi gravado: a Base_copia está aberta no Excel. Depois que ela for fechada e o abastecimento gravado, dá para editar ou excluir.'
-      : 'Este abastecimento ainda está sendo gravado na Base_copia. Aguarde alguns segundos e tente de novo.' }, 409);
+      ? 'Este abastecimento ainda não foi gravado: a gravação está pendente. Depois que ele for gravado, dá para editar ou excluir.'
+      : 'Este abastecimento ainda está sendo gravado. Aguarde alguns segundos e tente de novo.' }, 409);
   }
   const vizinhos = Array.isArray(d.vizinhos) ? d.vizinhos : [];
   if (vizinhos.length > 2 || !vizinhos.every(vizinhoValido)) return json({ erro: 'Dados do abastecimento seguinte fora do formato. Recarregue a página.' }, 400);
   // linha na planilha: a que a página achou na lista da Base_copia (se mudou de lugar) ou a da gravação; o vigia confere pela placa + data
   const linhaPlan = Number.isInteger(d.linha_planilha) && d.linha_planilha >= 2 ? d.linha_planilha : atual.linha_inicial;
-  if (!Number.isInteger(linhaPlan) || linhaPlan < 2) return json({ erro: 'Não sei em que linha da Base_copia está este abastecimento. Recarregue a página.' }, 409);
+  if (!Number.isInteger(linhaPlan) || linhaPlan < 2) return json({ erro: 'Não encontrei a linha deste abastecimento. Recarregue a página.' }, 409);
   const chave = { linha: linhaPlan, placa: atual.placa, data: serialDe(atual.quando) };
   const ops = [];
   let novo = null, principal = false;

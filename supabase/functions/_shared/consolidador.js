@@ -581,7 +581,7 @@ function consolidar({ base, ticket, truckpag, veloe, vibra, aliasExtras, postosN
   }
   const n_dup = totalAntes - filtrados.length;
   eventos = filtrados;
-  if (n_dup) add(`${n_dup} transacoes dos arquivos novos ja estavam na Base (mesma placa+hodometro+combustivel) e foram ignoradas automaticamente.`);
+  if (n_dup) add(`${n_dup} transacoes dos arquivos novos ja estavam nos abastecimentos (mesma placa+hodometro+combustivel) e foram ignoradas automaticamente.`);
 
   eventos.sort((a, b) => (a["PLACA"] < b["PLACA"] ? -1 : a["PLACA"] > b["PLACA"] ? 1 : a["DATA TRANSACAO"] - b["DATA TRANSACAO"]));
 
@@ -659,7 +659,7 @@ function consolidar({ base, ticket, truckpag, veloe, vibra, aliasExtras, postosN
         const info = postoDirPorChave.get(normKey(aliasGravado.get(normKey(ev["NOME ESTABELECIMENTO"]))));
         if (info) {
           prev = info;
-          add(`POSTO RELACIONADO (decisao gravada) [${ev.fonte}, placa ${ev.PLACA}]: "${ev["NOME ESTABELECIMENTO"]}" -> "${info["NOME ESTABELECIMENTO"]}" - a Base so tem esse posto em data posterior a esta transacao; usei o cadastro mais recente dele.`);
+          add(`POSTO RELACIONADO (decisao gravada) [${ev.fonte}, placa ${ev.PLACA}]: "${ev["NOME ESTABELECIMENTO"]}" -> "${info["NOME ESTABELECIMENTO"]}" - o historico so tem esse posto em data posterior a esta transacao; usei o cadastro mais recente dele.`);
         }
       }
       if (!prev) {
@@ -788,18 +788,18 @@ function consolidar({ base, ticket, truckpag, veloe, vibra, aliasExtras, postosN
     }
   }
 
-  for (const p of [...placas_sem_historico].sort()) add(`PLACA SEM HISTORICO ANTERIOR NA BASE: ${p} - provavelmente placa nova. KM/dados de veiculo ficaram em branco na primeira ocorrencia.`);
+  for (const p of [...placas_sem_historico].sort()) add(`PLACA SEM HISTORICO ANTERIOR: ${p} - provavelmente placa nova. KM/dados de veiculo ficaram em branco na primeira ocorrencia.`);
   for (const [nome, info] of [...motoristas_sem_historico.entries()].filter(([n]) => n).sort((a, b) => a[0].localeCompare(b[0]))) {
-    add(`MOTORISTA SEM HISTORICO NA BASE (matricula nao encontrada) [${info.fonte}, placa ${info.placa}]: "${nome}" - ${info.count} transacao(oes), primeira em ${info.data.toISOString()}.`);
+    add(`MOTORISTA SEM HISTORICO (matricula nao encontrada) [${info.fonte}, placa ${info.placa}]: "${nome}" - ${info.count} transacao(oes), primeira em ${info.data.toISOString()}.`);
   }
   for (const pp of postos_pendentes) {
-    add(`PEDIDO DE AUTORIZACAO [${pp.fonte}, placa ${pp.placa}] - possivel mesmo posto: "${pp.nome_cru}" (endereco no arquivo: ${pp.endereco}, ${pp.cidade}/${pp.uf}) pode ser o mesmo que "${pp.candidato}" ja cadastrado na Base (endereco: ${pp.info.ENDERECO}, ${pp.info.CIDADE}/${pp.info.UF}, codigo ${pp.info["CODIGO ESTABELECIMENTO"]}). Confianca da comparacao: ${(pp.score * 100).toFixed(0)}%. NAO apliquei essa regra - os dados desse posto ficaram em branco nesta linha ate voce autorizar.`);
+    add(`PEDIDO DE AUTORIZACAO [${pp.fonte}, placa ${pp.placa}] - possivel mesmo posto: "${pp.nome_cru}" (endereco no arquivo: ${pp.endereco}, ${pp.cidade}/${pp.uf}) pode ser o mesmo que "${pp.candidato}" ja cadastrado no historico (endereco: ${pp.info.ENDERECO}, ${pp.info.CIDADE}/${pp.info.UF}, codigo ${pp.info["CODIGO ESTABELECIMENTO"]}). Confianca da comparacao: ${(pp.score * 100).toFixed(0)}%. NAO apliquei essa regra - os dados desse posto ficaram em branco nesta linha ate voce autorizar.`);
   }
   for (const p of postos_sem_sugestao) {
-    add(`POSTO SEM HISTORICO NA BASE [${p.fonte}, placa ${p.placa}] (nenhum candidato parecido encontrado por endereco): "${p.nome_cru}" - endereco ${p.endereco || "—"}, ${p.cidade || "—"}/${p.uf || "—"}.`);
+    add(`POSTO SEM HISTORICO [${p.fonte}, placa ${p.placa}] (nenhum candidato parecido encontrado por endereco): "${p.nome_cru}" - endereco ${p.endereco || "—"}, ${p.cidade || "—"}/${p.uf || "—"}.`);
   }
   for (const ms of motoristas_sugestoes) {
-    if (!ms.sugestao_nome) { add(`MOTORISTA EM BRANCO [${ms.fonte}, placa ${ms.placa}] em ${ms.data.toISOString()}: arquivo nao trouxe nome e o veiculo nao tem motorista anterior na Base. A linha ficou em branco ate voce informar o motorista.`); continue; }
+    if (!ms.sugestao_nome) { add(`MOTORISTA EM BRANCO [${ms.fonte}, placa ${ms.placa}] em ${ms.data.toISOString()}: arquivo nao trouxe nome e o veiculo nao tem motorista anterior. A linha ficou em branco ate voce informar o motorista.`); continue; }
     add(`SUGESTAO DE MOTORISTA [${ms.fonte}, placa ${ms.placa}] em ${ms.data.toISOString()}: arquivo nao trouxe nome - o ultimo a abastecer esse veiculo foi "${ms.sugestao_nome}" em ${ms.sugestao_data.toISOString()}. NAO apliquei essa sugestao - a linha ficou em branco ate voce confirmar.`);
   }
 

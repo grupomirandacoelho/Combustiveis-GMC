@@ -29,7 +29,7 @@ export async function onRequestPost({ request, env }) {
     const decisao = ['mesmo', 'novo', 'ignorar'].includes(d.decisao) ? d.decisao : null;
     const canonico = texto(d.canonico, 200);
     if (!chave || !decisao) { erros.push('Decisão inválida para "' + (nome || '?') + '".'); continue; }
-    if (decisao === 'mesmo' && !canonico) { erros.push('Informe o posto já cadastrado na Base para "' + nome + '".'); continue; }
+    if (decisao === 'mesmo' && !canonico) { erros.push('Informe o posto já existente nos abastecimentos para "' + nome + '".'); continue; }
     stmts.push(env.DB.prepare(
       `INSERT INTO consolidador_postos (chave, nome, decisao, canonico, endereco, cidade, uf, usuario_nome) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(chave) DO UPDATE SET nome = excluded.nome, decisao = excluded.decisao, canonico = excluded.canonico,

@@ -593,7 +593,7 @@ async function aplicarDadosNovos(info) {
   try {
     await recarregarDados();
     window.dispatchEvent(new CustomEvent('dados-atualizados'));
-    aviso('Dados atualizados com a Base salva às ' + hora(info.baseSalvaEm || info.geradoEm) + '.');
+    aviso('Dados atualizados (gerados às ' + hora(info.baseSalvaEm || info.geradoEm) + ').');
     dadosNovos = null;
   } catch (e) {
     aviso('Não foi possível carregar os dados novos: ' + e.message);
@@ -615,19 +615,19 @@ async function atualizarDados() {
   if (a && a.tipo === 'enviando') {
     recebendo = a.s;
     carregarQuandoChegar = true;
-    aviso('A Base salva às ' + hora(a.s.baseSalvaEm) + ' está sendo enviada ao site. Os dados novos entram sozinhos em instantes.');
+    aviso('Os dados novos estão sendo gerados. Eles entram sozinhos em instantes.');
     desenharAcoes();
     clearTimeout(tRapido);
     tRapido = setTimeout(conferirVersao, 10 * 1000);
     return;
   }
   if (a && a.tipo === 'erro') {
-    aviso('O envio da Base salva às ' + hora(a.s.baseSalvaEm) + ' falhou. O computador da sincronização tenta de novo na próxima alteração; se persistir, veja o log dele.');
+    aviso('A geração dos dados novos falhou. Ela é tentada de novo sozinha em alguns minutos.');
     desenharAcoes();
     return;
   }
-  aviso('Você já está com os dados mais recentes (Base salva às ' + hora(info.baseSalvaEm || info.geradoEm) + ' de ' +
-    new Date(info.baseSalvaEm || info.geradoEm).toLocaleDateString('pt-BR') + '). Depois de salvar a Base, o envio leva cerca de 1 minuto.');
+  aviso('Você já está com os dados mais recentes (gerados às ' + hora(info.baseSalvaEm || info.geradoEm) + ' de ' +
+    new Date(info.baseSalvaEm || info.geradoEm).toLocaleDateString('pt-BR') + ').');
   desenharAcoes();
 }
 
@@ -643,11 +643,11 @@ function desenharAcoes() {
   at.className = 'btn btn-atualizar' + (dadosNovos ? ' tem-novo' : '');
   at.disabled = atualizando;
   const girar = atualizando || recebendo;
-  at.title = dadosNovos ? 'A Base foi atualizada em ' + quando(dadosNovos)
-    : recebendo ? 'A Base salva às ' + hora(recebendo.baseSalvaEm) + ' está sendo enviada ao site'
-    : 'Buscar os dados mais recentes da Base';
+  at.title = dadosNovos ? 'Há dados novos, de ' + quando(dadosNovos)
+    : recebendo ? 'Os dados novos estão sendo gerados'
+    : 'Buscar os dados mais recentes';
   at.innerHTML = '<svg aria-hidden="true" class="' + (girar ? 'girando' : '') + '"><use href="#i-atualizar"/></svg>' +
-    '<span class="txt">' + (atualizando ? 'Atualizando…' : dadosNovos ? 'Atualizar: dados novos' : recebendo ? 'Recebendo a Base…' : 'Atualizar') + '</span>' +
+    '<span class="txt">' + (atualizando ? 'Atualizando…' : dadosNovos ? 'Atualizar: dados novos' : recebendo ? 'Recebendo os dados…' : 'Atualizar') + '</span>' +
     (dadosNovos ? '<span class="ponto-novo" aria-hidden="true"></span>' : '');
   at.addEventListener('click', atualizarDados);
   // transações das APIs dos cartões (Ticket Log e TruckPag) somadas aos painéis antes de entrarem na planilha
@@ -662,7 +662,7 @@ function desenharAcoes() {
     tr.innerHTML = '<span class="ponto-vivo" aria-hidden="true"></span><span class="txt">Tempo real: ' + x.n.toLocaleString('pt-BR') +
       (ultima ? ' · última ' + ultima : '') + '</span>';
     tr.title = x.n.toLocaleString('pt-BR') + ' transações das APIs dos cartões (Ticket ' + (pc.TICKET || 0) + ', TruckPag ' + (pc.TRUCKPAG || 0) +
-      ') já somadas nos painéis e que ainda não estão na planilha Base. Entram na Base_copia no dia seguinte (D-1). Veloe e Vibra só aparecem depois da planilha.';
+      ') de hoje, que ainda não estão nos abastecimentos. Entram no dia seguinte (D-1). Veloe e Vibra entram pelo Consolidador.';
     tr.classList.remove('oculto');
   }).catch(() => {});
   acoes.appendChild(at);
@@ -760,16 +760,16 @@ const DESCRICOES = {
   'bomba-rateio': 'Rateio de cada nota de compra das bombas internas por centro de custo e placa, validado e disponível para o fiscal.',
   'consulta-km': 'Último hodômetro de cada placa e a data da leitura, com o histórico de leituras.',
   'mapa-calor': 'Onde a frota abastece: litros e preço médio de cada posto no mapa.',
-  'roteirizador': 'Traça a rota de uma viagem avulsa e sugere onde abastecer pelo menor custo, com os preços da Base.',
+  'roteirizador': 'Traça a rota de uma viagem avulsa e sugere onde abastecer pelo menor custo, com os preços dos abastecimentos.',
   'postos-motoristas': 'Postos autorizados e bloqueados por unidade: adicionar, editar, bloquear e autorizar.',
   'preco-postos': 'Preço pago em cada posto contra o negociado, quanto foi pago acima e as negociações desatualizadas.',
-  'rodada-precos': 'Atualiza o valor negociado de cada posto pelo preço da última transação e grava na planilha.',
-  'consolidador': 'Junta os abastecimentos de Ticket, Truckpag, Veloe e Vibra com o histórico da Base e grava na Base_copia.',
-  'abastecimentos': 'Corrige hodômetro, valor por litro e informações adicionais dos abastecimentos da Base_copia.',
-  'conferencia-cartoes': 'Compara a Base_copia com a Ticket e a TruckPag, separando o que mudou no cartão das correções feitas no portal.',
+  'rodada-precos': 'Atualiza o valor negociado de cada posto pelo preço da última transação.',
+  'consolidador': 'Junta os abastecimentos de Ticket, Truckpag, Veloe e Vibra com o histórico e grava nos abastecimentos do portal.',
+  'abastecimentos': 'Corrige hodômetro, valor por litro e informações adicionais dos abastecimentos.',
+  'conferencia-cartoes': 'Compara os abastecimentos do portal com a Ticket e a TruckPag, separando o que mudou no cartão das correções feitas no portal.',
   'cartoes-frota': 'Situação dos cartões Ticket, TruckPag e Veloe de cada placa, último uso e avisos dos motoristas.',
-  'cadastro-placas': 'Cadastro dos veículos da planilha de controle: categoria, unidade, meta, ponto crítico e tanque.',
-  'cadastro-motoristas': 'Cadastro dos motoristas da planilha de controle: unidade, usuário da área do motorista, senhas dos cartões e últimos acessos.',
+  'cadastro-placas': 'Cadastro dos veículos: categoria, unidade, meta, ponto crítico e tanque.',
+  'cadastro-motoristas': 'Cadastro dos motoristas: unidade, usuário da área do motorista, senhas dos cartões e últimos acessos.',
   'acessos': 'Criar, editar e excluir logins e escolher o que cada pessoa pode usar no portal.',
 };
 
@@ -825,7 +825,7 @@ function montarInicio(ctx) {
     const el = document.getElementById('info-dados');
     if (!el) return;
     const g = new Date(d.geradoEm);
-    el.textContent = 'Dados carregados da Base em ' + g.toLocaleDateString('pt-BR') + ' às ' +
+    el.textContent = 'Dados atualizados em ' + g.toLocaleDateString('pt-BR') + ' às ' +
       g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) +
       '. Abastecimentos de ' + fmtDia(d.diaMin) + ' a ' + fmtDia(d.diaMax) + '.';
   }).catch((e) => {

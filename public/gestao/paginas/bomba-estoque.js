@@ -48,11 +48,11 @@ export async function montar(ctx) {
     <dialog class="dialogo" id="be-dialogo" aria-labelledby="be-dlg-titulo">
       <form id="be-form" novalidate>
         <h2 id="be-dlg-titulo">Adicionar base</h2>
-        <p class="dialogo-explica">A base é a bomba interna (ou o cais da Vibra). O posto é como ela aparece nos abastecimentos da Base (ex.: POSTO INT RAJA JEQUIE ou CALAN): é por ele que o estoque acha as saídas.</p>
+        <p class="dialogo-explica">A base é a bomba interna (ou o cais da Vibra). O posto é como ela aparece nos abastecimentos (ex.: POSTO INT RAJA JEQUIE ou CALAN): é por ele que o estoque acha as saídas.</p>
         <p class="erro-form oculto" id="be-erro" role="alert"></p>
         <div class="grade-form">
           <label class="campo-form largo"><span>Nome da base</span><input name="nome" required autocomplete="off" placeholder="Ex.: RAJA LOG JEQUIE…"></label>
-          <label class="campo-form largo"><span>Posto nos abastecimentos da Base</span><input name="posto" list="be-postos" required autocomplete="off" spellcheck="false" placeholder="Ex.: POSTO INT RAJA JEQUIE ou CALAN…"></label>
+          <label class="campo-form largo"><span>Posto nos abastecimentos</span><input name="posto" list="be-postos" required autocomplete="off" spellcheck="false" placeholder="Ex.: POSTO INT RAJA JEQUIE ou CALAN…"></label>
         </div>
         ${['diesel', 'arla'].map((t) => `
         <fieldset class="be-tanque" data-tanque="${t}">
@@ -73,9 +73,9 @@ export async function montar(ctx) {
       </form>
     </dialog>`;
   const el = (id) => pagina.querySelector('#' + id);
-  ctx.definirSub('Estoque dos tanques das bombas internas. Abastecimentos da Base até ' + new Date(dados.diaMax * 864e5).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) +
-    (copiaEm ? ' e da Base_copia (Consolidador) lida em ' + copiaEm.toLocaleDateString('pt-BR') + ' às ' + copiaEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '.'
-      : '. A lista da Base_copia não pôde ser lida agora: os abastecimentos consolidados que ainda não estão na Base ficaram de fora.'));
+  ctx.definirSub('Estoque dos tanques das bombas internas. Abastecimentos até ' + new Date(dados.diaMax * 864e5).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) +
+    (copiaEm ? ' (lista dos abastecimentos lida em ' + copiaEm.toLocaleDateString('pt-BR') + ' às ' + copiaEm.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + ').'
+      : '. A lista dos abastecimentos não pôde ser lida agora: os lançados mais recentemente podem ter ficado de fora.'));
 
   // tanque de armazenamento (cilindro com tampa e aros) no lugar da barra (pedido do usuário em 19/11/2026): o líquido sobe com o
   // nível, na cor do alerta (verde; amarelo abaixo de 25%; vermelho abaixo de 10% ou negativo), e a % fica no meio do tanque
@@ -137,7 +137,7 @@ export async function montar(ctx) {
           <div><dt>Capacidade</dt><dd class="num">${num(e.capacidade, 0)} L</dd></div>
           <div><dt>Preço médio</dt><dd class="num">${e.preco === null ? '—' : 'R$ ' + num(e.preco, 2)}</dd></div>
         </dl>
-        <small class="be-conta" title="Medição + compras − abastecimentos">Medição ${esc(fmtQuando(e.inicialEm))}: ${num(e.inicial, 0)} L · +${num(e.litrosCompra, 0)} L em ${e.nCompras} compra(s) · −${num(e.litrosSaida, 0)} L em ${e.nSaidas} abastecimento(s)${e.nPendentes ? ' (' + e.nPendentes + ' lançado(s) pelo site, ainda não na Base)' : ''}${e.ultimaSaida ? ' · último ' + esc(fmtMinutos(e.ultimaSaida)) : ''}</small>
+        <small class="be-conta" title="Medição + compras − abastecimentos">Medição ${esc(fmtQuando(e.inicialEm))}: ${num(e.inicial, 0)} L · +${num(e.litrosCompra, 0)} L em ${e.nCompras} compra(s) · −${num(e.litrosSaida, 0)} L em ${e.nSaidas} abastecimento(s)${e.nPendentes ? ' (' + e.nPendentes + ' lançado(s) pelo site, ainda não gravado(s))' : ''}${e.ultimaSaida ? ' · último ' + esc(fmtMinutos(e.ultimaSaida)) : ''}</small>
         ${e.volume < 0 ? '<small class="aviso-linha">Estoque negativo: confira a medição ou lance as compras que faltam.</small>' : ''}
       </div>`;
     }).join('');

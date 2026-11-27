@@ -148,8 +148,8 @@ export function criarFiltros(o) {
     const antes = periodo.ate !== null && periodo.ate < min;
     if (!depois && !antes) return '';
     return '<span class="chip-aviso" role="status">' + (depois
-      ? 'A Base tem abastecimentos até ' + esc(fmtDia(max)) + ': este período ainda não tem dados. Quando a Base for atualizada com os abastecimentos dele, eles aparecem aqui.'
-      : 'A Base começa em ' + esc(fmtDia(min)) + ': este período não tem dados.') +
+      ? 'Há abastecimentos até ' + esc(fmtDia(max)) + ': este período ainda não tem dados. Quando os abastecimentos dele entrarem, eles aparecem aqui.'
+      : 'Os abastecimentos começam em ' + esc(fmtDia(min)) + ': este período não tem dados.') +
       (depois ? ' <button type="button" class="link-acao" data-ultimo-mes>Ver o mês passado</button>' : '') + '</span>';
   }
 

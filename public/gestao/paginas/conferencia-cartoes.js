@@ -12,10 +12,10 @@ import { botoesMaisMenos } from '../lib/filtros.js';
 
 const ROTULO = { F: 'Placa', Q: 'Hodômetro', O: 'Litros', T: 'Valor' };
 const ABAS = [
-  ['cartao', 'Alterado no cartão'], ['conflito', 'Conflito'], ['falta', 'Falta na Base_copia'],
+  ['cartao', 'Alterado no cartão'], ['conflito', 'Conflito'], ['falta', 'Falta no portal'],
   ['sumiu', 'Sumiu do cartão'], ['corrigido', 'Corrigido no portal'], ['mantido', 'Mantidos'],
 ];
-const NOME_PEDIDO = { pendente: 'Inclusão pedida, aguardando o vigia', feito: 'Incluído na Base_copia', duplicado: 'Já estava na Base_copia', erro: 'Não incluído' };
+const NOME_PEDIDO = { pendente: 'Inclusão pedida, aguardando gravação', feito: 'Incluído', duplicado: 'Já estava no portal', erro: 'Não incluído' };
 
 async function chamar(metodo, corpo) {
   const r = await fetch('/api/conferencia-cartoes', {
@@ -45,10 +45,10 @@ const pendentes = (i) => (i.campos ? i.campos.filter((c) => !c.decisao && c.clas
 const decididas = (i) => (i.campos ? i.campos.filter((c) => c.decisao).map((c) => c.chave) : i.decisao ? [i.chave] : []);
 const sufixo = (n) => n + (n === 1 ? ' abastecimento' : ' abastecimentos');
 const TODOS = {
-  cartao: { rotulo: 'Manter o nosso em todos', acao: 'manter', pergunta: (n) => 'Manter o valor da Base_copia em ' + sufixo(n) + ' de "Alterado no cartão"? Eles vão para "Mantidos", onde dá para desfazer.' },
-  conflito: { rotulo: 'Manter o nosso em todos', acao: 'manter', pergunta: (n) => 'Manter o valor da Base_copia em ' + sufixo(n) + ' de "Conflito"? Eles vão para "Mantidos", onde dá para desfazer.' },
-  falta: { rotulo: 'Ignorar todos', acao: 'manter', pergunta: (n) => 'Ignorar ' + sufixo(n) + ' de "Falta na Base_copia"? Eles vão para "Mantidos", onde dá para desfazer.' },
-  sumiu: { rotulo: 'Manter todos', acao: 'manter', pergunta: (n) => 'Manter na Base_copia ' + sufixo(n) + ' de "Sumiu do cartão"? Eles vão para "Mantidos", onde dá para desfazer.' },
+  cartao: { rotulo: 'Manter o nosso em todos', acao: 'manter', pergunta: (n) => 'Manter o valor do portal em ' + sufixo(n) + ' de "Alterado no cartão"? Eles vão para "Mantidos", onde dá para desfazer.' },
+  conflito: { rotulo: 'Manter o nosso em todos', acao: 'manter', pergunta: (n) => 'Manter o valor do portal em ' + sufixo(n) + ' de "Conflito"? Eles vão para "Mantidos", onde dá para desfazer.' },
+  falta: { rotulo: 'Ignorar todos', acao: 'manter', pergunta: (n) => 'Ignorar ' + sufixo(n) + ' de "Falta no portal"? Eles vão para "Mantidos", onde dá para desfazer.' },
+  sumiu: { rotulo: 'Manter todos', acao: 'manter', pergunta: (n) => 'Manter no portal ' + sufixo(n) + ' de "Sumiu do cartão"? Eles vão para "Mantidos", onde dá para desfazer.' },
   mantido: { rotulo: 'Desfazer todos', acao: 'desfazer', pergunta: (n) => 'Desfazer a decisão de ' + sufixo(n) + '? Eles voltam para as abas de origem.' },
 };
 
@@ -68,7 +68,7 @@ async function buscarJson(url, oque) {
   return j;
 }
 async function correcaoDoCartao(item, valores) {
-  if (!listaBase) listaBase = await buscarJson('/gestao/dados/base-copia.json', 'a lista da Base_copia');
+  if (!listaBase) listaBase = await buscarJson('/gestao/dados/base-copia.json', 'a lista dos abastecimentos');
   const { alteracoes } = await buscarJson('/api/base-copia', 'as correções salvas');
   const L = listaBase, c = L.col, D = L.dic, txt = (k, i) => (c[k][i] === null ? null : D[k][c[k][i]]);
   // correções salvas que a lista ainda não traz (como no Editar): ficam por cima dos valores da planilha
@@ -88,7 +88,7 @@ async function correcaoDoCartao(item, valores) {
   const [pl, mi] = String(item.chave || '').split('|');
   const bate = (l) => !!l && limpa(l.placaLista) === pl && Math.round(l.serial * 1440) === Number(mi);
   const l = linhas.find((x) => x.linha === item.linha && bate(x)) || linhas.find(bate);
-  if (!l) throw new Error('Não encontrei este abastecimento na Base_copia (pode ter sido excluído). Use "Abrir no Editar".');
+  if (!l) throw new Error('Não encontrei este abastecimento (pode ter sido excluído). Use "Abrir no Editar".');
   const cadeia = (x) => normKey(x.placa) + '§' + chaveCadeia(normFuel(x.fuel)[0] || '');
   const seq = linhas.filter((x) => cadeia(x) === cadeia(l)).sort((a, b) => a.serial - b.serial || a.linha - b.linha);
   const k = seq.indexOf(l), ant = seq[k - 1] || null, prox = seq[k + 1] || null;
@@ -104,7 +104,7 @@ async function correcaoDoCartao(item, valores) {
   else if ('O' in cel && typeof novo.vl === 'number' && typeof novo.litros === 'number') por('T', r6(novo.litros * novo.vl));
   if ('Q' in cel && ant && typeof ant.hodo === 'number' && typeof novo.hodo === 'number') por('R', novo.hodo - ant.hodo);
   if (('Q' in cel || 'O' in cel) && typeof novo.km === 'number') por('S', novo.litros > 0 ? r6(novo.km / novo.litros) : null);
-  if (!Object.keys(cel).length) throw new Error('A Base_copia já está com o valor do cartão; esta linha some da conferência na próxima volta do vigia.');
+  if (!Object.keys(cel).length) throw new Error('O portal já está com o valor do cartão; esta linha some na próxima conferência.');
   // KM impossível com o valor do cartão (negativo ou mais de 3.000 km): quase sempre é o cartão que está errado
   const estranho = (km) => typeof km === 'number' && (km < 0 || km > 3000);
   const alertas = [];
@@ -175,7 +175,7 @@ export async function montar(ctx) {
     }
     if (i.classe === 'sumiu') {
       const v = i.nossos || {};
-      return '<span class="cc-campo">Na Base_copia (linha ' + fmt.int(i.linha) + '): ' + (i.combustivel ? esc(i.combustivel) + ' · ' : '') + valor('O', v.O) + ' L · hodômetro ' +
+      return '<span class="cc-campo">No portal (linha ' + fmt.int(i.linha) + '): ' + (i.combustivel ? esc(i.combustivel) + ' · ' : '') + valor('O', v.O) + ' L · hodômetro ' +
         valor('Q', v.Q) + ' · ' + valor('T', v.T) + '</span>' + (i.decisao ? '<div class="nota">Mantido por ' + esc(i.decisao.usuario_nome || '—') + '</div>' : '');
     }
     return i.campos.map((c) => {
@@ -202,7 +202,7 @@ export async function montar(ctx) {
       else if (d.podeAplicar && ativos.length) b.push('<button type="button" class="btn btn-principal" data-aplicar>Aplicar o do cartão</button>');
       if (d.podeEditar) b.push('<button type="button" class="btn" data-manter>Manter o nosso</button>');
     } else if (i.classe === 'falta' && abaDe(i) === 'falta') {
-      if (d.podeEditar) b.push('<button type="button" class="btn btn-principal" data-incluir>Incluir na Base_copia</button><button type="button" class="btn" data-manter>Ignorar</button>');
+      if (d.podeEditar) b.push('<button type="button" class="btn btn-principal" data-incluir>Incluir no portal</button><button type="button" class="btn" data-manter>Ignorar</button>');
     } else if (i.classe === 'sumiu' && abaDe(i) === 'sumiu') {
       if (d.podeAplicar) b.push('<a class="btn" href="' + esc(linkAplicar(i)) + '">Abrir no Editar</a>');
       if (d.podeEditar) b.push('<button type="button" class="btn" data-manter>Manter</button>');
@@ -244,13 +244,13 @@ export async function montar(ctx) {
       const it = r.itens[0];
       const mudancas = Object.entries(it.celulas).map(([col, v]) => (NOME_COL[col] || col) + ': ' + fmtCol(col, it.antes[col]) + ' → ' + fmtCol(col, v));
       if (!await confirmar((r.alertas.length ? r.alertas.join('\n') + '\n\n' : '') + 'Aplicar o valor do cartão em ' + i.placa + ' (' + fmtQuando(i.quando) + ')?\n\n' + mudancas.concat(r.proxima).join('\n') +
-        '\n\nO vigia grava na Base_copia em instantes.')) { voltar(); return; }
+        '\n\nA gravação leva alguns instantes.')) { voltar(); return; }
       botao.textContent = 'Gravando…';
       const resp = await fetch('/api/base-copia', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ itens: r.itens }) });
       if (resp.status === 401) { location.href = '/?entrar=1'; return; }
       const j = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(j.erro || 'Não foi possível gravar a correção (' + resp.status + ').');
-      if (ctx.aviso) ctx.aviso('Correção gravada: ' + i.placa + ' fica com o valor do cartão. O vigia aplica na Base_copia em instantes.');
+      if (ctx.aviso) ctx.aviso('Correção gravada: ' + i.placa + ' fica com o valor do cartão em instantes.');
       await recarregar();
     } catch (e) {
       if (e.message !== 'sessão') { if (ctx.aviso) ctx.aviso(e.message); else alert(e.message); }

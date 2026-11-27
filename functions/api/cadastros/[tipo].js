@@ -71,7 +71,7 @@ export async function onRequestPost({ request, env, params, waitUntil }) {
   if (tipo === 'motoristas' && acao === 'redefinir-senha') return redefinirSenha(env, u, corpo);
   if (!['editar', 'adicionar'].includes(acao)) return json({ erro: 'Ação desconhecida.' }, 400);
   const { itens, atualizadoEm } = await lista(env, tipo);
-  if (!itens) return json({ erro: 'A lista ainda não foi publicada pelo computador da sincronização. Tente mais tarde.' }, 409);
+  if (!itens) return json({ erro: 'A lista ainda não está disponível. Tente de novo em instantes.' }, 409);
 
   const { dados, erros } = validar(tipo, acao, corpo.dados && typeof corpo.dados === 'object' ? corpo.dados : {});
   if (erros.length) return json({ erro: erros.join(' ') }, 400);

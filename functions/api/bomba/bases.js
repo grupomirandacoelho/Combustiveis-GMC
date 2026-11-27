@@ -44,7 +44,7 @@ export async function onRequestPost({ request, env }) {
   const nome = texto(d.nome, 80).toUpperCase(), posto = texto(d.posto, 120).toUpperCase();
   const erros = [];
   if (!nome) erros.push('Informe o nome da base.');
-  if (!posto) erros.push('Informe o posto (nome do estabelecimento na Base).');
+  if (!posto) erros.push('Informe o posto (nome do estabelecimento como aparece nos abastecimentos).');
   const tanques = {};
   for (const t of TANQUES) {
     const r = validarTanque((d.tanques || {})[t], t === 'diesel' ? 'diesel' : 'Arla');

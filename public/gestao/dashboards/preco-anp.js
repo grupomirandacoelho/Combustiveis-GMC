@@ -348,7 +348,7 @@ export async function montar(ctx) {
     });
     el('anp-grafico-titulo').textContent = 'Nosso preço e a média da ANP, ' + (estado.per === 'semanal' ? 'semana a semana' : 'mês a mês') + ' · ' + nomeLocal(estado.nivel, estado.local);
     el('anp-grafico-nota').textContent = 'Nosso preço: soma do valor pago ÷ soma dos litros de diesel ' + nomeOrigem() + ' em cada ' +
-      (estado.per === 'semanal' ? 'semana (domingo a sábado, como a ANP)' : 'mês') + '. Todo diesel da Base conta como S10. ANP: preço médio de revenda do óleo diesel S10' +
+      (estado.per === 'semanal' ? 'semana (domingo a sábado, como a ANP)' : 'mês') + '. Todo diesel dos abastecimentos conta como S10. ANP: preço médio de revenda do óleo diesel S10' +
       (t.misto ? ' do estado de cada abastecimento, pesado pelos mesmos litros (assim a comparação não mistura a diferença de preço entre estados).' : '.');
     graficoPeriodo(el('anp-grafico'), pts, {
       linhas: [{ campo: 'anp', rot: 'Média ANP', cor: 'var(--tinta-2)', tracejada: true }, { campo: 'nosso', rot: 'Nosso ponderado', cor: 'var(--serie-1)' }],
@@ -464,9 +464,9 @@ export async function montar(ctx) {
     const sem = r.semanal && r.semanal.ultimo, mes = r.mensal && r.mensal.ultimo;
     el('anp-fonte').innerHTML = 'Fonte: ANP, Levantamento de Preços de Combustíveis (preço médio de revenda do óleo diesel S10). ' +
       'Última semana publicada: ' + (sem ? esc(fmtDia(sem) + ' a ' + fmtDia(sem + 6)) : '—') + '; último mês: ' + (mes ? esc(fmtMes(mesDoDia(mes), true)) : '—') +
-      '. O computador da sincronização confere a ANP de hora em hora e atualiza o site quando ela publica.';
+      '. A atualização automática confere a ANP a cada 3 horas e traz a semana nova quando ela publica.';
     const g = new Date(dados.geradoEm);
-    ctx.definirSub('Diesel ' + nomeOrigem() + ' contra a média de revenda da ANP (diesel S10). Base enviada em ' + g.toLocaleDateString('pt-BR') + ' às ' +
+    ctx.definirSub('Diesel ' + nomeOrigem() + ' contra a média de revenda da ANP (diesel S10). Dados atualizados em ' + g.toLocaleDateString('pt-BR') + ' às ' +
       g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '.');
   }
 

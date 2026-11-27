@@ -105,8 +105,8 @@ export async function montar(ctx) {
     }
     externos.forEach((k) => internos.delete(k));   // interno é só quem nunca abasteceu como posto externo
     const g = new Date(d.geradoEm);
-    ctx.definirSub('Base enviada em ' + g.toLocaleDateString('pt-BR') + ' às ' +
-      g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '. Diesel em postos externos contra o preço negociado na planilha de negociações.');
+    ctx.definirSub('Dados atualizados em ' + g.toLocaleDateString('pt-BR') + ' às ' +
+      g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '. Diesel em postos externos contra o preço negociado.');
   }
   usarDados(dados);
   // postos autorizados na lista dos motoristas (/postos.csv, publicada logo depois de gravar na planilha): entram na
@@ -179,7 +179,7 @@ export async function montar(ctx) {
         </div>
         <datalist id="pp-sug-avisos"></datalist>
         <fieldset class="perm-bloco oculto" id="pp-unidades"><legend>Atualizar nas unidades</legend><div></div></fieldset>
-        <p class="nota">Vira uma negociação nova na planilha, com a data de hoje e o momento do contato como referência do preço. Tipo, cartão e situação continuam os mesmos.</p>
+        <p class="nota">Vira uma negociação nova, com a data de hoje e o momento do contato como referência do preço. Tipo, cartão e situação continuam os mesmos.</p>
         <div class="dialogo-acoes">
           <button type="button" class="btn" data-fechar>Cancelar</button>
           <button type="submit" class="btn btn-principal" id="pp-salvar">Gravar preço</button>
@@ -203,7 +203,7 @@ export async function montar(ctx) {
           <label class="campo-form largo"><span>Cidade</span><input name="cidade" required autocomplete="off" placeholder="Ex.: MARABA - PA…"></label>
           <label class="campo-form largo"><span>Aviso para o motorista</span><input name="aviso" autocomplete="off" list="pp-sug-avisos"></label>
         </div>
-        <p class="nota">Vira a primeira negociação deste posto na planilha (a mesma do "Adicionar posto" em Postos dos motoristas). Como autorizado, ele entra na lista dos motoristas da unidade. Unidade, cidade, cartão e combustível vêm dos abastecimentos dele na Base: confira.</p>
+        <p class="nota">Vira a primeira negociação deste posto (a mesma do "Adicionar posto" em Postos dos motoristas). Como autorizado, ele entra na lista dos motoristas da unidade. Unidade, cidade, cartão e combustível vêm dos abastecimentos dele: confira.</p>
         <div class="dialogo-acoes">
           <button type="button" class="btn" data-fechar>Cancelar</button>
           <button type="submit" class="btn btn-principal" id="pp-inc-salvar">Incluir negociação</button>
@@ -350,9 +350,9 @@ export async function montar(ctx) {
     el('pp-inc-erro').classList.add('oculto');
     el('pp-inc-titulo').textContent = 'Incluir negociação: ' + nome;
     el('pp-inc-explica').textContent = ult
-      ? fmt.int(n) + (n === 1 ? ' abastecimento' : ' abastecimentos') + ' de diesel na Base' +
+      ? fmt.int(n) + (n === 1 ? ' abastecimento' : ' abastecimentos') + ' de diesel' +
         (porUnidade.size ? ' (' + [...porUnidade.entries()].sort((a, b) => b[1] - a[1]).map(([u, q]) => u + ': ' + q).join(', ') + ')' : '') + '.'
-      : 'Sem abastecimento de diesel na Base.';
+      : 'Sem abastecimento de diesel.';
     el('pp-inc-atual').innerHTML = htmlApoio([
       { rot: 'Negociado atual', val: '—', det: '<span class="medidor-meta">sem negociação</span>' },
       { rot: 'Último pago', val: ult ? fmt.moeda(ult.vlLitro) : '—', det: ult ? '<span class="medidor-meta">' + esc(fmtDia(ult.dia)) + (ult.placa ? ' · ' + esc(ult.placa) : '') + '</span>' : '' },

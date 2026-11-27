@@ -239,7 +239,7 @@ export async function montar(ctx) {
             <select name="motivo" class="campo-sel">${MOTIVOS.map((m) => '<option>' + esc(m) + '</option>').join('')}</select></label>
           <label class="pr-so-fora pr-largo">Aviso ao motorista (aparece na área dele)
             <textarea name="aviso" rows="3" maxlength="300"></textarea></label>
-          <label class="pr-largo">Motorista deste abastecimento (troca também na Base_copia e no resto do portal; vazio = o da Base)
+          <label class="pr-largo">Motorista deste abastecimento (troca também nos abastecimentos e no resto do portal; vazio = o original)
             <input name="para" list="pr-motoristas" autocomplete="off" maxlength="120"></label>
         </div>
         <datalist id="pr-motoristas"></datalist>
@@ -364,7 +364,7 @@ export async function montar(ctx) {
       '<th class="n"><span>Litros</span></th><th class="n"><span>% tanque</span></th><th class="n"><span>Km/L</span></th><th class="n"><span>Meta</span></th><th><span>PRIME</span></th></tr></thead><tbody>' +
       ls.map((it) => {
         const l = it.l, idx = calc.linhas.indexOf(it), kmL = !it.fora && l.litros ? it.km / l.litros : null;
-        return '<tr' + attrSel(it) + '><td class="pr-abast-id"><strong>' + esc(l.placa) + '</strong> ' + seloCartao(l.cartao) + (l.tempoReal ? ' <span class="selo-tempo-real" title="Veio da API do cartão e ainda não está na planilha Base">API</span>' : '') +
+        return '<tr' + attrSel(it) + '><td class="pr-abast-id"><strong>' + esc(l.placa) + '</strong> ' + seloCartao(l.cartao) + (l.tempoReal ? ' <span class="selo-tempo-real" title="Veio da API do cartão hoje; entra nos abastecimentos no dia seguinte (D-1)">API</span>' : '') +
           '<small class="cidade-linha num">' + esc(fmtDia(l.dia)) + ' ' + esc(hora(l.seg)) + '</small></td><td>' + esc(l.fornecedor || '—') + '</td>' +
           '<td class="n num">' + fmt.int(l.hodometro) + '</td>' +
           '<td class="n"><span class="num">' + fmt.int(it.fora ? l.km : it.km) + '</span>' + notaKm(it) + '</td>' +
@@ -485,7 +485,7 @@ export async function montar(ctx) {
 
   function desenharRanking(ranking) {
     el('pr-conta').textContent = fmt.int(ranking.length) + ' motoristas';
-    if (!ranking.length) { el('pr-corpo').innerHTML = '<div class="vazio">Nenhum abastecimento de diesel neste mês na Base.</div>'; return; }
+    if (!ranking.length) { el('pr-corpo').innerHTML = '<div class="vazio">Nenhum abastecimento de diesel neste mês.</div>'; return; }
     // # = posição no ranking (não muda ao ordenar por outra coluna); clicar no motorista abre os abastecimentos dele
     const pos = new Map(ranking.map((r, i) => [r.chave, i + 1]));
     const tb = chaveNome(buscaRank);
@@ -525,9 +525,9 @@ export async function montar(ctx) {
       (lista.length ? lista.map((it) => {
         const l = it.l, idx = calc.linhas.indexOf(it);
         const kmL = !it.fora && l.litros ? it.km / l.litros : null;
-        return '<tr' + attrSel(it) + '><td class="pr-abast-id"><strong>' + esc(l.placa) + '</strong> ' + seloCartao(l.cartao) + (l.tempoReal ? ' <span class="selo-tempo-real" title="Veio da API do cartão e ainda não está na planilha Base">API</span>' : '') +
+        return '<tr' + attrSel(it) + '><td class="pr-abast-id"><strong>' + esc(l.placa) + '</strong> ' + seloCartao(l.cartao) + (l.tempoReal ? ' <span class="selo-tempo-real" title="Veio da API do cartão hoje; entra nos abastecimentos no dia seguinte (D-1)">API</span>' : '') +
           '<small class="cidade-linha num">' + esc(fmtDia(l.dia).slice(0, 5)) + ' ' + esc(hora(l.seg)) + '</small></td><td class="n num">' + fmt.int(l.hodometro) + '</td>' +
-          '<td>' + esc(it.motorista) + (it.d && it.d.motorista_para ? '<small class="cidade-linha">na Base: ' + esc(l.motorista) + '</small>' : '') + '</td>' +
+          '<td>' + esc(it.motorista) + (it.d && it.d.motorista_para ? '<small class="cidade-linha">nos abastecimentos: ' + esc(l.motorista) + '</small>' : '') + '</td>' +
           '<td>' + esc(l.fornecedor || '—') + '<small class="cidade-linha">' + esc(l.cc) + '</small></td>' +
           '<td class="n"><span class="num">' + fmt.int(it.fora ? l.km : it.km) + '</span>' + notaKm(it) + '</td>' +
           '<td class="n num">' + fmt.d2(l.litros) + '</td><td class="n num">' + fmt.pct(pctTanque(l)) + '</td><td class="n">' + kmlHtml(kmL, l.meta) + '</td><td class="n num">' + (l.meta ? fmt.d2(l.meta) : '—') + '</td>' +
@@ -573,8 +573,8 @@ export async function montar(ctx) {
       // motorista trocado (ou a troca desfeita): corrige a coluna L da Base_copia; o resto do portal muda quando a Base for atualizada
       const novo = (para || l.motorista).toUpperCase();
       if (chaveNome(para) !== chaveNome(paraAntes) && chaveNome(novo) !== chaveNome(l.motorista) || (!para && paraAntes)) {
-        try { await corrigirNaBaseCopia(l, 'L', novo); aviso('Motorista trocado no PRIME e enviado para a Base_copia (' + novo + '). O resto do portal muda quando a Base for atualizada.'); }
-        catch (err) { if (err.message !== 'sessão') aviso('A troca ficou no PRIME, mas não foi para a Base_copia: ' + err.message); }
+        try { await corrigirNaBaseCopia(l, 'L', novo); aviso('Motorista trocado no PRIME e nos abastecimentos (' + novo + '). Os dashboards mudam na próxima publicação.'); }
+        catch (err) { if (err.message !== 'sessão') aviso('A troca ficou no PRIME, mas não foi para os abastecimentos: ' + err.message); }
       }
       el('pr-dlg').close();
       await carregar(true);   // sem o 'Carregando': a lista fica onde estava

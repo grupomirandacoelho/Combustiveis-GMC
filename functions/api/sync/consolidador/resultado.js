@@ -13,7 +13,7 @@ export async function onRequestPost({ request, env }) {
   const stmts = itens.map((i) => {
     let msg = i.mensagem ? String(i.mensagem).slice(0, 300) : null;
     if (i.estado === 'aplicada' && !msg) {
-      msg = (i.gravadas || 0) + ' abastecimento(s) gravado(s)' + (i.ignoradas ? '; ' + i.ignoradas + ' já estavam na planilha' : '') + '.';
+      msg = (i.gravadas || 0) + ' abastecimento(s) gravado(s)' + (i.ignoradas ? '; ' + i.ignoradas + ' já estavam nos abastecimentos' : '') + '.';
     }
     return env.DB.prepare('UPDATE consolidador_lotes SET estado = ?, mensagem = ?, aplicada_em = ?, linha_inicial = ?, linha_final = ? WHERE id = ?')
       .bind(i.estado, msg, i.estado === 'aplicada' ? agora : null, int(i.linha_inicial), int(i.linha_final), i.id);

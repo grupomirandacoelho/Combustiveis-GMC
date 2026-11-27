@@ -64,7 +64,7 @@ export async function montar(ctx) {
     dados = d;
     base = d.linhas.filter((l) => EXTERNOS.has(l.tipoEstab) && l.litros > 0);
     const g = new Date(d.geradoEm);
-    ctx.definirSub('Base enviada em ' + g.toLocaleDateString('pt-BR') + ' às ' + g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) +
+    ctx.definirSub('Dados atualizados em ' + g.toLocaleDateString('pt-BR') + ' às ' + g.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) +
       '. Só postos externos (sem a bomba interna), todos os combustíveis.');
   }
   usarDados(dados);

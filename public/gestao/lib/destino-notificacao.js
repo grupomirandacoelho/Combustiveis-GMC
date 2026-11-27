@@ -16,7 +16,6 @@ export const TELAS_PADRAO = {
   'preco-alto': ['preco-postos', 'mapa-calor', 'rodada-precos', 'preco-anp', 'preco-refinaria', 'preco-fornecedor'],
   'falta-cartao': ['cartoes-frota'],
   comunicado: [],
-  'base-desatualizada': [],
   personalizado: [],   // aviso personalizado (26/11/2026): todos, ou as telas/usuários escolhidos
 };
 // o que o login precisa para o navegador conseguir verificar o tipo ('dados' = alguma tela que lê os abastecimentos)

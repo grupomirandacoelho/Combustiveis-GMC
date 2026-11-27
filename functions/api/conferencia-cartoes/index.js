@@ -92,7 +92,7 @@ export async function onRequestGet({ request, env }) {
   if (!u) return json({ erro: 'Não conectado.' }, 401);
   if (!pode(u, 'conferencia-cartoes')) return json({ erro: 'Seu acesso não inclui a conferência com os cartões.' }, 403);
   const r = await montar(env);
-  if (!r) return json({ erro: 'A conferência ainda não foi feita pelo computador da sincronização. Tente mais tarde.' }, 503);
+  if (!r) return json({ erro: 'A conferência ainda não foi feita (roda a cada 3 horas). Tente mais tarde.' }, 503);
   if (new URL(request.url).searchParams.get('resumo')) return json({ pendentes: r.pendentes });
   return json({ ...r, podeEditar: pode(u, 'conferencia-cartoes-editar'), podeAplicar: pode(u, 'abastecimentos-editar') });
 }

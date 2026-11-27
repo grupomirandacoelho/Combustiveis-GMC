@@ -246,5 +246,7 @@ Decisões do usuário: começar pela equipe de gestão (depois os motoristas); e
       economizado no ranking do PRIME (26/11/2026).
 - [x] Campos de texto, listas e buscas com a borda suave em todo o portal (26/11/2026).
 - [x] Medidor da média: linha "% da meta" embaixo do arco, sem sobrepor (26/11/2026).
+- [x] Textos da tela sem Base/Base_copia/planilha/vigia (27/11/2026; teste `textos-sem-planilha.test.mjs`).
+- [ ] Erros no console ao trocar de tela rápido (vistos 27/11 na varredura): Operação por motorista "Cannot read properties of null (reading 'clientWidth')" e Divisão por cartão "(reading 'closest')" (mesmo tipo do Mapa de calor: chamada atrasada depois de sair).
 - [ ] Usuário: conferir no Android se a notificação mostra o símbolo do grupo na barra (abrir o app uma vez para atualizar).
 

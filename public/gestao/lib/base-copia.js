@@ -10,7 +10,7 @@ function carregarLista() {
     lista = fetch('/gestao/dados/base-copia.json', { credentials: 'same-origin' }).then(async (r) => {
       if (r.status === 401 || r.redirected) { location.href = '/?entrar=1'; throw new Error('sessão'); }
       const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j.erro || 'Não foi possível carregar a lista da Base_copia (' + r.status + ').');
+      if (!r.ok) throw new Error(j.erro || 'Não foi possível carregar a lista dos abastecimentos (' + r.status + ').');
       return j;
     }).catch((e) => { lista = null; throw e; });
   }
@@ -48,8 +48,8 @@ export async function corrigirNaBaseCopia(l, col, valor) {
   const d = await carregarLista();
   const x = acharLinha(d, l);
   if (!x) throw new Error(l.tempoReal
-    ? 'Este abastecimento chegou pela API do cartão e ainda não está na Base_copia (entra no envio automático das 6h do dia seguinte). Troque depois disso.'
-    : 'Este abastecimento não foi encontrado na Base_copia (pode ter sido corrigido ou excluído).');
+    ? 'Este abastecimento chegou hoje pela API do cartão e ainda não está nos abastecimentos (entra às 6h do dia seguinte). Troque depois disso.'
+    : 'Este abastecimento não foi encontrado (pode ter sido corrigido ou excluído).');
   const antes = { L: x.mot, AD: x.inf3 }[col] ?? null;
   const r = await fetch('/api/base-copia', {
     method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
@@ -80,4 +80,4 @@ export function trocasPorMinuto(alteracoes) {
   }
   return m;
 }
-export const NOME_ESTADO = { pendente: 'aguardando gravação na Base_copia', aguardando: 'Base_copia aberta no Excel', aplicada: 'gravada na Base_copia' };
+export const NOME_ESTADO = { pendente: 'aguardando gravação', aguardando: 'aguardando gravação', aplicada: 'gravada' };
