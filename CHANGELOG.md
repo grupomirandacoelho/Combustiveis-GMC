@@ -6,6 +6,14 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 27/11/2026
 
+- **Mapa de calor sem erro ao sair da tela; limpeza da migração** (pedido do usuário):
+  - ao sair do Mapa de calor, chamadas atrasadas (enquadrar o mapa, mudança de tamanho, recarga dos dados) rodavam com o mapa já
+    fora da página e davam erro no console; agora param quando a tela sai;
+  - apagadas as chaves `reajustes` e `reajustes-versao` (sem uso desde o desligamento do vigia);
+  - CHECKLIST revisado: itens da saída das planilhas e dos passos 3 e 4 da migração que já estavam feitos foram fechados, com o
+    registro de que a carga do modelo `gestao` parou junto com o vigia (os painéis só usam veículos e unidades, que os cadastros
+    mantêm em dia).
+
 - **Categoria da CNH no cadastro do motorista** (pedido do usuário): a Ticket recusa motorista novo sem a categoria da CNH. No
   cadastro de motorista novo com cartões, o formulário pede CPF, data de nascimento e **categoria da CNH**, os três obrigatórios.
   O número e a validade da CNH saíram do formulário. Como os outros dados pessoais, a categoria vai só para a Ticket e a TruckPag e

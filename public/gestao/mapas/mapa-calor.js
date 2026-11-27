@@ -309,7 +309,10 @@ export async function montar(ctx) {
   let limites = null, mexeu = false;
   const semAnimacao = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   function enquadrar(animar) {
-    if (mexeu || !limites || !el('mc-mapa').clientHeight) return;
+    // fora da tela (27/11/2026): o setTimeout, o ResizeObserver e a recarga dos dados podem chegar depois do desmontar, com o
+    // mapa já fora da página (era o erro "Cannot read properties of null (reading 'clientHeight')")
+    const caixa = el('mc-mapa');
+    if (parado || mexeu || !limites || !caixa || !caixa.clientHeight) return;
     mapa.invalidateSize();
     mapa.fitBounds(limites, { animate: !!animar && !semAnimacao(), maxZoom: 13 });   // um posto só: zoom de cidade
     enquadrado = true;
@@ -831,17 +834,17 @@ export async function montar(ctx) {
     desenharSemCoord();
   });
   atualizar();
-  setTimeout(enquadrar, 60);
+  const tEnquadrar = setTimeout(enquadrar, 60);
 
   const aoTema = () => atualizar();   // recolore o anel das bolhas; o fundo escurece pelo CSS
   window.addEventListener('tema', aoTema);
-  const ro = new ResizeObserver(() => { mapa.invalidateSize(); if (!mexeu) enquadrar(); });
+  const ro = new ResizeObserver(() => { if (parado) return; mapa.invalidateSize(); if (!mexeu) enquadrar(); });
   ro.observe(el('mc-mapa'));
-  const aoAtualizarDados = () => carregarDados().then((d) => { usarDados(d); atualizar(); });
+  const aoAtualizarDados = () => carregarDados().then((d) => { if (parado) return; usarDados(d); atualizar(); });
   window.addEventListener('dados-atualizados', aoAtualizarDados);
   return {
     desmontar() {
-      parado = true; clearTimeout(timer);
+      parado = true; clearTimeout(timer); clearTimeout(tEnquadrar);
       if (mini) mini.remove();
       filtros.destruir();
       window.removeEventListener('tema', aoTema);

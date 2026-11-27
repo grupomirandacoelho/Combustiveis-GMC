@@ -25,7 +25,9 @@ e vai para o `CHANGELOG.md`. Regra de toda alteração: rodar `npm run verificar
 - [x] Carga do espelho para o modelo (`scripts/gestao_carga.py`) numa transação, com conferência dos totais e lista de pendências.
 - [x] Regras de normalização testadas (`scripts/gestao_normalizar.py`, `tests/py/test_gestao.py`).
 - [x] Relatório do que não está alinhado (`docs/BANCO.md` > Desalinhamentos).
-- [x] Vigia rodar a carga do modelo depois de cada sincronização do espelho (17/11/2026; de 5 em 5 minutos).
+- [x] Vigia rodar a carga do modelo depois de cada sincronização do espelho (17/11/2026; de 5 em 5 minutos). **Parou com o vigia em 27/11/2026**:
+      os painéis só usam `gestao.veiculos` e `gestao.unidades`, que o cadastro de placas atualiza direto (conferido 27/11: nenhuma placa nem
+      unidade fora do modelo). As outras tabelas de `gestao` ficam com a carga de 27/11 (nenhuma tela lê).
 
 ### 1.2 Corrigir os dados desalinhados (ver docs/BANCO.md)
 - [x] Senhas dos portais dos cartões: decisão do usuário (17/11) = manter na planilha (cartão físico é necessário); o modelo não guarda.
@@ -44,14 +46,16 @@ e vai para o `CHANGELOG.md`. Regra de toda alteração: rodar `npm run verificar
 - [ ] Bases de Belém, Salvador, São Paulo, GV e Ilhéus no site (Bomba interna) para as compras aparecerem em Movimentações.
 
 ### 1.3 Trocar as fontes do site e do vigia (próximas fases)
-- [ ] Site ler os dashboards do modelo (`gestao.abastecimentos` e cadastros) em vez do JSON gerado das planilhas.
+- [x] Site ler os dashboards do banco em vez do JSON das planilhas: feito pela migração 15 (`public.base_transacoes` -> `dados_painel`, 19/11),
+      não pelo modelo `gestao.abastecimentos`.
 - [x] Cadastro de placas lido do banco e gravado nele na hora (a fila para a planilha continua), 17/11.
 - [x] Motoristas, cartões e postos no banco (viradas de 25/11; a fila para a planilha sai com o vigia em 27/11).
-- [ ] Editar abastecimentos, Consolidador e lotes D-1 gravarem direto em `gestao.abastecimentos`.
-- [ ] APIs dos cartões (Ticket/TruckPag) gravarem direto em `gestao.abastecimentos`.
-- [ ] Negociações de postos e preços das bombas gravarem direto no modelo.
+- [x] Editar abastecimentos, Consolidador e lotes D-1 gravarem direto no banco: `public.base_transacoes` (15.2 passo 3; vigia desligado 27/11).
+- [x] APIs dos cartões (Ticket/TruckPag) gravarem direto no banco: Edge Function `cartoes-api` (15.2 passo 4, 23/11).
+- [x] Negociações de postos e preços das bombas gravarem direto no banco (15.3, viradas de 25/11).
 - [ ] Bomba interna (bases, tanques, movimentações, rateio) no modelo.
-- [ ] Planilhas viram só exportação (Excel gerado do banco) e deixam de ser fonte.
+- [x] Planilhas deixam de ser fonte (vigia desligado 27/11); a Base.xlsx sai pelo botão Exportar do Editar abastecimentos. As outras
+      planilhas ficam paradas em 27/11 (exportação delas só se o usuário pedir).
 - [ ] Site fora da Cloudflare (Lovable, domínio próprio), quando o banco estiver provado.
 
 ## 2. Qualidade
@@ -157,7 +161,7 @@ Ordem (cada passo conferido antes do próximo; o vigia continua ligado até o fi
 - [x] 1b. Área do motorista (Minha média) do banco (19/11; KV `motorista-fonte` = `banco`; o vigia ainda publica os grupos do KV como
       reserva até 15.4). Tempo real comparado com o banco (corrigiu 17-18/11 em dobro nos painéis).
 - [x] 2. Lista do Editar abastecimentos e histórico do Consolidador lidos do banco (19/11; chaves KV `base-copia-fonte` e `consolidacao-fonte`).
-- [ ] 3. (inventário e plano em `docs/MIGRACAO-PASSO3.md`) Gravações do portal direto no banco: correções e exclusões do Editar abastecimentos, Inclusão (bomba interna), lotes do
+- [x] 3. (inventário e plano em `docs/MIGRACAO-PASSO3.md`) Gravações do portal direto no banco: correções e exclusões do Editar abastecimentos, Inclusão (bomba interna), lotes do
       Consolidador e do D-1, preço do Rateio das NFs; o vigia deixa de espelhar a Base_copia no banco (o banco vira a origem).
   - [x] 3.1 Filas aplicadas também direto no banco (19/11): `lib/aplicar-banco.js` nas 6 rotas que gravam nas filas + varredura
         `/api/sync/banco/aplicar` (vigia, 1x/min); colunas `banco_aplicado_em`/`banco_mensagem`.
@@ -165,14 +169,14 @@ Ordem (cada passo conferido antes do próximo; o vigia continua ligado até o fi
         (volta: `py scripts/supabase_sync.py sincronizar base_transacoes --voltar-planilha`).
   - [x] 3.2 (27/11: iguais, 63.537 abastecimentos; teste encerrado) Teste até 27/11/2026 (adiantado de 01/12 pelo usuário em 25/11): `scripts/comparar_base.py` diário (vigia, 7h) igual + nenhum `banco_mensagem` com "erro".
   - [x] 3.4 Varredura no agendador da nuvem (23/11: pg_cron `nuvem-varredura-filas`).
-- [~] 4. Rotinas dos cartões nas Edge Functions (plano e situação em `docs/MIGRACAO-PASSO4.md`; infraestrutura pronta em 19/11;
-      estornos TruckPag e APIs dos cartões com Rateio das NFs LIGADOS em 23/11; recálculo do KM e varredura das filas também na nuvem; falta Conferência, conciliação e cadastros nos cartões): tempo real e D-1 (Ticket/TruckPag), estornos TruckPag, cadastro de motoristas e
+- [x] 4. Rotinas dos cartões nas Edge Functions (plano e situação em `docs/MIGRACAO-PASSO4.md`; infraestrutura pronta em 19/11;
+      estornos TruckPag e APIs dos cartões com Rateio das NFs LIGADOS em 23/11; conferência e conciliação em 23/11; cadastros nos cartões em 27/11: todas LIGADAS): tempo real e D-1 (Ticket/TruckPag), estornos TruckPag, cadastro de motoristas e
       placas nos cartões, conciliação de NFs, conferência com os cartões.
 
 - [x] 24/11: varredura das filas com índice no D1 (o LIKE lia a tabela inteira e estourou o limite diário em 23/11); rotina da nuvem
       que falha repete em 10 min; vigia ignora cópias em conflito do ownCloud.
 - [x] 25/11: índices nas consultas dos cadastros (a limpeza dos dados pessoais estourou o limite do D1 em 24/11, 16:16–21:00).
-- [ ] Antes de 15.4: conferir o consumo diário do D1 (rows read) depois do índice. Feito 25/11: `bomba-rateio/estado` lia
+- [x] Antes de 15.4: conferir o consumo diário do D1 (rows read) depois do índice. Feito 25/11: `bomba-rateio/estado` lia
       alteracoes_base_copia inteira a cada 5 min (~0,7 M/dia); índice parcial `0035` + `INDEXED BY`: 2.513 -> 1 linha lida por vez.
 
 ### 15.3 Demais planilhas no banco
@@ -205,7 +209,7 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 - [ ] Usuário: desativar a tarefa "Gestao Combustivel - sincronizar Base" (reserva) no notebook LAPTOP-3MSEKU3I (hoje fica em espera pelo interruptor, mas continua rodando).
 - [x] Ticket não cadastra motorista novo sem a categoria da CNH: o cadastro novo com cartões passou a exigir só a categoria (27/11/2026).
 - [x] ANTONIO DONIZETTI AUGUSTO (pedido 767): categoria AE informada pelo usuário; criado na Ticket pela nuvem em 27/11 8:50 (dados pessoais apagados).
-- [ ] Apagar as chaves KV `reajustes` e `reajustes-versao` (sem uso desde 27/11).
+- [x] Apagar as chaves KV `reajustes` e `reajustes-versao` (sem uso desde 27/11; apagadas em 27/11).
 - [x] Preço bomba interna: "Lançar negociação" e "Adicionar fornecedor" só com as praças (com negociação ou fornecedor), não o cadastro inteiro de unidades (23/11/2026).
 
 ## 16. Espaço do Supabase (25/11/2026; plano gratuito = 500 MB, em 25/11: 334 MB)
@@ -234,7 +238,7 @@ Decisões do usuário: começar pela equipe de gestão (depois os motoristas); e
 - [ ] Usuário: testar o toque longo no app (Operação por motorista, Programa PRIME, Real x Orçado, Mapa de calor).
 - [x] Tela de login (protótipo login-v2) e postos autorizados só com login (26/11/2026).
 - [ ] Usuário: testar o login de um motorista no celular (app instalado abre no login e depois na área com os postos).
-- [ ] Mapa de calor: erro "Cannot read properties of null (reading 'clientHeight')" em enquadrar ao sair da tela (ResizeObserver
+- [x] Mapa de calor: erro "Cannot read properties of null (reading 'clientHeight')" em enquadrar ao sair da tela (corrigido 27/11: chamadas atrasadas param no desmontar) (ResizeObserver
       sem desligar; visto no console em 26/11).
 - [x] Aviso personalizado (postos e abastecimentos) e unidades do login para separar por unidade (26/11/2026).
 - [ ] Usuário: cadastrar os encarregados (Gerenciar acessos > Unidades) e criar o aviso de mudanças nos postos com "Separar por unidade".
