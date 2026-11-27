@@ -239,6 +239,7 @@ Decisões do usuário: começar pela equipe de gestão (depois os motoristas); e
 - [ ] Usuário: testar o toque longo no app (Operação por motorista, Programa PRIME, Real x Orçado, Mapa de calor).
 - [x] Tela de login (protótipo login-v2) e postos autorizados só com login (26/11/2026).
 - [ ] Usuário: testar o login de um motorista no celular (app instalado abre no login e depois na área com os postos).
+- [x] Faixa "Instalar o aplicativo" no login e na área do motorista (27/11/2026).
 - [x] Mapa de calor: erro "Cannot read properties of null (reading 'clientHeight')" em enquadrar ao sair da tela (corrigido 27/11: chamadas atrasadas param no desmontar) (ResizeObserver
       sem desligar; visto no console em 26/11).
 - [x] Aviso personalizado (postos e abastecimentos) e unidades do login para separar por unidade (26/11/2026).

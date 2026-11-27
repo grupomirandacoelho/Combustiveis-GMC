@@ -6,6 +6,11 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 27/11/2026
 
+- **Opção de instalar o aplicativo de volta** (pedido do usuário): a tela de login e a área do motorista ganharam a faixa "Instale o
+  aplicativo no celular" (tinha saído junto com a página antiga dos postos). No Android o botão "Instalar" abre o pedido do
+  navegador; no iPhone, "Como instalar" mostra o passo a passo do Safari. Não aparece com o app já instalado; fechada no X, volta
+  depois de 7 dias. A área do motorista passou a ter o manifest do app (antes o celular não oferecia a instalação nela).
+
 - **Rateio e estoque dos cais atualizados pelas planilhas** (pedido do usuário):
   - notas novas no Rateio das NFs: Betim 5041578, Uberlândia 281468 (10.000 L), Suape 2968873 e 2971530, Viana 1730011;
   - validadas as que fecham no portal: Betim 5041578, Uberlândia 281468, Suape 2968873 e 2971530 (os totais batem com as notas).
