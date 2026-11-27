@@ -1,8 +1,8 @@
 (function () {
   'use strict';
   // Tela de login (/), 26/11/2026: protótipo prototipos/login-v2 (HANDOFF.md) ligado ao POST /api/login. Um login para todos:
-  // usuário de 6 números = motorista (vai para /motorista/: postos autorizados + média; 30 dias conectado); qualquer outro = gestão
-  // (vai para /gestao/; "Manter conectado" = 48 h). Os postos autorizados saíram desta página (só com login, na área do motorista).
+  // usuário de 6 números = motorista (vai para /motorista/: postos autorizados + média; 90 dias conectado); qualquer outro = gestão
+  // (vai para /gestao/; "Manter conectado" = 30 dias). Os postos autorizados saíram desta página (só com login, na área do motorista).
   // "Falta cartão no caminhão?" continua sem login (o mesmo formulário de antes).
   var $ = function (id) { return document.getElementById(id); };
   function guardar(chave, valor) {
@@ -31,7 +31,7 @@
     ehMotorista = ehUsuarioMotorista(usuario.value.trim());
     $('tipo-conta').classList.toggle('oculto', !ehMotorista);
     $('dica-motorista').classList.toggle('oculto', !(ehMotorista && dicaLiberada));
-    $('manter-rot').classList.toggle('oculto', ehMotorista);   // motorista já fica 30 dias conectado
+    $('manter-rot').classList.toggle('oculto', ehMotorista);   // motorista já fica 90 dias conectado
     if (ehMotorista) $('manter').checked = false;
     senha.inputMode = ehMotorista ? 'numeric' : 'text';
     atualizarAjuda();

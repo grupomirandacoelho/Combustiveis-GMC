@@ -6,6 +6,10 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 27/11/2026
 
+- **Tempo conectado** (pedido do usuário): motoristas ficam conectados por **90 dias** (eram 30); a gestão, com "Manter conectado"
+  marcado, por **30 dias** (eram 48 horas). Sem marcar, a gestão continua saindo ao fechar o navegador (no máximo 2 horas). Vale
+  para os próximos logins; quem já está conectado segue com o prazo do login anterior.
+
 - **Opção de instalar o aplicativo de volta** (pedido do usuário): a tela de login e a área do motorista ganharam a faixa "Instale o
   aplicativo no celular" (tinha saído junto com a página antiga dos postos). No Android o botão "Instalar" abre o pedido do
   navegador; no iPhone, "Como instalar" mostra o passo a passo do Safari. Não aparece com o app já instalado; fechada no X, volta
