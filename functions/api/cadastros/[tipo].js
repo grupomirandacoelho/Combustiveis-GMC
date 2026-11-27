@@ -1,6 +1,6 @@
 import { usuarioDaSessao, json } from '../../../lib/auth.js';
 import { pode } from '../../../lib/permissoes.js';
-import { CAMPOS, CHAVE, TIPOS, NOME, PESSOAIS, normalizarChave, validar, validarPessoais } from '../../../lib/cadastros.js';
+import { CAMPOS, CHAVE, TIPOS, NOME, PESSOAIS, PESSOAIS_CARTOES, normalizarChave, validar, validarPessoais } from '../../../lib/cadastros.js';
 import { chaveNome } from '../../../lib/motoristas.js';
 import { rpc } from '../../../lib/supabase.js';
 import { lerCadastros } from '../../../lib/cadastros-fonte.js';
@@ -80,7 +80,7 @@ export async function onRequestPost({ request, env, params, waitUntil }) {
   const cartoes = tipo === 'motoristas' && acao === 'adicionar' && corpo.cartoes !== false;
   let pessoais = {};
   if (tipo === 'motoristas') {
-    const v = validarPessoais(corpo.pessoais, acao === 'adicionar' ? (cartoes ? ['cpf', 'dataNascimento'] : ['cpf']) : []);
+    const v = validarPessoais(corpo.pessoais, acao === 'adicionar' ? (cartoes ? PESSOAIS_CARTOES : ['cpf']) : []);
     if (v.erros.length) return json({ erro: v.erros.join(' ') }, 400);
     pessoais = v.pessoais;
     if (acao === 'editar' && Object.keys(pessoais).length && !(pessoais.cpf && pessoais.dataNascimento)) {

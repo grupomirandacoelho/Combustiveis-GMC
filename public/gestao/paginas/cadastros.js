@@ -325,14 +325,14 @@ export async function montar(ctx, tipo) {
       ? '<select name="p_' + c.id + '">' + opcaoP('', '—') + c.opcoes.map((o) => opcaoP(o, o)).join('') + '</select>'
       : '<input name="p_' + c.id + '" autocomplete="off" spellcheck="false"' + (c.tipo === 'cpf' ? ' inputmode="numeric" placeholder="000.000.000-00" maxlength="14" data-mascara="cpf"'
         : c.tipo === 'data' ? ' inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" data-mascara="data"' : ' maxlength="' + (c.max || 20) + '"') + '>') + '</label>').join('');
-  // quais aparecem e quais são obrigatórios: novo com cartões = todos (CPF e nascimento obrigatórios); novo sem cartões = só
+  // quais aparecem e quais são obrigatórios: novo com cartões = todos (CPF, nascimento e categoria da CNH obrigatórios); novo sem cartões = só
   // o CPF (dá o usuário); edição = CPF e nascimento, opcionais, só se o motorista tem ID TruckPag
   function prepararPessoais() {
     const box = $('cd-pessoais');
     if (!ehMot || (editando && !editando.idTruckpag)) { box.classList.add('oculto'); return; }
     const cartoes = !editando && form.cartoes.checked;
     const mostrar = editando ? ['cpf', 'dataNascimento'] : cartoes ? PESSOAIS.map((c) => c.id) : ['cpf'];
-    const exigir = editando ? [] : cartoes ? ['cpf', 'dataNascimento'] : ['cpf'];
+    const exigir = editando ? [] : cartoes ? ['cpf', 'dataNascimento', 'cnhCategoria'] : ['cpf'];   // categoria da CNH: a Ticket exige (27/11/2026)
     box.classList.remove('oculto');
     box.querySelectorAll('[data-pessoal]').forEach((el) => {
       el.hidden = !mostrar.includes(el.dataset.pessoal);
@@ -341,7 +341,7 @@ export async function montar(ctx, tipo) {
     $('cd-pessoais-titulo').textContent = editando ? 'Repetir na TruckPag (opcional)' : cartoes ? 'Dados para o usuário e para os cartões' : 'CPF para criar o usuário';
     $('cd-pessoais-explica').textContent = editando
       ? 'A TruckPag exige CPF e data de nascimento em toda alteração de nome ou senha. Eles vão só para lá e não ficam guardados. Em branco, a alteração fica só no portal e na planilha.'
-      : cartoes ? 'O usuário de acesso do motorista são os 6 primeiros números do CPF. CPF, nascimento e CNH vão para a Ticket e a TruckPag e são apagados depois: não ficam no portal nem na planilha.'
+      : cartoes ? 'O usuário de acesso do motorista são os 6 primeiros números do CPF. CPF, nascimento e categoria da CNH vão para a Ticket e a TruckPag e são apagados depois: não ficam no portal nem na planilha.'
         : 'O usuário de acesso do motorista são os 6 primeiros números do CPF. O CPF não fica guardado no portal nem na planilha.';
   }
   form.addEventListener('change', (e) => { if (e.target.name === 'cartoes') prepararPessoais(); });

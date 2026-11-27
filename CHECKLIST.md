@@ -203,7 +203,8 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 - [x] Conferir painéis x banco por alguns dias com o vigia ainda ligado (só lendo). Comparações finais 27/11: 63.537 abastecimentos iguais; cadastros só com diferença de arredondamento das coordenadas.
 - [x] Desligar o vigia (27/11/2026): chave KV `vigia-desligado` (nenhum computador recebe o plantão), tarefa do Kemigas desativada, pedidos fechados como 'aplicada' pela nuvem (`fecharNoBanco`), cadastro nos cartões LIGADO na nuvem, reajustes fora.
 - [ ] Usuário: desativar a tarefa "Gestao Combustivel - sincronizar Base" (reserva) no notebook LAPTOP-3MSEKU3I (hoje fica em espera pelo interruptor, mas continua rodando).
-- [ ] Ticket não cadastra motorista novo sem a categoria da CNH ("ds_categoria_carteira"; o portal não guarda mais CNH desde 12/11): ANTONIO DONIZETTI AUGUSTO pendente na Ticket. Decidir com o usuário.
+- [x] Ticket não cadastra motorista novo sem a categoria da CNH: o cadastro novo com cartões passou a exigir só a categoria (27/11/2026).
+- [ ] ANTONIO DONIZETTI AUGUSTO (pedido 767) continua pendente na Ticket: falta a categoria da CNH dele (o usuário informa; ou cadastrar à mão na Ticket).
 - [ ] Apagar as chaves KV `reajustes` e `reajustes-versao` (sem uso desde 27/11).
 - [x] Preço bomba interna: "Lançar negociação" e "Adicionar fornecedor" só com as praças (com negociação ou fornecedor), não o cadastro inteiro de unidades (23/11/2026).
 

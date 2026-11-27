@@ -6,6 +6,11 @@ no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
 ## 27/11/2026
 
+- **Categoria da CNH no cadastro do motorista** (pedido do usuário): a Ticket recusa motorista novo sem a categoria da CNH. No
+  cadastro de motorista novo com cartões, o formulário pede CPF, data de nascimento e **categoria da CNH**, os três obrigatórios.
+  O número e a validade da CNH saíram do formulário. Como os outros dados pessoais, a categoria vai só para a Ticket e a TruckPag e
+  é apagada depois.
+
 - **Vigia desligado; o portal roda 100% na nuvem** (pedido do usuário, depois das comparações):
   - comparações finais: **63.537 abastecimentos iguais** no banco e na Base_copia (as 5 linhas "só no banco" da primeira rodada
     eram do lote 117, gravado na planilha segundos antes); cadastros iguais, com 36 diferenças que não são de dados: 34 postos com
