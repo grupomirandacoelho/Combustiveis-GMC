@@ -4,6 +4,21 @@ Toda alteração pedida e feita no portal Gestão de Combustível, da mais nova 
 Cada alteração nova entra no topo, com a data, o que foi pedido e o que mudou. O detalhe técnico de cada item continua
 no `briefing.md` (Histórico) e no `LEIA-ME.md`.
 
+## 27/11/2026
+
+- **Vigia desligado; o portal roda 100% na nuvem** (pedido do usuário, depois das comparações):
+  - comparações finais: **63.537 abastecimentos iguais** no banco e na Base_copia (as 5 linhas "só no banco" da primeira rodada
+    eram do lote 117, gravado na planilha segundos antes); cadastros iguais, com 36 diferenças que não são de dados: 34 postos com
+    a coordenada arredondada (6 casas na planilha, completa no banco), 1 posto com a coordenada certa só no banco (POSTO MINAS
+    GERAIS, Estreito-MA) e 1 negociação com a data da última transação mais nova no banco;
+  - todas as 9 fontes do portal já liam do banco; o cadastro de motoristas e placas nos cartões (Ticket e TruckPag) passou do vigia
+    para a nuvem (estado do vigia copiado antes, para não criar de novo quem já foi criado);
+  - interruptor no servidor (`vigia-desligado`): nenhum computador recebe o plantão, nem o reserva; a tarefa deste computador foi
+    desativada. Os pedidos que já estão no banco passam a ser fechados como "aplicada" pela própria nuvem (antes era o vigia, ao
+    gravar a planilha), para os cartões, as listas e o rateio continuarem funcionando;
+  - as planilhas (Base_copia, cadastros, cartões, postos, bomba) deixam de receber cópia; a Base.xlsx segue pelo botão Exportar.
+    O envio dos reajustes saiu (nenhuma tela lia).
+
 ## 26/11/2026
 
 - **Medidor da média sem sobreposição** (pedido do usuário): no medidor "Média km/L contra a meta" (Início, Média geral,

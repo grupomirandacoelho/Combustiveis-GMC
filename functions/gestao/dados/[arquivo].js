@@ -8,7 +8,7 @@ const ARQUIVOS = {
   'anp.json': { perms: ['preco-anp', 'contratos-anp'], dados: 'anp', versao: 'anp-versao', falta: 'Os preços da ANP ainda não foram enviados. O computador da sincronização envia na próxima conferência.' },
   // preços da Petrobras às distribuidoras por ponto de entrega (scripts/petrobras_precos.py) para "Preço x Refinaria"
   'petrobras.json': { perms: ['preco-refinaria'], dados: 'petrobras', versao: 'petrobras-versao', falta: 'Os preços da Petrobras ainda não foram enviados. O computador da sincronização envia na próxima conferência.' },
-  'reajustes.json': { perms: ['contratos-anp'], dados: 'reajustes', versao: 'reajustes-versao', falta: 'A planilha de reajustes ainda não foi enviada. O computador da sincronização envia em instantes.' },
+  // reajustes.json saiu em 27/11/2026 (15.4): nenhuma tela lê; Contratos x ANP usa os contratos do portal
   // histórico da Base para o Consolidador (Base.xlsx + CONTROLES\Base_copia.xlsx; scripts/consolidador_historico.py)
   'consolidacao.json': { perms: ['consolidador', 'bomba-abastecimento'], dados: 'consolidacao', versao: 'consolidacao-versao', falta: 'O histórico da Base para o consolidador ainda não foi enviado. O computador da sincronização envia em instantes.' },
   // abastecimentos da CONTROLES\Base_copia.xlsx para Operacional > Editar abastecimentos (scripts/base_copia_lista.py)

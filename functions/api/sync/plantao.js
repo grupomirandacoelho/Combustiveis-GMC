@@ -6,6 +6,10 @@ import { tokenSyncValido, json } from '../../../lib/auth.js';
 //  - quem está de plantão e vê um de prioridade maior dando sinal devolve o plantão para ele (o principal voltou);
 //  - quem está de plantão e para de dar sinal por PRAZO segundos perde o plantão (o reserva assume).
 // Assumir e devolver são UPDATEs condicionais (uma instrução só), então nunca ficam dois de plantão ao mesmo tempo.
+// Vigia desligado (15.4, 27/11/2026; pedido do usuário depois das comparações): com a chave KV "vigia-desligado", nenhum computador
+// recebe o plantão (o principal e o reserva ficam em espera e não gravam nada), mesmo que a tarefa agendada continue ligada em algum
+// deles. O sinal (vigias.visto_em) continua sendo anotado, para saber se algum vigia ainda está rodando. Para religar: apagar a chave.
+export const CHAVE_DESLIGADO = 'vigia-desligado';
 const VIVO = 60;     // s: sinal mais recente que isso = vigia ligado
 const PRAZO = 240;   // s: plantão sem sinal há mais que isso fica livre
 
@@ -21,6 +25,10 @@ export async function onRequestPost({ request, env }) {
 
   await db.prepare('INSERT INTO vigias (maquina, prioridade, visto_em) VALUES (?, ?, ?) ON CONFLICT(maquina) DO UPDATE SET prioridade = excluded.prioridade, visto_em = excluded.visto_em')
     .bind(maquina, prioridade, agora).run();
+  if (await env.DADOS.get(CHAVE_DESLIGADO)) {
+    await db.prepare('UPDATE plantao SET maquina = NULL WHERE id = 1 AND maquina IS NOT NULL').run();
+    return json({ ativo: false, plantao: null, desde: null, maquina, prioridade, desligado: true });
+  }
   const p = await db.prepare('SELECT maquina, desde, renovado FROM plantao WHERE id = 1').first();
   const vivos = (await db.prepare('SELECT maquina, prioridade FROM vigias WHERE visto_em > ? ORDER BY prioridade, maquina').bind(agora - VIVO).all()).results;
   const desejado = vivos.length ? vivos[0].maquina : maquina;

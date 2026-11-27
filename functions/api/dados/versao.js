@@ -15,6 +15,7 @@ export async function onRequestGet({ request, env }) {
   // status: andamento do sincronizador (processando / ok / erro), para o botão Atualizar explicar o que está acontecendo
   // a versão do site junta a da Base e a das transações em tempo real (lib/dados.js monta a mesma combinação)
   const mais = tempoReal && tempoReal.versao ? '+' + tempoReal.versao : '';
+  // vigia desligado (15.4, 27/11/2026): o plantão fica vazio e a linha "Sincronização: computador ..." sai do Início
   const resto = { tempoReal: tempoReal || null, plantao: plantao && plantao.maquina ? plantao : null };
   // painéis lendo do banco (desde 19/11/2026): a versão é a do banco, não a da última carga do vigia. Antes desta correção (25/11) as
   // duas nunca batiam e o botão "Atualizar: dados novos" ficava aceso o tempo todo. O andamento do vigia (status) não vale aqui.

@@ -951,7 +951,7 @@ if (process.argv.includes('--vigiar')) {
       const precosNaNuvem = await nuvemLigada('precos-anp');
       if (!precosNaNuvem && await plantao()) { try { processarANP(); } catch (e) { erro('nos preços da ANP', e); } }
       if (!precosNaNuvem && await plantao()) { try { processarPetrobras(); } catch (e) { erro('nos preços da Petrobras', e); } }
-      if (await plantao()) { try { processarReajustes(); } catch (e) { erro('nos reajustes', e); } }
+      // 15.4 (27/11/2026): reajustes saíram da volta (nenhuma tela lê reajustes.json; Contratos x ANP usa os contratos do portal)
       if (await plantao()) { try { await processarBomba(); } catch (e) { erro('no preço da bomba interna', e); } }
       if (await plantao()) { try { await processarLocais(); } catch (e) { erro('nas coordenadas dos postos', e); } }
       // 15.3 (25/11/2026): com 'geo-postos' ligado, a busca no OpenStreetMap roda na nuvem; o vigia pula

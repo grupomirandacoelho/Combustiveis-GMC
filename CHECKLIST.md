@@ -163,7 +163,7 @@ Ordem (cada passo conferido antes do próximo; o vigia continua ligado até o fi
         `/api/sync/banco/aplicar` (vigia, 1x/min); colunas `banco_aplicado_em`/`banco_mensagem`.
   - [x] 3.3 Virada (19/11, antecipada a pedido do usuário): `supabase_sync.py` não recopia mais `base_transacoes`
         (volta: `py scripts/supabase_sync.py sincronizar base_transacoes --voltar-planilha`).
-  - [ ] 3.2 (26/11: iguais, 63.434 abastecimentos; cadastros iguais) Teste até 27/11/2026 (adiantado de 01/12 pelo usuário em 25/11): `scripts/comparar_base.py` diário (vigia, 7h) igual + nenhum `banco_mensagem` com "erro".
+  - [x] 3.2 (27/11: iguais, 63.537 abastecimentos; teste encerrado) Teste até 27/11/2026 (adiantado de 01/12 pelo usuário em 25/11): `scripts/comparar_base.py` diário (vigia, 7h) igual + nenhum `banco_mensagem` com "erro".
   - [x] 3.4 Varredura no agendador da nuvem (23/11: pg_cron `nuvem-varredura-filas`).
 - [~] 4. Rotinas dos cartões nas Edge Functions (plano e situação em `docs/MIGRACAO-PASSO4.md`; infraestrutura pronta em 19/11;
       estornos TruckPag e APIs dos cartões com Rateio das NFs LIGADOS em 23/11; recálculo do KM e varredura das filas também na nuvem; falta Conferência, conciliação e cadastros nos cartões): tempo real e D-1 (Ticket/TruckPag), estornos TruckPag, cadastro de motoristas e
@@ -200,8 +200,11 @@ Plano, inventário e decisões (25/11/2026): `docs/MIGRACAO-15-3.md`.
 - [x] pg_cron `gestao-dados-painel`: ~8 s a cada 2 min mesmo sem mudança e 3 a 6 falhas por dia passando de 2 min (statement timeout);
       gerar só quando algo mudou (visto em 25/11/2026). Feito 25/11: contador por gatilho (`painel_mudancas`), rotina
       `gestao_dados_painel_rodar()`; conferir em 26/11 o tempo e as falhas do dia em `cron.job_run_details`.
-- [ ] Conferir painéis x banco por alguns dias com o vigia ainda ligado (só lendo).
-- [ ] Desligar a tarefa agendada nos dois computadores e retirar o revezamento.
+- [x] Conferir painéis x banco por alguns dias com o vigia ainda ligado (só lendo). Comparações finais 27/11: 63.537 abastecimentos iguais; cadastros só com diferença de arredondamento das coordenadas.
+- [x] Desligar o vigia (27/11/2026): chave KV `vigia-desligado` (nenhum computador recebe o plantão), tarefa do Kemigas desativada, pedidos fechados como 'aplicada' pela nuvem (`fecharNoBanco`), cadastro nos cartões LIGADO na nuvem, reajustes fora.
+- [ ] Usuário: desativar a tarefa "Gestao Combustivel - sincronizar Base" (reserva) no notebook LAPTOP-3MSEKU3I (hoje fica em espera pelo interruptor, mas continua rodando).
+- [ ] Ticket não cadastra motorista novo sem a categoria da CNH ("ds_categoria_carteira"; o portal não guarda mais CNH desde 12/11): ANTONIO DONIZETTI AUGUSTO pendente na Ticket. Decidir com o usuário.
+- [ ] Apagar as chaves KV `reajustes` e `reajustes-versao` (sem uso desde 27/11).
 - [x] Preço bomba interna: "Lançar negociação" e "Adicionar fornecedor" só com as praças (com negociação ou fornecedor), não o cadastro inteiro de unidades (23/11/2026).
 
 ## 16. Espaço do Supabase (25/11/2026; plano gratuito = 500 MB, em 25/11: 334 MB)

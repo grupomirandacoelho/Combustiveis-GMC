@@ -1,5 +1,5 @@
 import { tokenSyncValido, json } from '../../../../lib/auth.js';
-import { aplicarPendentes } from '../../../../lib/aplicar-banco.js';
+import { aplicarPendentes, fecharNoBanco } from '../../../../lib/aplicar-banco.js';
 import { aplicarCadastrosPendentes, aplicarCartoesPendentes, aplicarBombaPendentes, aplicarPostosPendentes, aplicarLocaisPendentes } from '../../../../lib/aplicar-cadastros.js';
 
 // Migração 100% nuvem, 15.2 passo 3: varredura das filas — aplica no banco o que ficou pendente (banco fora do ar na hora da gravação,
@@ -20,7 +20,8 @@ export async function onRequestPost({ request, env }) {
   const bo = await aplicarBombaPendentes(env);   // preço bomba interna (15.3 item 3)
   const po = await aplicarPostosPendentes(env);   // negociações dos postos (15.3 item 4)
   const lo = await aplicarLocaisPendentes(env);   // coordenadas dos postos (15.3 item 5)
+  const fe = await fecharNoBanco(env);   // vigia desligado (15.4): fecha como 'aplicada' o que já está no banco
   return json({ ok: true, ...total, cadastros: { aplicados: c.aplicados, erros: c.erros }, cartoes: { aplicados: k.aplicados, erros: k.erros },
     bomba: { aplicados: bo.aplicados, erros: bo.erros }, postos: { aplicados: po.aplicados, erros: po.erros },
-    locais: { aplicados: lo.aplicados, erros: lo.erros } });
+    locais: { aplicados: lo.aplicados, erros: lo.erros }, fechados: fe.fechados });
 }
